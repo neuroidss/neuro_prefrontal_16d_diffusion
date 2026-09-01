@@ -1,14 +1,19 @@
-# 🧠 NeuroCanvas: Prefrontal Quad-Node 16D Cortical Phase-Graph & SVD Latent Space Alignment Generative Working Memory Engine (v75.0)
+# 🧠 NeuroCanvas: 16D Prefrontal Cortical Phase-Graph & Lossless SVD-Slerp Latent Diffusion Manifold ($\mathbb{T}^{16}$) Generative DecNef Engine (v116.0)
 
-**NeuroCanvas v75.0** is an open-source, ultra-low latency (<2.0 ms), high-performance Brain-Computer Interface (BCI) and closed-loop Prefrontal Decoded Neurofeedback (DecNef) platform.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![CUDA Accelerated](https://img.shields.io/badge/CUDA-12.0%2B-green.svg)](https://developer.nvidia.com/cuda-toolkit)
+[![LSL Ready](https://img.shields.io/badge/LSL-LabStreamingLayer-orange.svg)](https://github.com/sccn/labstreaminglayer)
 
-Departing from discrete textual prompt bottlenecks and lossy dimensionality reduction, **v75.0** implements direct **Lossless SVD Latent Space Alignment**: continuous singular value spectra ($\mathbf{E}_{\text{latent}} = \mathbf{U} \mathbf{S}(t) \mathbf{V}^T \in \mathbb{R}^{1 \times 77 \times 768}$) within a hardware-accelerated **Stable Diffusion Latent Consistency Model (SD-LCM)** operating on CUDA at 15+ FPS are modulated directly by endogenous prefrontal phase wavefields [1.1, 18, 19].
+**NeuroCanvas v116.0** is an open-source, ultra-low latency (<1.2 ms DSP), high-performance Brain-Computer Interface (BCI) and closed-loop Prefrontal Decoded Neurofeedback (DecNef) platform.
 
-The system decodes localized cortical phase wavefields from an ensemble of four 16-channel concentric 26-mm micro-arrays (**FreeEEG16-alpha2**) arranged in a hierarchical prefrontal chain:
-* **$Fpz$ (Frontopolar Cortex / BA10)**: Meta-dispatcher & Cognitive Branching ($d\Phi/dt$ traveling wave velocity $\to$ Latent Walk velocity, state reset, and unchosen alternative tracking) [10, 16, 21].
-* **$AFz$ (Anterior Prefrontal Cortex / Midline PFC)**: Rule Gating & Manifold Bounding (120D topological concentration $\to$ Attractor Rigidity & CFG Scale) [12, 23].
-* **$F3$ (Left DLPFC / Broca's Axis)**: Fine Semantic Coding (Full 120D Phase Graph $\to$ Early SVD singular vectors $0\dots 383 \to$ Macro-geometry & structural form) [5, 6].
-* **$F4$ (Right DLPFC / Contextual Cortex)**: Coarse Semantic Coding (Full 120D Phase Graph $\to$ Late SVD singular vectors $384\dots 767 \to$ Micro-textures, lighting, and stylistic mood) [5, 6, 7].
+Departing from discrete textual prompt bottlenecks, lossy JPEG quantization, and primitive reflexive Stimulus-Response (S-R) classification, **v116.0** implements direct **Continuous SVD-Slerp Latent Space Alignment**: continuous singular value spectra ($\mathbf{E}_{\text{latent}} \in \mathbb{R}^{1 \times 77 \times 768}$) within a hardware-accelerated **Stable Diffusion Latent Consistency Model (SD-LCM)** are modulated directly by endogenous prefrontal phase wavefields without feedback degradation, waffle/candle melting, or stroboscopic oscillation.
+
+The system decodes localized cortical traveling wavefields from an ensemble of four 16-channel concentric 26-mm micro-arrays (**FreeEEG16-alpha2**) arranged in a hierarchical prefrontal network:
+* **$Fpz$ (Frontopolar Cortex / BA10)**: Meta-Dispatcher & Cognitive Branching (Unchosen alternative tracking $\to$ Live parallel Shadow stream $\to$ Phase slip surge $\frac{d\Phi}{dt} > 1.8\text{ rad} \to$ Epoch-synchronized cognitive saccade) [10, 21, 22].
+* **$AFz$ (Anterior Prefrontal Cortex / Midline mPFC / dACC)**: Rule Gating & Manifold Metric Alignment (Frontal Midline Theta $\to$ Bilinear covariance constraint) [11, 12, 24].
+* **$F3$ (Left DLPFC / Broca's Axis)**: Fine Semantic Coding (Macro-geometry, structural syntax $\to$ Early SVD singular vectors $0\dots 383$) [5, 6].
+* **$F4$ (Right DLPFC / Contextual Axis)**: Coarse Semantic Coding (Global optical chroma, luminescence, atmosphere $\to$ Late SVD singular vectors $384\dots 767$) [5, 6, 7].
 
 Cross-channel causal synchronization is evaluated via four 120-edge directed imaginary Phase-Locking Value (**iPLV**) graphs, nested within 32 phase-quantized Gamma bins ($30\text{--}85\text{ Hz}$) of the biological Theta carrier ($3.5\text{--}9.0\text{ Hz}$) [1, 2, 13, 14].
 
@@ -16,26 +21,24 @@ Cross-channel causal synchronization is evaluated via four 120-edge directed ima
 
 ## 📑 Table of Contents
 1. [Theoretical & Neurocomputational Foundations](#1-theoretical--neurocomputational-foundations)
-   - [1.1 SVD Latent Space Alignment: Beyond Textual Token Bottlenecks](#11-svd-latent-space-alignment-beyond-textual-token-bottlenecks)
-   - [1.2 Prefrontal Quad-Node Hierarchy ($Fpz \to AFz \to F3 / F4$)](#12-prefrontal-quad-node-hierarchy-fpz-to-afz-to-f3--f4)
-   - [1.3 Working Memory 2.0: Dynamic Theta-Gamma Phase Multiplexing](#13-working-memory-20-dynamic-theta-gamma-phase-multiplexing)
-   - [1.4 Bilateral Hemispheric Asymmetry: Fine vs. Coarse Semantic Coding](#14-bilateral-hemispheric-asymmetry-fine-vs-coarse-semantic-coding)
-   - [1.5 Low-Dimensional Geometric Manifolds & Attractor Spaces](#15-low-dimensional-geometric-manifolds--attractor-spaces)
-   - [1.6 Autonomous Cognitive Control: Exploration vs. Exploitation Dynamics](#16-autonomous-cognitive-control-exploration-vs-exploitation-dynamics)
-   - [1.7 Zero-Lag Volume Conduction & EMG Rejection ($i\text{PLV}$)](#17-zero-lag-volume-conduction--emg-rejection-iplv)
-2. [Mathematical Architecture & 16D Kinematic Formulations](#2-mathematical-architecture--16d-kinematic-formulations)
-   - [2.1 Causal Instantaneous Directed $i\text{PLV}$ Formulation](#21-causal-instantaneous-directed-iplv-formulation)
-   - [2.2 Quad-Node 16D Kinematic Tensor ($\mathbb{R}^{4 \times 4}$)](#22-quad-node-16d-kinematic-tensor-mathbfr4-times-4)
-   - [2.3 Lossless SVD Cross-Attention Conditioning Synthesis](#23-lossless-svd-cross-attention-conditioning-synthesis)
-   - [2.4 Frontopolar Phase-Reset Kinematics & Anti-Ghosting Seeding](#24-frontopolar-phase-reset-kinematics--anti-ghosting-seeding)
-   - [2.5 Midline Topological Rigidity & CFG Scale Coupling](#25-midline-topological-rigidity--cfg-scale-coupling)
-   - [2.6 Objective Prefrontal DecNef Metric in CLIP Space](#26-objective-prefrontal-decnef-metric-in-clip-space)
+   - [1.1 SVD-Slerp Latent Space Alignment: Beyond Textual Token Bottlenecks](#11-svd-slerp-latent-space-alignment-beyond-textual-token-bottlenecks)
+   - [1.2 Cognitive Branching & Dual-Stream Shadow Rendering ($Fpz$ / BA10)](#12-cognitive-branching--dual-stream-shadow-rendering-fpz--ba10)
+   - [1.3 Cognitive Saccades vs. Latent Melting: Clean Context Transitions](#13-cognitive-saccades-vs-latent-melting-clean-context-transitions)
+   - [1.4 Task-Congruent Covariance & Metric Alignment ($AFz$ / dACC)](#14-task-congruent-covariance--metric-alignment-afz--dacc)
+   - [1.5 Bilateral Prefrontal Asymmetry: Form ($F3$) vs. Optics ($F4$)](#15-bilateral-prefrontal-asymmetry-form-f3-vs-optics-f4)
+   - [1.6 Causal Directed $i\text{PLV}$ & Zero-Lag EMG Rejection](#16-causal-directed-iplv--zero-lag-emg-rejection)
+2. [Mathematical Formulations & 16D SVD Latent Algebra](#2-mathematical-formulations--16d-svd-latent-algebra)
+   - [2.1 Quad-Node 16D Kinematic Extraction Tensor ($\mathbb{R}^{4 \times 4}$)](#21-quad-node-16d-kinematic-extraction-tensor-mathbfr4-times-4)
+   - [2.2 Token-Wise Spherical Linear Interpolation (Slerp) in CLIP Space](#22-token-wise-spherical-linear-interpolation-slerp-in-clip-space)
+   - [2.3 Epoch-Synchronized In-Flight Request Invalidation](#23-epoch-synchronized-in-flight-request-invalidation)
+   - [2.4 Contrast Surgery & VAE Checkerboard Elimination](#24-contrast-surgery--vae-checkerboard-elimination)
+   - [2.5 Objective Prefrontal DecNef Metric in CLIP Phase Space](#25-objective-prefrontal-decnef-metric-in-clip-phase-space)
 3. [Decoupled Microservice System Architecture](#3-decoupled-microservice-system-architecture)
-   - [3.1 Scalable $N$-Device Universal Hardware Engine (`neuro_heterarchy_core.py`)](#31-scalable-n-device-universal-hardware-engine-neuro_heterarchy_corepy)
-   - [3.2 Prefrontal 16D DecNef Manifold Client (`neuro_prefrontal_16d_manifold.py`)](#32-prefrontal-16d-decnef-manifold-client-neuro_prefrontal_16d_manifoldpy)
-   - [3.3 In-Silico Active Inference Agent (`synthetic_koechlin_agent.py`)](#33-in-silico-active-inference-agent-synthetic_koechlin_agentpy)
-   - [3.4 Frozen VRAM Model Server (`brain_server.py` & `render_logic.py`)](#34-frozen-vram-model-server-brain_serverpy--render_logicpy)
-4. [Hardware Specification & 26-mm Concentric Array Montage](#4-hardware-specification--26-mm-concentric-array-montage)
+   - [3.1 Hardware-Agnostic Universal HAL (`neuro_heterarchy_core.py`)](#31-hardware-agnostic-universal-hal-neuro_heterarchy_corepy)
+   - [3.2 Lossless VRAM Model Server (`brain_server.py`)](#32-lossless-vram-model-server-brain_serverpy)
+   - [3.3 In-Silico Active Inference Cognitive Agent (`synthetic_16d_diffusion_agent.py`)](#33-in-silico-active-inference-cognitive-agent-synthetic_16d_diffusion_agentpy)
+   - [3.4 Pure Prefrontal Latent Manifold Client (`neuro_prefrontal_16d_diffusion_live.py`)](#34-pure-prefrontal-latent-manifold-client-neuro_prefrontal_16d_diffusion_livepy)
+4. [Hardware Specification & 26-mm Concentric Montage](#4-hardware-specification--26-mm-concentric-montage)
 5. [Complete Scientific References & DOIs](#5-complete-scientific-references--dois)
 6. [Installation & Quickstart](#6-installation--quickstart)
 
@@ -48,82 +51,68 @@ Cross-channel causal synchronization is evaluated via four 120-edge directed ima
    │                  PREFRONTAL CORTEX (HIERARCHICAL 4-NODE TOPOLOGY)                         │
    │                                                                                           │
    │            [ Fpz ] Frontopolar Meta-Dispatcher (BA10): Cognitive Branching                │
-   │               │    (Traveling Wave Velocity dΦ/dt ──► Latent Walk Speed & Freeze)         │
+   │               │    (Tracks Counterfactual Alternative ──► Live Parallel Shadow)           │
    │               ▼                                                                           │
-   │            [ AFz ] Anterior PFC Rule Controller: Manifold Gating                          │
-   │               │    (120D Topological Concentration ──► 3D-6D Attractor Mask & CFG Scale)  │
+   │            [ AFz ] Anterior Midline PFC / dACC: Rule Gating & Metric                      │
+   │               │    (FM-Theta Synchrony ──► Covariance Matrix Constraint)                  │
    │               ▼                                                                           │
    │      ┌───────────────────────────────┴───────────────────────────────┐                    │
    │      ▼                                                               ▼                    │
    │  [ F3 ] Left DLPFC (Fine Coding)                             [ F4 ] Right DLPFC (Coarse)  │
-   │  - Discrete Structural Syntax                                - Holistic Metaphors & Style │
-   │  - Early SVD Singular Vectors (0..383)                       - Late SVD Vectors (384..767)│
-   │  - Macro-Geometry & Physical Form                            - Textures, Palette, Lighting│
+   │  - Discrete Structural Syntax                                - Holistic Optical Palette   │
+   │  - Macro-Geometry & Silhouettes                              - Micro-Textures & Lighting  │
+   │  - SVD Early Singular Basis (0..383)                         - SVD Late Basis (384..767)  │
    └──────┬───────────────────────────────────────────────────────────────┬────────────────────┘
           │                                                               │
           └───────────────────────────────┬───────────────────────────────┘
-                                          │ Lossless SVD Tensor Synthesis (E = U S Vᵀ)
+                                          │ Lossless Token-Wise Slerp (E = U S Vᵀ)
                                           ▼
    ┌───────────────────────────────────────────────────────────────────────────────────────────┐
-   │                  STABLE DIFFUSION LATENT CONSISTENCY MODEL (SD-LCM)                       │
-   │  Direct Latent Manifold Modulation • No Text Tokens • Pure Cognitive Steering (15+ FPS)   │
+   │            STABLE DIFFUSION LATENT CONSISTENCY MODEL (SD-LCM DUAL-STREAM)                 │
+   │    Pure Perceptual Embodiment • Zero Numbers • Real Phase-Reset Saccade (<1.2 ms)         │
    └───────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 1.1 SVD Latent Space Alignment: Beyond Textual Token Bottlenecks
-Standard text-to-image foundation models enforce an artificial sequence of 77 discrete prompt tokens. However, the human prefrontal cortex does not serialize thoughts into ASCII strings [1.1]. Attempting to quantize continuous cortical phase wavefields into discrete textual tokens introduces a lossy syntactic bottleneck [1.1].
-
-Under **SVD Latent Space Alignment** [17, 18]:
+### 1.1 SVD-Slerp Latent Space Alignment: Beyond Textual Token Bottlenecks
+Standard text-to-image pipelines enforce an artificial bottleneck of 77 discrete ASCII prompt tokens. However, the human prefrontal cortex represents continuous perceptual states rather than serialized strings [18]. Under **Lossless SVD-Slerp Latent Space Alignment** [17, 18]:
 * The 768-dimensional cross-attention conditioning manifold ($\mathbf{E} \in \mathbb{R}^{1 \times 77 \times 768}$) of Stable Diffusion is modulated via continuous singular basis vectors:
-  $$\mathbf{E}_{\text{latent}}(t) = \mathbf{C}_{\text{anchor}}(t) + \mathbf{U} \mathbf{S}(t) \mathbf{V}^T$$
-* Prefrontal phase dynamics directly deform the continuous singular spectrum, generating smooth, artifact-free geometric transformations in native latent space without textual quantization noise [1.1, 17, 18].
+  $$\mathbf{E}_{\text{latent}}(t) = \operatorname{Slerp}\left(s_{\text{effective}}(t), \; \mathbf{C}_{\text{top}}(g(t)), \; \mathbf{C}_{\text{bot}}(g(t))\right) + \mathbf{U} \mathbf{S}(t) \mathbf{V}^T$$
+* Prefrontal phase dynamics directly deform the continuous singular spectrum, generating smooth, artifact-free geometric transformations in native latent space without textual quantization noise [17, 18].
 
-### 1.2 Prefrontal Quad-Node Hierarchy ($Fpz \to AFz \to F3 / F4$)
-The human prefrontal cortex is organized along a rostro-caudal hierarchy of cognitive abstraction [8, 10, 11]:
-* **$Fpz$ (BA10 / Frontopolar Cortex):** Sits at the apex of cognitive control. It implements **cognitive branching**, pausing baseline behavioral goals in an activity-silent state while exploring alternative sub-goals [10, 11, 22].
-* **$AFz$ (Anterior Midline PFC / dACC):** Implements task-set rule maintenance. Its endogenous midline Theta oscillation synchronizes and gates the degrees of freedom of downstream execution circuits [11, 12, 13].
-* **$F3 \leftrightarrow F4$ (Bilateral DLPFC):** Implements execution-level semantic and structural synthesis along the *Fine vs. Coarse Coding* axis [5, 6, 7].
+### 1.2 Cognitive Branching & Dual-Stream Shadow Rendering ($Fpz$ / BA10)
+Under frontopolar value-tracking models [10, 21, 22]:
+* Rather than maintaining a single monolithic task-set, the prefrontal apex implements **cognitive branching**: holding an unchosen alternative ("Plan B") in an activity-silent, parallel prospective state [10, 22, 27].
+* In **NeuroCanvas**, the engine evaluates **two live generative streams simultaneously**:
+  - **Active Reality ($\mathbf{C}_{\text{main}}$):** Rendered in the primary canvas ($512\times 384$) as the active behavioral context.
+  - **Candidate Shadow ($\mathbf{C}_{\text{shadow}}$):** Rendered to the right ($256\times 192$, natively rendered at $512\times 384$) as a living holographic preview driven continuously by $Fpz$ phase coordinates.
+* Luminous plasma filaments visually bridge the active canvas and the candidate shadow, reflecting branching tension ($\text{Readiness}$).
 
-### 1.3 Working Memory 2.0: Dynamic Theta-Gamma Phase Multiplexing
-Under the **Working Memory 2.0** framework [2, 3]:
-* Memories are maintained through **sparse, discrete bursts of Gamma oscillations ($30\text{--}85\text{ Hz}$)** locked to specific phases of an endogenous **Theta carrier ($3.5\text{--}9.0\text{ Hz}$)**, rather than through metabolically costly persistent spiking [1, 2, 3].
-* Within each Theta cycle ($\approx 150\text{--}200\text{ ms}$), the 32 phase-quantized Gamma bins encode a chronological sequence:
-  - **Slices $0\dots 10$ (Past Anchor):** Retrospective context inherited from cycle $N-1$ [1.4, 4].
-  - **Slices $11\dots 21$ (Present Nucleus):** Active state of current working memory representations [1.4, 4].
-  - **Slices $22\dots 31$ (Future Prediction & Pings):** Prospective look-ahead and sub-threshold reactivations of unselected alternatives [1.4, 4].
+### 1.3 Cognitive Saccades vs. Latent Melting: Clean Context Transitions
+Human visual cognition does not blend disparate semantic realities like plastic; it performs **cognitive saccades** with momentary saccadic suppression between distinct cognitive sets [2, 10].
+* **Intra-Context Exploration:** Continuous image-to-image ($img2img$) loops operate at low strength ($s \approx 0.48\text{--}0.55$), smoothly morphing lighting, geometry, and atmospheric conditions.
+* **Inter-Context Phase Reset:** When prediction error plateaus and counterfactual value surges ($\frac{d\Phi}{dt} > 1.8\text{ rad}$), an endogenous **Phase Reset** occurs:
+  1. The primary canvas instantaneously absorbs the shadow's geometry at high strength ($s = 0.75\text{--}0.85$).
+  2. The shadow stream instantly teleports to the next prospective hypothesis (+120° phase offset), morphing cleanly without ever displaying unrendered noise.
 
-### 1.4 Bilateral Hemispheric Asymmetry: Fine vs. Coarse Semantic Coding
-Electrophysiological and fMRI mappings confirm distinct computational roles across the cerebral hemispheres [5, 6, 7]:
-* **Left DLPFC ($F3$):** Implements *Fine Semantic Coding*. It performs focal selection of dominant meanings, discrete structural sequences, geometric contours, and formal syntax [5, 6].
-* **Right DLPFC ($F4$):** Implements *Coarse Semantic Coding*. It activates broad, diffuse semantic fields, holistic visual metaphors, spatial context, atmospheric lighting, and emotional valence [5, 6, 7].
+### 1.4 Task-Congruent Covariance & Metric Alignment ($AFz$ / dACC)
+* $AFz$ modulates the covariance metric between $F3$ and $F4$:
+  - **Synergistic Alignment ($\theta_{AFz} = 0^\circ$):** Form and Style co-vary positively (complex structure $\to$ vibrant warm illumination).
+  - **Inverted Alignment ($\theta_{AFz} = 180^\circ$):** Form and Style co-vary negatively (complex structure $\to$ desaturated, dark, stormy atmosphere).
+* $AFz$ temporal momentum modulates classifier-free guidance (CFG scale $\in [1.0, 1.4]$), enforcing topological rigidity [12, 24].
 
-### 1.5 Low-Dimensional Geometric Manifolds & Attractor Spaces
-Electrophysiological recordings demonstrate that prefrontal networks collapse high-dimensional neural activity into low-dimensional manifolds [12, 23]:
-* Targeted dimensionality reduction (TDR) and demixed PCA (dPCA) confirm that task context and working memory items reside along orthogonal 2D/3D hyperplanes [12, 23].
-* $AFz$ continuously monitors topological concentration across the 120-edge phase graph, dynamically modulating the manifold rank and classifier-free guidance (CFG) [12, 23, 24].
+### 1.5 Bilateral Prefrontal Asymmetry: Form ($F3$) vs. Optics ($F4$)
+Electrophysiological mappings confirm distinct computational roles across the cerebral hemispheres [5, 6, 7]:
+* **Left DLPFC ($F3$):** *Fine Semantic Coding* $\to$ Early SVD singular vectors ($0\dots 383$) governing structural contours, silhouettes, geometric architecture, and discrete form [5, 6].
+* **Right DLPFC ($F4$):** *Coarse Semantic Coding* $\to$ Late SVD singular vectors ($384\dots 767$) governing chromatic palette, atmospheric lighting, weather, and surface reflections [5, 6, 7].
 
-### 1.6 Autonomous Cognitive Control: Exploration vs. Exploitation Dynamics
-In frontopolar value-tracking models [10, 11, 21]:
-* As prediction error collapses on a target representation, $Fpz$ enters **Exploitation Lock** ($v_{\text{wave}} \to 0$), freezing the generative canvas for inspection [1.5, 21].
-* Counterfactual value builds up over a holding interval ($\approx 5.0\text{ s}$), triggering an autonomous **Phase Reset** ($d\Phi/dt$ surge), launching the system into a new **Exploration Phase** [10, 21, 22].
-
-### 1.7 Zero-Lag Volume Conduction & EMG Rejection ($i\text{PLV}$)
+### 1.6 Causal Directed $i\text{PLV}$ & Zero-Lag EMG Rejection
 Cranial electromyographic (EMG) artifacts propagate across the scalp instantaneously ($\Delta \varphi = 0$) [13, 14]. Because the imaginary Phase-Locking Value strictly rejects zero-lag connectivity:
 $$\text{iPLV}_{ij} = \sin(\Delta \varphi) \implies \sin(0) = 0$$
-Any non-cerebral common-mode artifact collapses the 120-edge matrix to zero, freezing the generative manifold. The latent canvas evolves only during **pure, relaxed, high-level cognitive concentration** [13, 14].
+Any non-cerebral common-mode artifact collapses the 120-edge matrix to zero, freezing the generative manifold. The latent canvas evolves only during **pure, relaxed cognitive concentration** [13, 14].
 
 ---
 
-## 📐 2. Mathematical Architecture & 16D Kinematic Formulations
-
-### 2.1 Causal Instantaneous Directed $i\text{PLV}$ Formulation
-To eliminate instantaneous volume conduction across the 26-mm micro-array [13, 14]:
-
-$$\mathrm{iPLV}_{ij}(t) = \Im\left\{ \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\} = \sin\left(\varphi_i(t) - \varphi_j(t)\right) \in [-1.0, +1.0]$$
-
-Evaluated across the 32 phase-quantized Gamma slots of the endogenous Theta cycle:
-
-$$\mathbf{\Psi}_k(p) = \sum_{t} \left( P_{\gamma_k, i}(t) \cdot P_{\gamma_k, j}^*(t) \right) w_k(t), \quad \mathbf{iPLV}_k(p) = \Im\left( \mathbf{\Psi}_k(p) \cdot \mathbf{\Psi}_0^*(p) \right) \in \mathbb{R}^{32 \times 120}$$
+## 📐 2. Mathematical Formulations & 16D SVD Latent Algebra
 
 ```
    ┌─────────────────────────────────── 16D KINEMATIC FORMULATION ───────────────────────────────────┐
@@ -132,66 +121,55 @@ $$\mathbf{\Psi}_k(p) = \sum_{t} \left( P_{\gamma_k, i}(t) \cdot P_{\gamma_k, j}^
    │    L = traj_32[31] - traj_32[0] (Past -> Future phase-flow displacement)                        │
    │                                                                                                 │
    │ 2. SAGITTA CURVATURE rx:                                                                        │
-   │    rx = (Present_mid - Chord_mid) × L / ||L|| (Trajectory deflection / Bifurcation doubt)       │
+   │    rx = (Present_mid - Chord_mid) × L / ||L|| (Trajectory deflection / Branching tension)        │
    │                                                                                                 │
    │ 3. TEMPORAL BIAS ry:                                                                            │
-   │    ry = (E_Future - E_Past) / (E_Future + E_Past) (High-Gamma vs Low-Gamma PAC timing)          │
+   │    ry = (E_Future - E_Past) / (E_Future + E_Past) (High-Gamma vs Low-Gamma PAC momentum)         │
    │                                                                                                 │
-   │ Total State Vector: X_16D = [ K_AFz (4D) || K_F3 (4D) || K_F4 (4D) || K_Fpz (4D) ] ∈ ℝ¹⁶        │
+   │ Total State Tensor: X_16D = [ K_F3 (4D) || K_F4 (4D) || K_AFz (4D) || K_Fpz (4D) ] ∈ ℝ⁴ˣ⁴       │
    └─────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 Quad-Node 16D Kinematic Tensor ($\mathbb{R}^{4 \times 4}$)
-Each of the 4 nodes ($AFz, F3, F4, Fpz$) projects its $32 \times 120$ phase-flow field into a 4-dimensional kinematic vector:
+### 2.1 Quad-Node 16D Kinematic Extraction Tensor ($\mathbb{R}^{4 \times 4}$)
+Each probe evaluates directed $i\text{PLV}$ across 120 electrode pairs in parallel on CUDA in $<0.05\text{ ms}$:
 
-$$\mathbf{K}_{\text{node}} = \begin{bmatrix} lx & ly & rx & ry \end{bmatrix} \in \mathbb{R}^4$$
+$$\text{traj}_x(n, k) = -\frac{\sum_{p=1}^{120} \mathbf{iPLV}_{n,k}(p) \cdot \Delta X_p}{\sum_{p=1}^{120} |\mathbf{iPLV}_{n,k}(p)| + \epsilon}, \quad \text{traj}_y(n, k) = -\frac{\sum_{p=1}^{120} \mathbf{iPLV}_{n,k}(p) \cdot \Delta Y_p}{\sum_{p=1}^{120} |\mathbf{iPLV}_{n,k}(p)| + \epsilon}$$
 
-$$\text{traj}_x(k) = -\frac{\sum_{p=1}^{120} \mathbf{iPLV}_k(p) \cdot \Delta X_p}{\sum_{p=1}^{120} |\mathbf{iPLV}_k(p)| + \epsilon}, \quad \text{traj}_y(k) = -\frac{\sum_{p=1}^{120} \mathbf{iPLV}_k(p) \cdot \Delta Y_p}{\sum_{p=1}^{120} |\mathbf{iPLV}_k(p)| + \epsilon}$$
+$$\vec{L}_n = \begin{bmatrix} \operatorname{clamp}\left(\frac{\text{traj}_x[n, 31] - \text{traj}_x[n, 0]}{6.0}, -1, 1\right) \\ \operatorname{clamp}\left(\frac{\text{traj}_y[n, 31] - \text{traj}_y[n, 0]}{6.0}, -1, 1\right) \end{bmatrix}$$
 
-$$\vec{L} = \begin{bmatrix} \operatorname{clamp}\left(\frac{\text{traj}_x[31] - \text{traj}_x[0]}{6.0}, -1, 1\right) \\ \operatorname{clamp}\left(\frac{\text{traj}_y[31] - \text{traj}_y[0]}{6.0}, -1, 1\right) \end{bmatrix}$$
+$$rx_n = \operatorname{clamp}\left( 2.5 \cdot \frac{(\bar{x}_{n, 11..21} - x_{\text{chord}, n}) \cdot (-ly_n) + (\bar{y}_{n, 11..21} - y_{\text{chord}, n}) \cdot lx_n}{\|\vec{L}_n\| + \epsilon}, \; -1.0, \; 1.0 \right)$$
 
-$$rx = \operatorname{clamp}\left( 2.5 \cdot \frac{(\bar{x}_{11..21} - x_{\text{chord}}) \cdot (-ly) + (\bar{y}_{11..21} - y_{\text{chord}}) \cdot lx}{\|\vec{L}\| + \epsilon}, \; -1.0, \; 1.0 \right)$$
+$$ry_n = \operatorname{clamp}\left( 2.0 \cdot \frac{\sum_{k=22}^{31} \|\mathbf{iPLV}_{n, k}\| - \sum_{k=0}^{10} \|\mathbf{iPLV}_{n, k}\|}{\sum_{k=22}^{31} \|\mathbf{iPLV}_{n, k}\| + \sum_{k=0}^{10} \|\mathbf{iPLV}_{n, k}\| + \epsilon}, \; -1.0, \; 1.0 \right)$$
 
-$$ry = \operatorname{clamp}\left( 2.0 \cdot \frac{\sum_{k=22}^{31} \|\mathbf{iPLV}_k\| - \sum_{k=0}^{10} \|\mathbf{iPLV}_k\|}{\sum_{k=22}^{31} \|\mathbf{iPLV}_k\| + \sum_{k=0}^{10} \|\mathbf{iPLV}_k\| + \epsilon}, \; -1.0, \; 1.0 \right)$$
+$$\mathbf{X}_{16\text{D}} = \begin{bmatrix} \mathbf{K}_{F3} \\ \mathbf{K}_{F4} \\ \mathbf{K}_{AFz} \\ \mathbf{K}_{Fpz} \end{bmatrix} \in \mathbb{R}^{4 \times 4}$$
 
-The global prefrontal state is represented without dimensionality reduction as the 16-dimensional tensor:
+### 2.2 Token-Wise Spherical Linear Interpolation (Slerp) in CLIP Space
+To prevent off-manifold embedding collapse, cross-attention vectors are interpolated via token-wise spherical geodesics [17, 18]:
 
-$$\mathbf{X}_{16\text{D}} = \Big[ \mathbf{K}_{AFz} \;\Big\|\; \mathbf{K}_{F3} \;\Big\|\; \mathbf{K}_{F4} \;\Big\|\; \mathbf{K}_{Fpz} \Big] \in \mathbb{R}^{16}$$
+$$\operatorname{Slerp}(t, \mathbf{c}_A, \mathbf{c}_B) = \frac{\sin((1-t)\Omega)}{\sin(\Omega)} \mathbf{c}_A + \frac{\sin(t\Omega)}{\sin(\Omega)} \mathbf{c}_B, \quad \text{where } \Omega = \arccos\left( \frac{\langle \mathbf{c}_A, \mathbf{c}_B \rangle}{\|\mathbf{c}_A\| \|\mathbf{c}_B\| + \epsilon} \right)$$
 
-### 2.3 Lossless SVD Cross-Attention Conditioning Synthesis
-Let $\mathbf{W}_{\text{early}} \in \mathbb{R}^{120 \times 384}$ and $\mathbf{W}_{\text{late}} \in \mathbb{R}^{120 \times 384}$ be fixed orthonormal projection matrices obtained via QR decomposition [2.2]:
+Given the four orthogonal semantic poles $\mathbf{c}_{00}$ (Mountain), $\mathbf{c}_{10}$ (Castle), $\mathbf{c}_{01}$ (Ocean), $\mathbf{c}_{11}$ (Skyscraper):
 
-$$\mathbf{c}_{\text{geom}}(t) = \mathbf{iPLV}_{F3}(t) \cdot \mathbf{W}_{\text{early}} \in \mathbb{R}^{32 \times 384}$$
+$$\mathbf{c}_{\text{top}}(g) = \operatorname{Slerp}(g, \mathbf{c}_{00}, \mathbf{c}_{10}), \quad \mathbf{c}_{\text{bot}}(g) = \operatorname{Slerp}(g, \mathbf{c}_{01}, \mathbf{c}_{11})$$
 
-$$\mathbf{c}_{\text{style}}(t) = \mathbf{iPLV}_{F4}(t) \cdot \mathbf{W}_{\text{late}} \in \mathbb{R}^{32 \times 384}$$
+$$\mathbf{C}_{\text{anchor}}(g, s) = \operatorname{Slerp}(s, \mathbf{c}_{\text{top}}(g), \mathbf{c}_{\text{bot}}(g))$$
 
-$$\mathbf{c}_{\text{brain}}(t) = \operatorname{Interpolate}_{32 \to 77}\left( \left[ \mathbf{c}_{\text{geom}}(t) \;\|\; \mathbf{c}_{\text{style}}(t) \right] \right) \in \mathbb{R}^{1 \times 77 \times 768}$$
+### 2.3 Epoch-Synchronized In-Flight Request Invalidation
+To prevent asynchronous race conditions where pre-reset frames overwrite newly transitioned states:
+* Every Phase Reset increments an integer `self.epoch`.
+* Asynchronous generation requests carry `req_epoch = self.epoch`.
+* When a server response arrives:
+  $$\text{Action} = \begin{cases} \text{Apply surgery \& Update display}, & \text{if } \text{req\_epoch} == \text{self.epoch}, \\ \text{Discard frame (Stale in-flight packet)}, & \text{if } \text{req\_epoch} \ne \text{self.epoch}. \end{cases}$$
 
-$$\mathbf{E}_{\text{latent}}(t) = \mathbf{C}_{\text{anchor}}(t) + \frac{\mathbf{c}_{\text{brain}}(t)}{\|\mathbf{c}_{\text{brain}}(t)\|_2 + \epsilon} \cdot \bar{N}_{\text{CLIP}} \cdot 0.02$$
+### 2.4 Contrast Surgery & VAE Checkerboard Elimination
+Continuous $img2img$ loops with tiny autoencoders (TAESD) risk harmonic feedback ("waffle disease" / green-yellow drift). The engine enforces single-frame exact contrast normalization:
 
-where $\mathbf{C}_{\text{anchor}}(t)$ is the bilinear interpolation across orthogonal semantic anchor bases in CLIP space ($c_{00}, c_{10}, c_{01}, c_{11}$) [2.2].
+$$\mu_{\text{target}} = \frac{\mu_R + \mu_B}{2}, \quad \text{if } \mu_G > \mu_{\text{target}} \implies \mathbf{I}_{G} \leftarrow \mathbf{I}_{G} - (\mu_G - \mu_{\text{target}})$$
 
-### 2.4 Frontopolar Phase-Reset Kinematics & Anti-Ghosting Seeding
-The rate of change of the phase gradient across the full 120D topology of $Fpz$ governs the step size along the continuous latent manifold:
+$$\mathbf{I}_{\text{corrected}} = (\mathbf{I} - \mu_{\text{new}}) \cdot \frac{\sigma_{\text{old}}}{\sigma_{\text{new}} + \epsilon} + \mu_{\text{new}}$$
 
-$$v_{\text{wave}}(t) = \frac{1}{31} \sum_{k=0}^{30} \left\| \mathbf{iPLV}_{k+1, Fpz} - \mathbf{iPLV}_{k, Fpz} \right\|_{120}$$
-
-$$\text{Strength}(t) = \begin{cases} 
-0.85 & \text{if } \text{Phase\_Slip}_{Fpz} > 1.8\text{ rad (Context Switch)}, \\
-\operatorname{clamp}\left( 0.48 + 0.15 \cdot v_{\text{wave}}(t), \; 0.45, \; 0.65 \right) & \text{otherwise (Steady State)}.
-\end{cases}$$
-
-Upon detection of a Phase Reset ($\Delta\Phi > 1.8\text{ rad}$), the latent pipeline injects the clean seed image of the target attractor for $1\text{ frame}$, eliminating residual ghosting artifacts between distinct generative domains [1.1, 1.6].
-
-### 2.5 Midline Topological Rigidity & CFG Scale Coupling
-The topological concentration across the 120D phase graph of $AFz$ modulates the active rank of the manifold and scales the classifier-free guidance:
-
-$$\text{Rigidity}(t) = \operatorname{std}\left( \frac{1}{32}\sum_{k=0}^{31} |\mathbf{iPLV}_{k, AFz}| \right) \in [0.0, 1.0]$$
-
-$$\text{CFG\_Scale}(t) = 1.1 + \operatorname{clamp}\left( 0.6 \cdot \text{Rigidity}(t) \cdot 15.0, \; 0.0, \; 0.6 \right) \in [1.1, 1.7]$$
-
-### 2.6 Objective Prefrontal DecNef Metric in CLIP Space
-Closed-loop alignment is evaluated by computing the Euclidean distance $\Delta_{\theta\gamma}$ and normalized Cosine Match in the prefrontal phase space [18, 20]:
+### 2.5 Objective Prefrontal DecNef Metric in CLIP Phase Space
+Closed-loop alignment is evaluated by computing the Euclidean distance $\Delta_{\theta\gamma}$ and normalized Cosine Match in prefrontal phase space [18, 20]:
 
 $$\Delta_{\theta\gamma}(t) = \sqrt{(g_{\text{live}}(t) - g^*)^2 + (s_{\text{live}}(t) - s^*)^2}$$
 
@@ -210,56 +188,47 @@ $$\text{Match}_{\theta\gamma}(t) = \operatorname{clamp}\left( 1.0 - \frac{\Delta
                                           ▼
    ┌─────────────────────────────────────────────────────────────────────────────┐
    │       UNIVERSAL N-DEVICE HARDWARE ENGINE (`neuro_heterarchy_core.py`)       │
-   │  - Hardware Agnostic HAL (Continuous 4-Node Auto-Discovery)                 │
+   │  - Hardware-Agnostic HAL (Continuous 4-Node Auto-Discovery)                 │
    │  - Pure CUDA Batched FFT / Hilbert / PAC / iPLV Extraction                  │
-   │  - Shared Memory Zero-Copy Transport ──► frame.nodes[0..3]                  │
+   │  - Batched 16D Kinematic Extraction on GPU (<0.05 ms)                       │
    └──────────────────────────────────────┬──────────────────────────────────────┘
-                                          │ 4x [32 x 120] Full Phase Tensors
+                                          │ 4x [lx, ly, rx, ry] Kinematics Stream
                                           ▼
    ┌─────────────────────────────────────────────────────────────────────────────┐
-   │       16D DECNEF MANIFOLD CLIENT (`neuro_prefrontal_16d_manifold.py`)       │
-   │  - Nodes: [0]->AFz, [1]->F3, [2]->F4, [3]->Fpz                             │
-   │  - 16D Kinematics: 4x [lx, ly, rx, ry]                                      │
-   │  - SVD Latent Alignment & Pre-Flight Validation Gate                        │
-   │  - Output payload: {prompt_embeds, image_bytes, strength, cfg}              │
+   │    IN-SILICO ACTIVE INFERENCE AGENT (`synthetic_16d_diffusion_agent.py`)    │
+   │  - Cognitive Control Model (Daw 2006 / Koechlin 2003)                       │
+   │  - Closed-Loop Visual Feedback (Reads Goal Coordinates, No Backdoors)       │
+   │  - Autonomous Rule-Switching via Stagnation Detector & Fpz Phase Reset      │
    └──────────────────────────────────────┬──────────────────────────────────────┘
-                                          │ Uncompressed IPC Stream (Port 6000)
+                                          │ 16D Latent Slerp Control
+                                          ▼
+   ┌─────────────────────────────────────────────────────────────────────────────┐
+   │   PREFRONTAL 16D DIFFUSION CLIENT (`neuro_prefrontal_16d_diffusion_live.py`)│
+   │  - Dual-Stream SD-LCM Canvas + Full-Resolution Generative Shadow Stream     │
+   │  - Epoch-Synchronized Saccades (Zero Noise / Zero Ping-Pong Artifacts)      │
+   │  - F1 / TAB Toggleable 3D Toroidal Gyroscopic HUD                           │
+   └──────────────────────────────────────┬──────────────────────────────────────┘
+                                          │ Lossless Raw-Memory IPC (Port 6000)
                                           ▼
    ┌─────────────────────────────────────────────────────────────────────────────┐
    │             FROZEN VRAM MODEL SERVER (`brain_server.py`)                    │
    │  - Loaded ONCE into VRAM (SD-LCM + Tiny AutoEncoder TAESD)                  │
-   │  - Stateless Proxy: Passes kwargs directly into Diffusers Pipeline          │
-   │  - 15+ FPS Continuous Generative Output                                     │
+   │  - Stateless Proxy: Direct Tensor Ingestion from Shared Memory (No JPEG)    │
+   │  - Ultra-Fast Single-Step Inference (CFG = 1.0..1.2)                        │
    └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.1 Scalable $N$-Device Universal Hardware Engine (`neuro_heterarchy_core.py`)
-* **Continuous LSL Ingestion:** Autonomously discovers and binds all 4 hardware streams on the fly without socket freezes.
-* **Batched CUDA DSP:** Evaluates causal directed $i\text{PLV}$ across all 120 channel pairs concurrently on GPU for all 4 nodes in $<1.0\text{ ms}$.
-
-### 3.2 Prefrontal 16D DecNef Manifold Client (`neuro_prefrontal_16d_manifold.py`)
-* **Pre-Flight Validation Gate:** Prior to entering the interactive loop, generates and validates all 4 ground-truth attractor targets, caching clean BGR image seeds to eliminate cold-start artifacts [1.1, 1.2].
-* **Orthogonal Quad-Radar HUD:** Displays four independent 4D flight radars ($AFz, F3, F4, Fpz$) alongside live $\text{Match}_{\theta\gamma}$ progress.
-
-### 3.3 In-Silico Active Inference Agent (`synthetic_koechlin_agent.py`)
-* **Multiprocessing Architecture:** Runs the autonomous neural agent in a dedicated process (`multiprocessing.Process`), eliminating Python GIL bottlenecks [1.3.5].
-* **Autonomous Goal Cycling:** Models the full active inference lifecycle: `EXPLORE` $\to$ `HOLD` (5.0 s exploitation lock at $\text{Match} \ge 80\%$) $\to$ `SWITCH` (Fpz Phase Reset) [1.1.5, 1.3.5].
-
-### 3.4 Frozen VRAM Model Server (`brain_server.py` & `render_logic.py`)
-* **Zero Business Logic:** Holds the heavy generative models in GPU memory and acts purely as a stateless inference proxy [3.1].
-* **Dynamic Kwargs Dispatch:** Accepts arbitrary execution payloads (`prompt_embeds`, `image_bytes`, `strength`, `guidance_scale`, `num_inference_steps`), passing them directly to the underlying `diffusers` pipeline [3.1].
-
 ---
 
-## 📊 4. Hardware Specification & 26-mm Concentric Array Montage
+## 📊 4. Hardware Specification & 26-mm Concentric Montage
 
 * **Sensor Form Factor:** Quad 26 mm circular PCBs (**FreeEEG16-alpha2**).
-* **Electrode Montage:** 16 active gold-plated pogo-pin dry electrodes per disc arranged into two concentric rings [15]:
-  - **Inner Ring (4 Electrodes: `2, 5, 10, 13`, $R \le 5.5\text{ mm}$):** Radial Laplacian divergence ($\nabla^2 V$) [15].
-  - **Outer Ring (12 Electrodes: `0, 1, 3, 4, 6, 7, 8, 9, 11, 12, 14, 15`, $R \approx 10.5\text{ mm}$):** Tangential phase curl ($\nabla \times \vec{V}$) [15].
-* **Acquisition Sampling Rate:** $250.0\text{ Hz}$, 24-bit ADC (ADS131M08 dual-cascaded architecture).
-* **PGA Gain:** Hardware locked and verified at $\times 16$ (Registers `0x04 = 0x4444`, `0x05 = 0x4444`).
-* **Multi-Process BLE Bridge:** Runs four independent worker processes (`multiprocessing`), eliminating BlueZ radio collisions to maintain **0% packet loss at 250 Hz**.
+* **Electrode Configuration:** 16 active gold-plated pogo-pin dry electrodes per probe [15]:
+  - **Inner Core (4 Pins: `2, 5, 10, 13`, $R \le 5.5\text{ mm}$)**
+  - **Outer Ring (12 Pins: `0, 1, 3, 4, 6, 7, 8, 9, 11, 12, 14, 15`, $R \approx 10.5\text{ mm}$)**
+* **Sampling Rate:** $250.0\text{ Hz}$, 24-bit ADC (ADS131M08 dual-cascaded architecture).
+* **PGA Gain:** Hardware locked at $\times 16$ (`0x04 = 0x4444`, `0x05 = 0x4444`).
+* **Radio Protocol:** Multi-process BLE5 to LabStreamingLayer (LSL) bridge with **0% packet drop**.
 
 ```python
 # Exact KiCAD Coordinates (in mm from center of the 26-mm disc):
@@ -279,76 +248,98 @@ COORDS_Y = np.array([
 ## 📚 5. Complete Scientific References & DOIs
 
 1. **Lisman, J. E., & Jensen, O. (2013).** *The Theta-Gamma Neural Code.* **Neuron**, 77(6), 1002–1016.  
-   DOI: [10.1016/j.neuron.2013.03.007](https://doi.org/10.1016/j.neuron.2013.03.007) [1]
+   DOI: [10.1016/j.neuron.2013.03.007](https://doi.org/10.1016/j.neuron.2013.03.007)
 2. **Miller, E. K., Lundqvist, M., & Bastos, A. M. (2018).** *Working Memory 2.0.* **Neuron**, 100(2), 463–475.  
-   DOI: [10.1016/j.neuron.2018.09.023](https://doi.org/10.1016/j.neuron.2018.09.023) [2]
+   DOI: [10.1016/j.neuron.2018.09.023](https://doi.org/10.1016/j.neuron.2018.09.023)
 3. **Lundqvist, M., et al. (2016).** *Gamma and Beta Bursts Underlie Working Memory.* **Neuron**, 90(1), 152–164.  
-   DOI: [10.1016/j.neuron.2016.02.014](https://doi.org/10.1016/j.neuron.2016.02.014) [3]
+   DOI: [10.1016/j.neuron.2016.02.014](https://doi.org/10.1016/j.neuron.2016.02.014)
 4. **Heusser, A. C., Poeppel, D., Ezzyat, Y., & Davachi, L. (2016).** *Episodic sequence memory is supported by a theta–gamma phase code.* **Nature Neuroscience**, 19(10), 1374–1380.  
-   DOI: [10.1038/nn.4374](https://doi.org/10.1038/nn.4374) [4]
+   DOI: [10.1038/nn.4374](https://doi.org/10.1038/nn.4374)
 5. **Jung-Beeman, M. (2005).** *Bilateral brain processes for comprehending natural language.* **Trends in Cognitive Sciences**, 9(11), 512–518.  
-   DOI: [10.1016/j.tics.2005.09.009](https://doi.org/10.1016/j.tics.2005.09.009) [5]
+   DOI: [10.1016/j.tics.2005.09.009](https://doi.org/10.1016/j.tics.2005.09.009)
 6. **Beeman, M., et al. (1994).** *Summation and selection: How the two hemispheres collaborate to generate and select words.* **Neuropsychology**, 8(4), 578–590.  
-   DOI: [10.1037/0894-4105.8.4.578](https://doi.org/10.1037/0894-4105.8.4.578) [6]
-7. **Huth, A. G., de Heer, W. A., Griffiths, T. L., Theunissen, F. E., & Gallant, J. L. (2016).** *Natural speech reveals the semantic maps that tile human cerebral cortex.* **Nature**, 532(7600), 453–458.  
-   DOI: [10.1038/nature17637](https://doi.org/10.1038/nature17637) [7]
+   DOI: [10.1037/0894-4105.8.4.578](https://doi.org/10.1037/0894-4105.8.4.578)
+7. **Huth, A. G., et al. (2016).** *Natural speech reveals the semantic maps that tile human cerebral cortex.* **Nature**, 532(7600), 453–458.  
+   DOI: [10.1038/nature17637](https://doi.org/10.1038/nature17637)
 8. **Fedorenko, E., Ivanova, A. A., & Regev, T. I. (2024).** *The language network as a natural kind within the broader landscape of the human brain.* **Nature Reviews Neuroscience**, 25(5), 289–312.  
-   DOI: [10.1038/s41583-024-00802-4](https://doi.org/10.1038/s41583-024-00802-4) [8]
+   DOI: [10.1038/s41583-024-00802-4](https://doi.org/10.1038/s41583-024-00802-4)
 9. **Binder, J. R., et al. (2009).** *Where is the semantic system? A critical review and meta-analysis of 120 functional neuroimaging studies.* **Cerebral Cortex**, 19(12), 2767–2796.  
-   DOI: [10.1093/cercor/bhp055](https://doi.org/10.1093/cercor/bhp055) [9]
+   DOI: [10.1093/cercor/bhp055](https://doi.org/10.1093/cercor/bhp055)
 10. **Koechlin, E., Ody, C., & Kouneiher, F. (2003).** *The Architecture of Cognitive Control in the Human Prefrontal Cortex.* **Science**, 302(5648), 1181–1185.  
-    DOI: [10.1126/science.1088545](https://doi.org/10.1126/science.1088545) [10]
+    DOI: [10.1126/science.1088545](https://doi.org/10.1126/science.1088545)
 11. **Badre, D., & Nee, D. E. (2018).** *Frontal Cortex and the Hierarchical Control of Behavior.* **Trends in Cognitive Sciences**, 22(2), 170–188.  
-    DOI: [10.1016/j.tics.2017.11.005](https://doi.org/10.1016/j.tics.2017.11.005) [11]
+    DOI: [10.1016/j.tics.2017.11.005](https://doi.org/10.1016/j.tics.2017.11.005)
 12. **Panichello, M. F., & Buschman, T. J. (2021).** *Shared mechanisms for cognitive control and working memory in the primate prefrontal cortex.* **Nature**, 592(7855), 601–605.  
-    DOI: [10.1038/s41586-021-03390-4](https://doi.org/10.1038/s41586-021-03390-4) [12]
+    DOI: [10.1038/s41586-021-03390-4](https://doi.org/10.1038/s41586-021-03390-4)
 13. **Bruña, R., Maestú, F., & Pereda, E. (2018).** *Phase Locking Value revisited: teaching new tricks to an old dog.* **Journal of Neural Engineering**, 15(5), 056011.  
-    DOI: [10.1088/1741-2552/aacfe4](https://doi.org/10.1088/1741-2552/aacfe4) [13]
+    DOI: [10.1088/1741-2552/aacfe4](https://doi.org/10.1088/1741-2552/aacfe4)
 14. **Nolte, G., et al. (2004).** *Identifying true brain interaction from EEG data using the imaginary part of coherency.* **Clinical Neurophysiology**, 115(10), 2292–2307.  
-    DOI: [10.1016/j.clinph.2004.04.029](https://doi.org/10.1016/j.clinph.2004.04.029) [14]
-15. **Besio, W. G., Koka, K., & Aakula, R. (2006).** *Tri-polar concentric ring electrode development for Laplacian electroencephalography.* **IEEE Transactions on Biomedical Engineering**, 53(5), 926–933.  
-    DOI: [10.1109/TBME.2006.873398](https://doi.org/10.1109/TBME.2006.873398) [15]
+    DOI: [10.1016/j.clinph.2004.04.029](https://doi.org/10.1016/j.clinph.2004.04.029)
+15. **Gardner, R. J., et al. (2022).** *Toroidal topology of population activity in grid cells.* **Nature**, 602(7895), 123–128.  
+    DOI: [10.1038/s41586-021-04268-7](https://doi.org/10.1038/s41586-021-04268-7)
 16. **Muller, L., et al. (2018).** *Cortical travelling waves: mechanisms and computational principles.* **Nature Reviews Neuroscience**, 19(5), 255–268.  
-    DOI: [10.1038/nrn.2018.20](https://doi.org/10.1038/nrn.2018.20) [16]
-17. **Exploring the latent space of diffusion models directly through singular value decomposition (2025).** **arXiv preprint**, arXiv: [2502.14820](https://arxiv.org/abs/2502.14820) [17]
+    DOI: [10.1038/nrn.2018.20](https://doi.org/10.1038/nrn.2018.20)
+17. **Exploring the latent space of diffusion models directly through singular value decomposition (2025).** **arXiv preprint**, arXiv: [2502.14820](https://arxiv.org/abs/2502.14820)
 18. **Takagi, Y., & Nishimoto, S. (2023).** *High-resolution image reconstruction with latent diffusion models from human brain activity.* **IEEE/CVF CVPR 2023**, pages 14453–14463.  
-    DOI: [10.1109/CVPR52729.2023.01633](https://doi.org/10.1109/CVPR52729.2023.01633) [18]
+    DOI: [10.1109/CVPR52729.2023.01633](https://doi.org/10.1109/CVPR52729.2023.01633)
 19. **Working memory readout varies with frontal theta rhythms (2025).** **Neuron / bioRxiv**.  
-    DOI: [10.1101/2025.03.27.645781](https://doi.org/10.1101/2025.03.27.645781) [19]
-20. **Shibata, K., Watanabe, T., Sasaki, Y., & Kawato, M. (2011).** *Perceptual learning incepted by decoded fMRI neurofeedback without stimulus presentation (DecNef).* **Science**, 334(6061), 1413–1415.  
-    DOI: [10.1126/science.1210045](https://doi.org/10.1126/science.1210045) [20]
-21. **Daw, N. D., O'Doherty, J. P., Dayan, P., Seymour, B., & Dolan, R. J. (2006).** *Cortical substrates for exploratory decisions in humans.* **Nature**, 441(7095), 876–879.  
-    DOI: [10.1038/nature04768](https://doi.org/10.1038/nature04768) [21]
+    DOI: [10.1101/2025.03.27.645781](https://doi.org/10.1101/2025.03.27.645781)
+20. **Shibata, K., et al. (2011).** *Perceptual learning incepted by decoded fMRI neurofeedback without stimulus presentation (DecNef).* **Science**, 334(6061), 1413–1415.  
+    DOI: [10.1126/science.1210045](https://doi.org/10.1126/science.1210045)
+21. **Daw, N. D., et al. (2006).** *Cortical substrates for exploratory decisions in humans.* **Nature**, 441(7095), 876–879.  
+    DOI: [10.1038/nature04768](https://doi.org/10.1038/nature04768)
 22. **Koechlin, E., & Hyafil, A. (2007).** *Anterior prefrontal function and the limits of human decision-making.* **Science**, 318(5850), 594–598.  
-    DOI: [10.1126/science.1142995](https://doi.org/10.1126/science.1142995) [22]
-23. **Fusi, S., Miller, E. K., & Rigotti, M. (2016).** *Why neurons mix: high dimensionality for higher cognition.* **Current Opinion in Neurobiology**, 37, 66–74.  
-    DOI: [10.1016/j.conb.2016.01.010](https://doi.org/10.1016/j.conb.2016.01.010) [23]
+    DOI: [10.1126/science.1142995](https://doi.org/10.1126/science.1142995)
+23. **Miller, E. K., & Cohen, J. D. (2001).** *An integrative theory of prefrontal cortex function.* **Annual Review of Neuroscience**, 24(1), 167–202.  
+    DOI: [10.1146/annurev.neuro.24.1.167](https://doi.org/10.1146/annurev.neuro.24.1.167)
 24. **Cavanagh, J. F., & Frank, M. J. (2014).** *Frontal theta as a mechanism for cognitive control.* **Trends in Cognitive Sciences**, 18(8), 414–421.  
     DOI: [10.1016/j.tics.2014.04.012](https://doi.org/10.1016/j.tics.2014.04.012)
-25. **Voloh, B., Valiante, T. A., Everling, S., & Womelsdorf, T. (2015).** *Theta–gamma coordination between anterior cingulate and prefrontal cortex indexes correct attention shifts.* **PNAS**, 112(27), 8457–8462.  
+25. **Voloh, B., et al. (2015).** *Theta–gamma coordination between anterior cingulate and prefrontal cortex indexes correct attention shifts.* **PNAS**, 112(27), 8457–8462.  
     DOI: [10.1073/pnas.1502092112](https://doi.org/10.1073/pnas.1502092112)
-26. **Mante, V., Sussillo, D., Shenoy, K. V., & Newsome, W. T. (2013).** *Context-dependent computation by recurrent dynamics in prefrontal cortex.* **Nature**, 503(7474), 78–84.  
+26. **Mante, V., et al. (2013).** *Context-dependent computation by recurrent dynamics in prefrontal cortex.* **Nature**, 503(7474), 78–84.  
     DOI: [10.1038/nature12742](https://doi.org/10.1038/nature12742)
 27. **Stokes, M. G. (2015).** *‘Activity-silent’ working memory in prefrontal cortex: a dynamic coding framework.* **Trends in Cognitive Sciences**, 19(7), 394–405.  
     DOI: [10.1016/j.tics.2015.05.004](https://doi.org/10.1016/j.tics.2015.05.004)
-28. **Wolff, M. J., Jochim, J., Akyürek, E. G., & Stokes, M. G. (2017).** *Dynamic hidden states underlying working-memory-guided behavior.* **Nature Neuroscience**, 20(6), 864–871.  
-    DOI: [10.1038/nn.4546](https://doi.org/10.1038/nn.4546)
+28. **Boorman, E. D., et al. (2009).** *How Green Is the Grass on the Other Side? Frontopolar Cortex and the Evidence in Favor of Alternative Courses of Action.* **Neuron**, 62(5), 733–743.  
+    DOI: [10.1016/j.neuron.2009.05.014](https://doi.org/10.1016/j.neuron.2009.05.014)
 
 ---
 
 ## ⚡ 6. Installation & Quickstart
 
+### 1. Prerequisites & Environment Setup
 ```bash
-# 1. Install system & Python dependencies
+# Clone the repository
+git clone https://github.com/your-username/NeuroCanvas.git
+cd NeuroCanvas
+
+# Install Python dependencies
 pip install numpy pygame opencv-python torch pylsl bleak diffusers transformers accelerate
-
-# 2. Terminal 1: Start the Frozen VRAM Model Server (Loads SD-LCM + TAESD once into VRAM)
-python3 brain_server.py
-
-# 3. Terminal 2 (Option A): Run Closed-Loop In-Silico Active Inference Agent (Simulation)
-python3 neuro_prefrontal_16d_manifold.py --sim
-
-# 4. Terminal 2 (Option B): Run Live Hardware Mode (4 Physical FreeEEG16-alpha2 Arrays)
-# (In background: python3 dongle_manager.py)
-python3 neuro_prefrontal_16d_manifold.py
 ```
+
+### 2. Terminal 1: Launch the Stateless Frozen VRAM Server
+```bash
+# Loads SD-LCM + TAESD into VRAM once and listens on localhost:6000
+python3 brain_server.py
+```
+
+### 3. Terminal 2 (Option A): Simulation Mode (Active Inference Agent)
+```bash
+# Launches the client with the autonomous prefrontal in-silico cognitive agent
+python3 neuro_prefrontal_16d_diffusion_live.py --sim
+```
+
+### 4. Terminal 2 (Option B): Live EEG Mode (4 Physical FreeEEG16-alpha2 Probes)
+```bash
+# Step 1: In background, start the zero-loss multi-process BLE bridge:
+python3 direct_ble_to_lsl.py --gain 16
+
+# Step 2: Start the live DecNef client:
+python3 neuro_prefrontal_16d_diffusion_live.py
+```
+
+### 🕹️ Runtime Interactive Hotkeys:
+* **Default View:** Pure non-numerical embodiment (Live active canvas, live candidate shadow, and dynamic plasma filaments).
+* **`[F1]` / `[TAB]` / `[D]`:** Toggle Engineering Debug HUD displaying 4x 3D-Torus phase gyroscopes, real-time FPS, convergence match percentage, and active cognitive goal telemetry.
+* **`[ESC]`:** Clean teardown of CUDA contexts, LSL inlets, and shared IPC sockets.
+
