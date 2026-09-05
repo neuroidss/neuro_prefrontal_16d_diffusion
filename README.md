@@ -215,7 +215,7 @@ To design a neural network that is structurally faithful to the human brain, we 
 ### 3.3 Higher-Order Thalamic Pose Transform (Hawkins 2025 CTC Loop)
 Following Hawkins et al. (2025), Layer 6b projections to the thalamus mediate relative coordinate transformations:
 
-$$\mathbf{SDR}_{\text{parent}, L4} = \text{top\_k}\left( \text{ReLU}\left( \mathbf{SDR}_{\text{child}, L3} + \mathbf{W}_{\text{thalamus}} \cdot \mathbf{K}_{\text{kinematics}} \right), k=80 \right)$$
+$$\mathbf{SDR}_{\mathrm{parent}, L4} = \mathrm{top\_k}\left( \mathrm{ReLU}\left( \mathbf{SDR}_{\mathrm{child}, L3} + \mathbf{W}_{\mathrm{thalamus}} \cdot \mathbf{K}_{\mathrm{kinematics}} \right), k=80 \right)$$
 
 This maps child-object representations from lower prefrontal nodes into the allocentric reference frames of higher executive nodes.
 
@@ -224,7 +224,7 @@ To eliminate artificial training screens and buffer contamination:
 * **The Stability-Plasticity Resonance Gate:** Online accumulation occurs **only** when visual confidence is confirmed ($P_{\text{CLIP}} \ge 0.65$), guaranteeing that transitional or ambiguous frames are never imprinted into memory.
 * **Majority Voting Consensus:** Across 15 high-confidence frames, active columns are accumulated:
 
-$$\mathbf{Acc}_k = \sum_{t=1}^{15} \mathbf{SDR}_t, \quad \mathbf{M}_k = \text{top\_k}\left(\mathbf{Acc}_k, K_{\text{total}}=320\right) \in \lbrace 0, 1 \rbrace^{16,384}$$
+$$\mathbf{Acc}_k = \sum_{t=1}^{15} \mathbf{SDR}_t, \quad \mathbf{M}_k = \mathrm{top\_k}\left(\mathbf{Acc}_k, K_{\mathrm{total}}=320\right) \in \lbrace 0, 1 \rbrace^{16,384}$$
   
   Transitional noise is completely eliminated, preserving orthogonal binary SDR prototypes.
 * **Frozen Long-Term Retention:** Once verified ($\ge 85.0\%$), prototypes are locked into long-term memory, eliminating catastrophic forgetting.
