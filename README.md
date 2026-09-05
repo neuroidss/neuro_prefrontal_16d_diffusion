@@ -112,7 +112,9 @@ In the human prefrontal cortex, abstract decisions, rules, and semantic relation
 
 ### 1.4 Causal Directed $i\text{PLV}$ & Zero-Lag Volume Conduction Rejection
 Scalp-conducted electromyographic (EMG) signals and cranial volume conduction propagate instantaneously ($\Delta \varphi \equiv 0$). Following Bruña et al. (2018) and Nolte et al. (2004), the directed imaginary Phase-Locking Value ($i\text{PLV}$) strictly isolates non-zero phase lags:
-$$\text{iPLV}_{ij}(t) = \Im\left\{ \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\} = \sin(\varphi_i(t) - \varphi_j(t)) \implies \sin(0) \equiv 0$$
+
+$$\text{iPLV}_{ij}(t) = \Im\left\lbrace \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\rbrace = \sin(\varphi_i(t) - \varphi_j(t)) \implies \sin(0) \equiv 0$$
+
 Any non-cerebral common-mode artifact collapses the 120-edge matrix to zero, freezing the downstream manifold and ensuring that only genuine neural phase gradients drive the interface.
 
 ### 1.5 Closed-Loop Active Inference & Visual Landmark Anchoring
@@ -212,21 +214,27 @@ To design a neural network that is structurally faithful to the human brain, we 
 
 ### 3.3 Higher-Order Thalamic Pose Transform (Hawkins 2025 CTC Loop)
 Following Hawkins et al. (2025), Layer 6b projections to the thalamus mediate relative coordinate transformations:
+
 $$\mathbf{SDR}_{\text{parent}, L4} = \operatorname{top\_k}\left( \operatorname{ReLU}\left( \mathbf{SDR}_{\text{child}, L3} + \mathbf{W}_{\text{thalamus}} \cdot \mathbf{K}_{\text{kinematics}} \right), \; k=80 \right)$$
+
 This maps child-object representations from lower prefrontal nodes into the allocentric reference frames of higher executive nodes.
 
 ### 3.4 In-Line Consensus Curriculum & Honest CLIP Verification
 To eliminate artificial training screens and buffer contamination:
 * **The Stability-Plasticity Resonance Gate:** Online accumulation occurs **only** when visual confidence is confirmed ($P_{\text{CLIP}} \ge 0.65$), guaranteeing that transitional or ambiguous frames are never imprinted into memory.
 * **Majority Voting Consensus:** Across 15 high-confidence frames, active columns are accumulated:
+
   $$\mathbf{Acc}_k = \sum_{t=1}^{15} \mathbf{SDR}_t, \quad \mathbf{M}_k = \operatorname{top\_k}\left(\mathbf{Acc}_k, \; K_{\text{total}}=320\right) \in \{0, 1\}^{16\,384}$$
+  
   Transitional noise is completely eliminated, preserving orthogonal binary SDR prototypes.
 * **Frozen Long-Term Retention:** Once verified ($\ge 85.0\%$), prototypes are locked into long-term memory, eliminating catastrophic forgetting.
 
 ### 3.5 Anti-Trap Latent Diffusion Worker (`ToroidalDiffusionWorker`)
 * Controls a Stable Diffusion Latent Consistency Model (SD-LCM) over IPC socket (Port 6000).
 * Direct Simplex Interpolation:
+
   $$\mathbf{E}_{\text{target}} = \sum_{k=0}^{K-1} w_k \cdot \mathbf{E}_{\text{base}, k}$$
+  
 * **Anti-Trap Denoising Warping:**
   - When cognitive frustration exceeds $0.50$, denoising surges to **$s = 0.88$**, dissolving stuck image attractors within two frames.
   - When the target concept stabilizes ($P_{\text{target}} \ge 0.60$), strength relaxes to **$s = 0.52$**, resolving fine photographic details.
