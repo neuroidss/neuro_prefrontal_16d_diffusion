@@ -224,7 +224,7 @@ To eliminate artificial training screens and buffer contamination:
 * **The Stability-Plasticity Resonance Gate:** Online accumulation occurs **only** when visual confidence is confirmed ($P_{\text{CLIP}} \ge 0.65$), guaranteeing that transitional or ambiguous frames are never imprinted into memory.
 * **Majority Voting Consensus:** Across 15 high-confidence frames, active columns are accumulated:
 
-  $$\mathbf{Acc}_k = \sum_{t=1}^{15} \mathbf{SDR}_t, \quad \mathbf{M}_k = \operatorname{top\_k}\left(\mathbf{Acc}_k, \; K_{\text{total}}=320\right) \in \{0, 1\}^{16\,384}$$
+$$\mathbf{Acc}_k = \sum_{t=1}^{15} \mathbf{SDR}_t, \quad \mathbf{M}_k = \operatorname{top\_k}\left(\mathbf{Acc}_k, \; K_{\text{total}}=320\right) \in \{0, 1\}^{16\,384}$$
   
   Transitional noise is completely eliminated, preserving orthogonal binary SDR prototypes.
 * **Frozen Long-Term Retention:** Once verified ($\ge 85.0\%$), prototypes are locked into long-term memory, eliminating catastrophic forgetting.
@@ -233,7 +233,7 @@ To eliminate artificial training screens and buffer contamination:
 * Controls a Stable Diffusion Latent Consistency Model (SD-LCM) over IPC socket (Port 6000).
 * Direct Simplex Interpolation:
 
-  $$\mathbf{E}_{\text{target}} = \sum_{k=0}^{K-1} w_k \cdot \mathbf{E}_{\text{base}, k}$$
+$$\mathbf{E}_{\text{target}} = \sum_{k=0}^{K-1} w_k \cdot \mathbf{E}_{\text{base}, k}$$
   
 * **Anti-Trap Denoising Warping:**
   - When cognitive frustration exceeds $0.50$, denoising surges to **$s = 0.88$**, dissolving stuck image attractors within two frames.
