@@ -88,7 +88,7 @@ Under the Thousand Brains Framework (Hawkins, Ahmad, & Cui, 2017 [3]; Hawkins, L
 ### 2.3 Nonlinear Mixed Selectivity: How the Neocortex Avoids Low-Dimensional Collapse
 Why can the brain distinguish thousands of concepts without interference, while flat neural networks suffer from rank collapse?
 * In prefrontal cortex, single neurons do not code for isolated variables. Instead, they exhibit **Nonlinear Mixed Selectivity** (Rigotti, Barak, Warden, Wang, Daw, Miller, & Fusi, 2013, *Nature*, [DOI: 10.1038/nature12236](https://doi.org/10.1038/nature12236); Fusi, Miller, & Rigotti, 2016, *Curr. Opin. Neurobiol.*, [DOI: 10.1016/j.conb.2016.01.010](https://doi.org/10.1016/j.conb.2016.01.010)):
-* 
+
 $$\text{Response}_i = f\left( \sum_k w_{ik} \cdot \text{Feature}_k + \sum_{j,k} W_{ijk} \cdot \text{Context}_j \cdot \text{Rule}_k \right)$$
 
 * Non-linear mixing expands the dimensionality of the neural representation into a high-dimensional state space. Linear readouts can then decode an arbitrary number of concept combinations with zero cross-talk.
