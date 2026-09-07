@@ -255,7 +255,7 @@ To prevent the autoregressive deadlock shown in the diagnostic trial (Target = C
 
 $$S_{\text{error}}(t) = 1.0 - P_{\text{target}}(t)$$
 
-$$s(t) = \operatorname{clamp}\left( s_{\text{base}} + \alpha \cdot S_{\text{error}}(t)^2 + \beta \cdot (1.0 - \text{Stability}_\beta(t)), \; 0.35, \; 0.92 \right)$$
+$$s(t) = \text{clamp}\left( s_{\text{base}} + \alpha \cdot S_{\text{error}}(t)^2 + \beta \cdot (1.0 - \text{Stability}_\beta(t)), 0.35, 0.92 \right)$$
 
 When the goal changes and visual mismatch persists ($S_{\text{error}} > 0.8$), denoising automatically surges to **$s = 0.92$**, vaporizing the old visual attractor in pixel space within two frames and allowing CLIP to verify the new target immediately.
 
