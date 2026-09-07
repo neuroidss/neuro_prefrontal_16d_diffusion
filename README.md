@@ -94,14 +94,20 @@ $$\text{Response}_i = f\left( \sum_k w_{ik} \cdot \text{Feature}_k + \sum_{j,k} 
 
 ### 2.4 Directed Causal Phase Dynamics: Instantaneous $i\text{PLV}$ Without Volume Conduction
 Scalp-conducted electromyographic (EMG) noise and tissue volume conduction propagate instantaneously at zero phase-lag ($\Delta \varphi \equiv 0$). Following Bruña, Maestú, & Pereda (2018, *J. Neural Eng.*, [DOI: 10.1088/1741-2552/aacfe4](https://doi.org/10.1088/1741-2552/aacfe4) [1]) and Nolte et al. (2004, *Clin. Neurophysiol.*, [DOI: 10.1016/j.clinph.2004.04.029](https://doi.org/10.1016/j.clinph.2004.04.029) [1]):
+
 $$\text{iPLV}_{ij}(t) = \Im\left\{ \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\} = \sin\left(\varphi_i(t) - \varphi_j(t)\right) \in [-1.0, +1.0]$$
+
 The imaginary Phase-Locking Value strictly rejects zero-lag volume conduction ($\sin(0) \equiv 0$) while preserving the **sign of the phase gradient**, indicating which cortical column leads and which lags.
 
 ### 2.5 Continuous Phase Derivatives ($\frac{d\Phi}{dt}$) and jPCA Rotational Invariants
 * **The Biological Clock:** Rather than assuming static frequency bins, the instantaneous pacing clock is derived directly from the unwrap derivative of the analytic phase across the CUDA buffer:
+
 $$\omega_{\text{inst}}(t) = \frac{d\Phi}{dt} = \frac{\Phi(t) - \Phi(t-\Delta t)}{\Delta t} \pmod{2\pi}$$
+
 * **Rotational Population Dynamics (jPCA):** Neural population activity in executive and motor cortex is governed by skew-symmetric dynamical flow fields (Churchland et al., 2012, *Nature*, [DOI: 10.1038/nature11129](https://doi.org/10.1038/nature11129)):
+
 $$\dot{\mathbf{X}} = \mathbf{M}_{\text{skew}} \mathbf{X}, \quad \text{where } \mathbf{M}_{\text{skew}} = -\mathbf{M}_{\text{skew}}^T$$
+
 jPCA extracts the primary rotational plane of the 120-edge $i\text{PLV}$ flow, translating oscillatory phase circulation into continuous metric displacements $\vec{d} \in \mathbb{R}^3$ for path integration.
 
 ---
@@ -134,7 +140,9 @@ During empirical trials transitioning from 4 concepts (**ГОРА, ЗАМОК, �
 * Four physical arrays ($F3, F4, AFz, Fpz$) provide at most $4 \times 3.5 \approx \mathbf{14 \text{ independent spatial degrees of freedom}}$.
 * For $K = 4$ concepts, mutually orthogonal vectors require only 4 dimensions ($\Delta \theta = 90^\circ$). Cross-concept overlap in the $16\,384$-column sheet remains below $\rho \le 0.12$, allowing 100% classification.
 * For $K = 8$ concepts in a 14-dimensional space, geometric packing limits force adjacent concepts to share phase gradients:
+* 
 $$\rho(\mathbf{SDR}_{\text{Skyscraper}}, \mathbf{SDR}_{\text{Cyberpunk}}) \ge 0.82$$
+
 This cross-talk destabilizes the Softmax separator ($\tau = 24.0$), causing interference that corrupts previously learned representations (dropping **ЗАМОК** to 69.9% and **ДЖУНГЛИ** to 43.8%).
 
 ### 3.2 The Autoregressive Latent-Lock Trap (Image-to-Image Deadlock)
@@ -244,8 +252,11 @@ $$\Phi_m(t) = \Phi_{\text{master}}(t) + \omega \tau_{mn} + \eta_m(t)$$
 
 ### 6.2 The Anti-Trap Denoising Formula (Breaking the Latent Lock)
 To prevent the autoregressive deadlock shown in the diagnostic trial (Target = Cyberpunk, Reality = Jungle), the denoising strength must adapt dynamically to **Sensory-Goal Prediction Error**:
+
 $$S_{\text{error}}(t) = 1.0 - P_{\text{target}}(t)$$
+
 $$s(t) = \operatorname{clamp}\left( s_{\text{base}} + \alpha \cdot S_{\text{error}}(t)^2 + \beta \cdot (1.0 - \text{Stability}_\beta(t)), \; 0.35, \; 0.92 \right)$$
+
 When the goal changes and visual mismatch persists ($S_{\text{error}} > 0.8$), denoising automatically surges to **$s = 0.92$**, vaporizing the old visual attractor in pixel space within two frames and allowing CLIP to verify the new target immediately.
 
 ---
