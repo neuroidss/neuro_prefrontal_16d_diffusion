@@ -95,7 +95,7 @@ $$\text{Response}_i = f\left( \sum_k w_{ik} \cdot \text{Feature}_k + \sum_{j,k} 
 ### 2.4 Directed Causal Phase Dynamics: Instantaneous $i\text{PLV}$ Without Volume Conduction
 Scalp-conducted electromyographic (EMG) noise and tissue volume conduction propagate instantaneously at zero phase-lag ($\Delta \varphi \equiv 0$). Following Bruña, Maestú, & Pereda (2018, *J. Neural Eng.*, [DOI: 10.1088/1741-2552/aacfe4](https://doi.org/10.1088/1741-2552/aacfe4) [1]) and Nolte et al. (2004, *Clin. Neurophysiol.*, [DOI: 10.1016/j.clinph.2004.04.029](https://doi.org/10.1016/j.clinph.2004.04.029) [1]):
 
-$$\text{iPLV}_{ij}(t) = \Im\left\{ \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\} = \sin\left(\varphi_i(t) - \varphi_j(t)\right) \in [-1.0, +1.0]$$
+$$\text{iPLV}_{ij}(t) = \Im\left\lbrace \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\rbrace = \sin\left(\varphi_i(t) - \varphi_j(t)\right) \in [-1.0, +1.0]$$
 
 The imaginary Phase-Locking Value strictly rejects zero-lag volume conduction ($\sin(0) \equiv 0$) while preserving the **sign of the phase gradient**, indicating which cortical column leads and which lags.
 
