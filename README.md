@@ -155,7 +155,9 @@ Stable Diffusion Image-to-Image operates autoregressively on previous pixel buff
 1.  When an agent shifts attention from a Mountain ($L0$) to a Castle ($L2$), the prior structural pixels of the mountain dominate the update when denoising is low ($s = 0.50$).
 2.  The supervisor (CLIP ViT-L/14) evaluates the canvas: Castle presence is near $0\%$, triggering an impasse.
 3.  **Resolution (Anti-Trap Denoising):** Denoising power is coupled directly to the **dACC Hierarchical Prediction Error** ($\epsilon_{\text{CLIP}} = 1.0 - P_{\text{target}}$):
+4.  
 $$s(t) = \operatorname{clip}\left( s_{\text{base}} + 0.28 \cdot \epsilon_{\text{CLIP}} + 0.12 \cdot (1 - \text{Stability}_{\beta}), \; 0.48, \; 0.95 \right)$$
+
 When a level switch or goal change occurs, denoising surges to $s = 0.95$, vaporizing the old visual attractor within two frames and enabling immediate verification of the new hierarchy rank.
 
 ### 3.3 Elimination of the Text-Prompt Bottleneck: Continuous Manifold Conditioning
