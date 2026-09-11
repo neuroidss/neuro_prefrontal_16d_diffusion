@@ -1,93 +1,135 @@
 # render_logic.py
 import torch, cv2, numpy as np
 from PIL import Image
-from diffusers import StableDiffusionImg2ImgPipeline, AutoPipelineForImage2Image, LCMScheduler, AutoencoderTiny
+from diffusers import (
+    StableDiffusionImg2ImgPipeline,
+    AutoPipelineForImage2Image,
+    LCMScheduler,
+    AutoencoderTiny
+)
 
 GW, GH = 512, 384
 
 class NeuroRender:
-    def __init__(self, mode="lcm", compile_unet=False, remote_conn=None):
+    def __init__(self, mode="turbo", compile_unet=False, remote_conn=None):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.dtype = torch.float16
-        self.mode = mode.lower()
+        self.mode = mode.lower().replace("_", "-")
         self.remote_conn = remote_conn
         
         if self.remote_conn is not None:
-            print("[NeuroRender] Active in REMOTE CLIENT mode. Proxies requests to Server.")
-            self.latent_dim = 768
+            print(f"[NeuroRender] Active in REMOTE CLIENT mode ({self.mode.upper()}).")
             return
         
         print(f"[NeuroRender] Initializing {self.mode.upper()} pipeline on {self.device}...")
-        if self.mode == "turbo":
-            self.pipe = AutoPipelineForImage2Image.from_pretrained("stabilityai/sd-turbo", torch_dtype=self.dtype, variant="fp16").to(self.device)
-        else:
-            self.pipe = StableDiffusionImg2ImgPipeline.from_pretrained("SimianLuo/LCM_Dreamshaper_v7", torch_dtype=self.dtype).to(self.device)
+        
+        if self.mode in ["sdxl-turbo", "sdxl"]:
+            self.pipe = AutoPipelineForImage2Image.from_pretrained(
+                "stabilityai/sdxl-turbo",
+                torch_dtype=self.dtype,
+                variant="fp16"
+            ).to(self.device)
+            try:
+                self.pipe.vae = AutoencoderTiny.from_pretrained(
+                    "madebyollin/taesdxl",
+                    torch_dtype=self.dtype
+                ).to(self.device)
+            except Exception as e:
+                print(f"[!] Warning: fast taesdxl not available, using default VAE: {e}")
+
+        elif self.mode in ["turbo", "sd-turbo"]:
+            self.pipe = AutoPipelineForImage2Image.from_pretrained(
+                "stabilityai/sd-turbo",
+                torch_dtype=self.dtype,
+                variant="fp16"
+            ).to(self.device)
+            try:
+                self.pipe.vae = AutoencoderTiny.from_pretrained(
+                    "madebyollin/taesd",
+                    torch_dtype=self.dtype
+                ).to(self.device)
+            except Exception:
+                pass
+
+        else:  # default: lcm
+            self.mode = "lcm"
+            self.pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
+                "SimianLuo/LCM_Dreamshaper_v7",
+                torch_dtype=self.dtype
+            ).to(self.device)
             self.pipe.scheduler = LCMScheduler.from_config(self.pipe.scheduler.config)
+            try:
+                self.pipe.vae = AutoencoderTiny.from_pretrained(
+                    "madebyollin/taesd",
+                    torch_dtype=self.dtype
+                ).to(self.device)
+            except Exception:
+                pass
 
         self.pipe.safety_checker = None
-        self.pipe.vae = AutoencoderTiny.from_pretrained("madebyollin/taesd", torch_dtype=self.dtype).to(self.device)
         self.pipe.set_progress_bar_config(disable=True)
         
         try:
             self.pipe.enable_attention_slicing()
-        except Exception as e:
+        except Exception:
             pass
             
-        self.latent_dim = self.pipe.text_encoder.config.hidden_size
-        
         if compile_unet and self.device == 'cuda':
             try:
                 self.pipe.unet = torch.compile(self.pipe.unet, mode="reduce-overhead", fullgraph=False)
             except Exception as e:
                 print(f"[!] Compilation error: {e}")
+
+        self.is_sdxl = hasattr(self.pipe, "text_encoder_2")
         self._warmup()
-        print("[NeuroRender] Ready.")
+        print(f"[NeuroRender] {self.mode.upper()} Ready. (Architecture: {'SDXL' if self.is_sdxl else 'Standard SD'})")
 
     def _warmup(self):
         dummy_image = Image.fromarray(np.zeros((GH, GW, 3), dtype=np.uint8))
         with torch.no_grad():
             for _ in range(2):
-                self.generate(prompt="warmup", image=dummy_image, strength=1.0)
+                if self.is_sdxl:
+                    p_emb, _, pool, _ = self.pipe.encode_prompt(
+                        prompt="warmup", device=self.device, num_images_per_prompt=1, do_classifier_free_guidance=False
+                    )
+                    self.generate(image=dummy_image, prompt_embeds=p_emb, pooled_prompt_embeds=pool, strength=1.0)
+                else:
+                    p_emb, _ = self.pipe.encode_prompt(
+                        prompt="warmup", device=self.device, num_images_per_prompt=1, do_classifier_free_guidance=False
+                    )
+                    self.generate(image=dummy_image, prompt_embeds=p_emb, strength=1.0)
 
-    def encode_prompt(self, prompt_text):
-        if self.remote_conn is not None:
-            self.remote_conn.send({'cmd': 'encode_prompt', 'text': prompt_text})
-            arr = self.remote_conn.recv()
-            return torch.tensor(arr, dtype=self.dtype, device=self.device)
-            
+    def encode_prompts_universal(self, prompt_list):
+        """Кодирует список строк на сервере в точные тензоры активной модели."""
+        p_embeds_list = []
+        pooled_list = []
         with torch.no_grad():
-            return self.pipe.text_encoder(self.pipe.tokenizer(
-                prompt_text, return_tensors="pt", padding="max_length", 
-                max_length=self.pipe.tokenizer.model_max_length, truncation=True
-            ).input_ids.to(self.device))[0]
+            for p in prompt_list:
+                if self.is_sdxl:
+                    p_emb, _, pool, _ = self.pipe.encode_prompt(
+                        prompt=p, device=self.device, num_images_per_prompt=1, do_classifier_free_guidance=False
+                    )
+                    p_embeds_list.append(p_emb[0].cpu().numpy())
+                    pooled_list.append(pool[0].cpu().numpy())
+                else:
+                    p_emb, _ = self.pipe.encode_prompt(
+                        prompt=p, device=self.device, num_images_per_prompt=1, do_classifier_free_guidance=False
+                    )
+                    p_embeds_list.append(p_emb[0].cpu().numpy())
+                    
+        return {
+            'c_bases': p_embeds_list,
+            'pooled_bases': pooled_list if self.is_sdxl else None,
+            'is_sdxl': self.is_sdxl,
+            'mode': self.mode
+        }
 
     def generate(self, **kwargs):
-        """Полностью универсальный метод. Проксирует любые **kwargs."""
-        if self.remote_conn is not None:
-            payload = {'cmd': 'generate'}
-            
-            if 'image' in kwargs and kwargs['image'] is not None:
-                from io import BytesIO
-                buf = BytesIO()
-                kwargs['image'].save(buf, format='JPEG')
-                payload['image_bytes'] = buf.getvalue()
-                del kwargs['image']
-                
-            if 'prompt_embeds' in kwargs and kwargs['prompt_embeds'] is not None:
-                payload['prompt_embeds'] = kwargs['prompt_embeds'].cpu().numpy()
-                del kwargs['prompt_embeds']
-                
-            payload.update(kwargs)
-            self.remote_conn.send(payload)
-            
-            from io import BytesIO
-            resp_bytes = self.remote_conn.recv()
-            if isinstance(resp_bytes, dict) and 'error' in resp_bytes:
-                raise RuntimeError(resp_bytes['error'])
-            return Image.open(BytesIO(resp_bytes))
+        """Универсальный запуск генерации с защитой параметров под активный режим."""
+        if 'strength' in kwargs:
+            kwargs['strength'] = float(np.clip(kwargs['strength'], 0.35, 0.95))
 
-        # SERVER-SIDE EXECUTION
-        if self.mode == "turbo":
+        if self.mode in ["turbo", "sd-turbo", "sdxl-turbo", "sdxl"]:
             kwargs.setdefault("strength", 0.5)
             kwargs.setdefault("num_inference_steps", 2)
             kwargs.setdefault("guidance_scale", 0.0)

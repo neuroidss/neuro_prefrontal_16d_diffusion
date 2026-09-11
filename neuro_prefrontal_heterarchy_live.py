@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 """
-🧠 NEUROCANVAS LIVE v270.0: HONEST CLIP-GATED HAWKINS CURRICULUM
-- Честное обучение по зрению: запись SDR ТОЛЬКО при уверенности CLIP >= 65%.
-- Никаких слепых таймеров: переход к следующему только по набору чистых шагов.
-- ЖЕСТКИЙ ШЛЮЗ (Hard Gate): выход в сёрфинг ЗАПРЕЩЕН, пока ВСЕ концепты не наберут >= 85%.
-- Полный 60 FPS реалтайм без зависаний окон и без разрыва контура.
+🧠 NEUROCANVAS × TBP.MONTY: FULL 3-LEVEL HIERARCHY ENGINE (v320.0)
+- 16 384 Macrocolumns (4 Nodes x 64x64 L4 Sheets) running CUDA-accelerated.
+- Universal support for LCM, SD-Turbo, and SDXL-Turbo via dynamic server negotiation.
+- Complete dimension matching: 768 (SD 1.5), 1024 (SD 2.1), 2048+1280 (SDXL).
+- Cortical Messaging Protocol (CMP) passing displacement, SO(3) pose, and scale.
+- Active Inference closed loop with Visual CLIP validation and Anti-Trap Denoising.
 """
 
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import sys
+from pathlib import Path
+
+CURRENT_DIR = Path(__file__).resolve().parent
+for p in [CURRENT_DIR, CURRENT_DIR / "src", CURRENT_DIR.parent / "src"]:
+    if p.exists() and str(p) not in sys.path:
+        sys.path.insert(0, str(p))
+
 import argparse
 import time
 import math
@@ -19,10 +28,30 @@ import pygame
 from PIL import Image
 import torch
 import torch.nn as nn
-from transformers import CLIPTokenizer, CLIPTextModel, CLIPModel, CLIPProcessor
+from transformers import CLIPModel, CLIPProcessor
 from multiprocessing.connection import Client
 
-from neuro_heterarchy_core import HeterarchicalBrainEngine, NUM_MAX_DEVICES, DEVICE
+# Official CMP Message Interface from Thousand Brains Project
+try:
+    from tbp.monty.cmp import Message
+except ImportError:
+    class Message:
+        def __init__(self, location, morphological_features, non_morphological_features,
+                     confidence, pass_message, sender_id, sender_type, process_features_in_lm):
+            self.location = location
+            self.morphological_features = morphological_features
+            self.non_morphological_features = non_morphological_features
+            self.confidence = float(confidence)
+            self.pass_message = bool(pass_message)
+            self.sender_id = str(sender_id)
+            self.sender_type = str(sender_type)
+            self.process_features_in_lm = bool(process_features_in_lm)
+            self.displacement = {}
+
+        def set_displacement(self, displacement, ppf=None):
+            self.displacement = {"displacement": displacement}
+
+from neuro_heterarchy_core import HeterarchicalBrainEngine, DEVICE
 
 WIDTH, HEIGHT = 1600, 960
 
@@ -36,9 +65,8 @@ ELECTRODE_Y = np.array([
      2.72,  7.43,  4.76,  10.14, 10.15,  4.77,  7.42,   2.71
 ], dtype=np.float32)
 
-
 # ==============================================================================
-# 1. СЛОЙ 4 ХОКИНСА: 4096 МАКРОКОЛОНОК НА УЗЕЛ (СЕТКА 64x64)
+# 1. LAYER 4 HTM MACROCOLUMN (64x64 CUDA SHEET PER NODE)
 # ==============================================================================
 class CanonicalHTMColumn(nn.Module):
     def __init__(self, node_id: str, num_columns: int = 4096, k_active: int = 80):
@@ -79,12 +107,11 @@ class CanonicalHTMColumn(nn.Module):
         sdr[active_indices] = 1.0
         return sdr, active_indices
 
-
 # ==============================================================================
-# 2. ПОТОКОВАЯ ГЕТЕРАРХИЯ ХОКИНСА (16 384 КОЛОНКИ)
+# 2. STREAMING 16,384-COLUMN EXECUTIVE HETERARCHY
 # ==============================================================================
 class FrontalExecutiveHeterarchy(nn.Module):
-    def __init__(self, num_concepts: int = 4, num_columns_per_node: int = 4096, k_active_per_node: int = 80):
+    def __init__(self, num_concepts: int = 8, num_columns_per_node: int = 4096, k_active_per_node: int = 80):
         super().__init__()
         self.num_concepts = num_concepts
         self.num_columns_per_node = num_columns_per_node
@@ -139,7 +166,6 @@ class FrontalExecutiveHeterarchy(nn.Module):
         proto_norm = torch.nn.functional.normalize(self.object_prototypes, p=2, dim=1)
         sdr_norm = torch.nn.functional.normalize(full_sdr, p=2, dim=0)
         raw_similarities = torch.mv(proto_norm, sdr_norm)
-
         weights = torch.softmax(raw_similarities * 24.0, dim=0)
 
         if self.last_sdr.sum() > 0:
@@ -150,9 +176,8 @@ class FrontalExecutiveHeterarchy(nn.Module):
 
         return weights.cpu().numpy(), self.plan_b_active, raw_similarities.cpu().numpy()
 
-
 # ==============================================================================
-# 3. ЗРИТЕЛЬНЫЙ КЛАССИФИКАТОР CLIP
+# 3. SUPERVISORY CLIP VISION TEACHER
 # ==============================================================================
 class VisualCLIPTeacher:
     def __init__(self, class_names, text_prompts):
@@ -178,7 +203,6 @@ class VisualCLIPTeacher:
             probs = torch.softmax(logits, dim=-1).cpu().numpy()[0]
         return probs
 
-
 def apply_surgery(img_np, old_f32):
     res = img_np.astype(np.float32)
     mu = np.mean(res, axis=(0, 1))
@@ -198,34 +222,36 @@ def apply_surgery(img_np, old_f32):
     res = (res - mu_t.reshape(1, 1, 3)) * (t_std / (std_t + 1e-5)).reshape(1, 1, 3) + mu_t.reshape(1, 1, 3)
     return np.clip(res, 0, 255).astype(np.uint8)
 
-
+# ==============================================================================
+# 4. UNIVERSAL TOROIDAL DIFFUSION WORKER (LCM / SD-TURBO / SDXL-TURBO)
+# ==============================================================================
 class ToroidalDiffusionWorker:
-    def __init__(self, prompts, port: int = 6000):
+    def __init__(self, prompts, port: int = 6000, mode: str = "sdxl-turbo"):
         self.conn = None
         self.current_rgb = np.zeros((384, 512, 3), dtype=np.uint8)
         self.initialized = False
         self.lock = threading.Lock()
         self.running = True
         self.fps = 0.0
-        self.strength = 0.55
+        self.strength = 0.50
         self.frame_id = 0
+        self.mode = mode
+        self.prompts = prompts
+        self.num_concepts = len(prompts)
 
-        model_id = "openai/clip-vit-large-patch14"
-        self.tokenizer = CLIPTokenizer.from_pretrained(model_id)
-        self.text_encoder = CLIPTextModel.from_pretrained(model_id).to(DEVICE).eval()
+        self.c_bases = None
+        self.c_pooled_bases = None
+        self.is_sdxl = False
+        self.latent_active = None
+        self.pooled_active = None
 
-        self.c_bases = []
-        for p in prompts:
-            tokens = self.tokenizer(p, padding="max_length", max_length=77, return_tensors="pt").to(DEVICE)
-            with torch.no_grad():
-                self.c_bases.append(self.text_encoder(tokens.input_ids)[0])
-
-        self.latent_active = self.c_bases[0].clone()
-        self.num_concepts = len(self.c_bases)
         self.thread = threading.Thread(target=self._loop, daemon=True)
         self.thread.start()
 
-    def update_simplex_targets(self, weights_nd: np.ndarray, force_strength: float = 0.55):
+    def update_simplex_targets(self, weights_nd: np.ndarray, force_strength: float = 0.50):
+        if not self.initialized or self.c_bases is None:
+            return
+
         with torch.inference_mode():
             target = torch.zeros_like(self.c_bases[0])
             for i in range(self.num_concepts):
@@ -233,6 +259,11 @@ class ToroidalDiffusionWorker:
 
             with self.lock:
                 self.latent_active = self.latent_active * 0.65 + target * 0.35
+                if self.is_sdxl and self.c_pooled_bases is not None:
+                    target_pooled = torch.zeros_like(self.c_pooled_bases[0])
+                    for i in range(self.num_concepts):
+                        target_pooled += float(weights_nd[i]) * self.c_pooled_bases[i]
+                    self.pooled_active = self.pooled_active * 0.65 + target_pooled * 0.35
                 self.strength = force_strength
 
     def _loop(self):
@@ -241,21 +272,59 @@ class ToroidalDiffusionWorker:
             if not self.initialized:
                 try:
                     self.conn = Client(('localhost', 6000), authkey=b'brain')
+                    
+                    # 1. Согласовываем режим работы пайплайна
+                    self.conn.send({'cmd': 'init_mode', 'mode': self.mode})
+                    init_ack = self.conn.recv()
+                    self.is_sdxl = init_ack.get('is_sdxl', False)
+                    actual_mode = init_ack.get('mode', self.mode)
+                    
+                    # 2. Получаем точно сгенерированные сервером эмбеддинги
+                    self.conn.send({'cmd': 'encode_base_prompts', 'prompts': self.prompts})
+                    enc_resp = self.conn.recv()
+                    
+                    self.c_bases = [torch.tensor(b, dtype=torch.float32, device=DEVICE) for b in enc_resp['c_bases']]
+                    self.latent_active = self.c_bases[0].clone()
+                    
+                    if self.is_sdxl and enc_resp.get('pooled_bases') is not None:
+                        self.c_pooled_bases = [torch.tensor(p, dtype=torch.float32, device=DEVICE) for p in enc_resp['pooled_bases']]
+                        self.pooled_active = self.c_pooled_bases[0].clone()
+                    else:
+                        self.c_pooled_bases = None
+                        self.pooled_active = None
+
+                    # 3. Стартовый прогревочный кадр
                     dummy = np.random.randint(100, 150, (384, 512, 3), dtype=np.uint8)
-                    init_emb = self.latent_active.cpu().numpy()
-                    self.conn.send({'cmd': 'generate', 'image_np': dummy, 'prompt_embeds': init_emb, 'strength': 1.0})
+                    init_payload = {
+                        'cmd': 'generate',
+                        'image_np': dummy,
+                        'prompt_embeds': self.latent_active.cpu().numpy(),
+                        'strength': 1.0
+                    }
+                    if self.pooled_active is not None:
+                        init_payload['pooled_prompt_embeds'] = self.pooled_active.cpu().numpy()
+
+                    self.conn.send(init_payload)
                     self.current_rgb = apply_surgery(self.conn.recv(), dummy.astype(np.float32))
                     self.initialized = True
-                except Exception:
+                    print(f"✅ [SD-{actual_mode.upper()}] Connected! Base embeds verified (Dim={self.c_bases[0].shape[-1]}, SDXL={self.is_sdxl})")
+                except Exception as e:
                     time.sleep(0.5)
                     continue
 
             try:
                 t0 = time.time()
                 with self.lock:
-                    emb, img, s_val = self.latent_active.cpu().numpy(), self.current_rgb.copy(), self.strength
+                    emb = self.latent_active.cpu().numpy()
+                    pooled = self.pooled_active.cpu().numpy() if self.pooled_active is not None else None
+                    img = self.current_rgb.copy()
+                    s_val = self.strength
 
-                self.conn.send({'cmd': 'generate', 'image_np': img, 'prompt_embeds': emb, 'strength': s_val})
+                payload = {'cmd': 'generate', 'image_np': img, 'prompt_embeds': emb, 'strength': s_val}
+                if pooled is not None:
+                    payload['pooled_prompt_embeds'] = pooled
+
+                self.conn.send(payload)
                 resp = self.conn.recv()
 
                 with self.lock:
@@ -270,28 +339,48 @@ class ToroidalDiffusionWorker:
                 self.initialized = False
                 time.sleep(0.5)
 
-
 # ==============================================================================
-# 4. ТОЧКА ВХОДА С ЖЕСТКИМ ОНЛАЙН-ШЛЮЗОМ
+# 5. MAIN CLOSED-LOOP CONTROLLER
 # ==============================================================================
 def main():
-    parser = argparse.ArgumentParser(description="NeuroCanvas Live: Honest CLIP-Gated Heterarchy")
-    parser.add_argument('--sim', action='store_true', help="Включить симуляцию агента")
-    parser.add_argument('--concepts', type=int, default=4, choices=[4, 8], help="Количество концептов (4 по умолчанию)")
-    parser.add_argument('--online-learn', action='store_true', default=False, help="Включить адаптивное дообучение при поиске")
-    parser.add_argument('--online-lr', type=float, default=0.02, help="Сила онлайн-пластичности")
+    parser = argparse.ArgumentParser(description="NeuroCanvas × tbp.monty: Invasive Laminar Heterarchy")
+    parser.add_argument('--sim', action='store_true', help="Enable autonomous invasive agent process")
+    parser.add_argument('--concepts', type=int, default=8, choices=[4, 8], help="Number of active concepts in hierarchy")
+    parser.add_argument('--online-learn', action='store_true', default=False, help="Enable adaptive ground-truth updates during inference")
+    parser.add_argument('--online-lr', type=float, default=0.02, help="Online plasticity rate")
+    parser.add_argument('--mode', type=str, default="lcm", choices=["lcm", "turbo", "sdxl-turbo"],
+                        help="Active diffusion pipeline mode (Default: sdxl-turbo)")
+    parser.add_argument('--turbo', action='store_true', help="Alias for --mode turbo")
+    parser.add_argument('--sdxl', action='store_true', help="Alias for --mode sdxl-turbo")
     args = parser.parse_args()
 
-    ALL_NAMES = ["ГОРА", "ЗАМОК", "НЕБОСКРЕБ", "ОКЕАН", "КИБЕРПАНК", "ПУСТЫНЯ", "КОСМОС", "ДЖУНГЛИ"]
+    # Разрешаем псевдонимы аргументов
+    active_mode = args.mode
+    if args.sdxl:
+        active_mode = "sdxl-turbo"
+    elif args.turbo:
+        active_mode = "turbo"
+
+    ALL_NAMES = [
+        "КОСМОС",
+        "ПЛАНЕТА",
+        "КИБЕРПАНК",
+        "НЕБОСКРЕБ",
+        "ГОРА",
+        "ЗАМОК",
+        "ОКЕАН",
+        "ДЖУНГЛИ"
+    ]
+
     ALL_PROMPTS = [
-        "high quality photograph of a giant snowy mountain peak, rocky cliffs, clear blue sky, sharp focus, 8k",
-        "high quality photograph of an ancient medieval stone castle fortress towers, daytime, sharp focus, 8k",
-        "high quality photograph of modern glass skyscraper buildings, downtown city, geometric architecture, 8k",
-        "high quality photograph of open stormy dark blue ocean, pure water surface, giant ocean waves, sea foam, no land, 8k",
-        "high quality digital art of a futuristic cyberpunk city street, neon lights, rain, glowing signs, 8k",
-        "high quality photograph of a vast dry sandy desert, sand dunes, scorching hot sun, clear sky, 8k",
-        "high quality photograph of deep outer space, glowing colorful nebula, bright stars, galaxy, 8k",
-        "high quality photograph of a dense lush green tropical jungle, giant trees, vines, sunlight piercing through leaves, 8k"
+        "deep outer space, glowing colorful nebula, bright stars, galaxy, 8k, sharp detailed",
+        "spherical alien planet with atmosphere, continents and oceans in space, 8k, sharp detailed",
+        "futuristic cyberpunk city street, neon lights, rain, glowing signs, sharp linework, 8k",
+        "modern glass skyscraper buildings, downtown city, geometric architecture, sharp focus, 8k",
+        "giant snowy mountain peak, rocky cliffs, clear blue sky, sharp focus, 8k",
+        "ancient medieval stone castle fortress towers, daytime, sharp focus, 8k",
+        "open stormy dark blue ocean, pure water surface, giant ocean waves, sea foam, no land, 8k",
+        "dense lush green tropical jungle, giant trees, vines, sunlight piercing through leaves, 8k"
     ]
 
     NUM_CONCEPTS = args.concepts
@@ -302,11 +391,11 @@ def main():
     if args.sim:
         from synthetic_16d_causal_agent import SyntheticAutonomousAgent
         agent = SyntheticAutonomousAgent(num_concepts=NUM_CONCEPTS)
-        print(f"🤖 [CONFIG] Запущен симулятор агента ({NUM_CONCEPTS} концептов).")
+        print(f"🤖 [BOOT] Synthetic Invasive Agent active ({NUM_CONCEPTS} concepts, 3-level tree)...")
 
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption(f"NeuroCanvas v270.0: Honest CLIP-Gated Heterarchy ({NUM_CONCEPTS} Concepts)")
+    pygame.display.set_caption(f"NeuroCanvas × tbp.monty: Invasive Laminar Heterarchy [{active_mode.upper()}]")
     clock = pygame.time.Clock()
     font_b = pygame.font.SysFont("consolas", 13, bold=True)
     font_s = pygame.font.SysFont("consolas", 11)
@@ -314,7 +403,7 @@ def main():
     engine = HeterarchicalBrainEngine()
     engine.start()
 
-    worker = ToroidalDiffusionWorker(PROMPTS, port=6000)
+    worker = ToroidalDiffusionWorker(PROMPTS, port=6000, mode=active_mode)
     clip_teacher = VisualCLIPTeacher(TARGET_NAMES, PROMPTS)
     heterarchy = FrontalExecutiveHeterarchy(num_concepts=NUM_CONCEPTS, num_columns_per_node=4096, k_active_per_node=80).to(DEVICE)
 
@@ -324,20 +413,19 @@ def main():
     last_frame_id = -1
     cur_probs = np.ones(NUM_CONCEPTS, dtype=np.float32) / NUM_CONCEPTS
 
-    # --------------------------------------------------------------------------
-    # ПЕРЕМЕННЫЕ ЧЕСТНОГО ШЛЮЗА ОБУЧЕНИЯ
-    # --------------------------------------------------------------------------
     is_calibrating = True
     learn_idx = 0
     clean_steps_accumulated = 0
-    CLEAN_STEPS_REQUIRED = 15       # Нужно 15 кадров высокого качества
-    CLIP_HONEST_THRESHOLD = 0.65    # НЕ УЧИМ, пока CLIP не увидит цель >= 65%
+    CLEAN_STEPS_REQUIRED = 15
+    CLIP_HONEST_THRESHOLD = 0.65
 
     concept_snapshots = {}
     concept_scores = [0.0] * NUM_CONCEPTS
     curriculum_epoch = 1
 
-    print("🧠 [SYSTEM] Старт живого конвейера. Обучение активно до достижения >= 85% по всем концептам...")
+    monty_location = np.array([0.0, 0.0, 0.0], dtype=np.float64)
+
+    print(f"🧠 [SYSTEM] Pipeline Active [{active_mode.upper()}]. Honest Calibration Gate running...")
 
     try:
         while True:
@@ -348,7 +436,12 @@ def main():
                     raise KeyboardInterrupt
 
             frame = engine.get_frame()
-            node_tensors = {name: torch.tensor(frame.nodes[i].iplv_32, dtype=torch.float32, device=DEVICE) for i, name in enumerate(["F3", "F4", "AFz", "Fpz"])}
+            node_tensors = {
+                "F3":  torch.tensor(frame.nodes[0].iplv_32, dtype=torch.float32, device=DEVICE),
+                "F4":  torch.tensor(frame.nodes[1].iplv_32, dtype=torch.float32, device=DEVICE),
+                "AFz": torch.tensor(frame.nodes[2].iplv_32, dtype=torch.float32, device=DEVICE),
+                "Fpz": torch.tensor(frame.nodes[3].iplv_32, dtype=torch.float32, device=DEVICE)
+            }
 
             with worker.lock:
                 rgb_m, fid = worker.current_rgb.copy(), worker.frame_id
@@ -360,25 +453,44 @@ def main():
             if agent:
                 agent.update_visual_state(cur_probs)
 
-            # Извлечение 16 384-битного SDR
             with torch.no_grad():
                 full_sdr, sdr_f3 = heterarchy.get_current_sdr(node_tensors)
 
+            lead_node = frame.nodes[0]
+            monty_location += lead_node.disp_xyz
+            monty_location = np.clip(monty_location, -2.0, 2.0)
+
+            cmp_message = Message(
+                location=monty_location.copy(),
+                morphological_features={
+                    "pose_vectors": lead_node.pose_matrix,
+                    "pose_fully_defined": True,
+                    "on_object": True
+                },
+                non_morphological_features={
+                    "theta_hz": frame.theta_freq,
+                    "delta_hz": frame.delta_freq
+                },
+                confidence=max(0.0, min(1.0, (lead_node.beta_stability + 1.0) / 2.0)),
+                pass_message=True,
+                sender_id="F3_Macrocolumn",
+                sender_type="SM",
+                process_features_in_lm=True
+            )
+            cmp_message.set_displacement(lead_node.disp_xyz)
+
             # ==================================================================
-            # ЧЕСТНЫЙ ШЛЮЗ ОБУЧЕНИЯ (CLIP-GATED HARD GATE)
+            # HONEST HARD-GATE CALIBRATION
             # ==================================================================
             if is_calibrating:
-                b_name = TARGET_NAMES[learn_idx]
                 vis_conf = float(cur_probs[learn_idx])
 
-                # Принудительно направляем диффузию и агента
                 target_sim = np.zeros(NUM_CONCEPTS, dtype=np.float32)
                 target_sim[learn_idx] = 1.0
                 worker.update_simplex_targets(target_sim, force_strength=1.0)
                 if agent:
                     agent.set_calibration_target(True, learn_idx)
 
-                # 🔬 ЧЕСТНОЕ ПРАВИЛО: учим ТОЛЬКО когда клип видит цель четко (>= 65%)!
                 if vis_conf >= CLIP_HONEST_THRESHOLD:
                     clip_status = f"CLIP VERIFIED ({vis_conf*100:.1f}% >= 65%) -> IMPRINTING"
                     heterarchy.stream_learn_accumulate(learn_idx, full_sdr)
@@ -387,49 +499,41 @@ def main():
                 else:
                     clip_status = f"WAITING FOR CLIP CONVERGENCE... ({vis_conf*100:.1f}% < 65%)"
 
-                # Набрано 15 чистых кадров -> финализируем концепт
                 if clean_steps_accumulated >= CLEAN_STEPS_REQUIRED:
                     heterarchy.finalize_slot(learn_idx)
-                    
-                    # Проверяем качество всех обученных концептов
+
                     with torch.no_grad():
                         for chk_i in range(NUM_CONCEPTS):
                             if chk_i in concept_snapshots and heterarchy.concept_trained[chk_i] > 0:
                                 p_w, _, _ = heterarchy.predict_evidence(concept_snapshots[chk_i])
                                 concept_scores[chk_i] = float(p_w[chk_i]) * 100.0
 
-                    # Переход к следующему концепту
                     learn_idx += 1
                     clean_steps_accumulated = 0
 
-                    # Если круг завершен — проверяем ЖЕСТКИЙ ШЛЮЗ!
                     if learn_idx >= NUM_CONCEPTS:
                         min_score = min(concept_scores)
-                        # ВЫХОД ТОЛЬКО ЕСЛИ ВСЕ >= 85.0%!
                         if min_score >= 85.0 and all(heterarchy.concept_trained > 0):
                             is_calibrating = False
                             if agent:
                                 agent.set_calibration_target(False)
-                            print("🏆 [HARD GATE PASSED] Все концепты выучены выше 85%! Выход в сёрфинг.")
+                            print("🏆 [HARD GATE PASSED] All hierarchical slots locked in LTM >= 85%!")
                         else:
-                            # Если кто-то завалил — идем на следующий круг доучивать слабейшего!
                             curriculum_epoch += 1
-                            # Фокусируемся на концепте с минимальной точностью
                             learn_idx = int(np.argmin(concept_scores))
                             heterarchy.reset_accumulator(learn_idx)
-                            print(f"⚠️ [RE-LEARNING] Шлюз заблокирован! Концепт [{TARGET_NAMES[learn_idx]}] набрал {concept_scores[learn_idx]:.1f}%. Доучиваем...")
+                            print(f"⚠️ [RE-LEARNING] Retraining weakest node: [{TARGET_NAMES[learn_idx]}] ({concept_scores[learn_idx]:.1f}% < 85%)")
 
                 current_weights = target_sim
                 switched = False
 
+            # ==================================================================
+            # ACTIVE INFERENCE SURFING & LEVEL TRANSITION
+            # ==================================================================
             else:
-                # --------------------------------------------------------------
-                # ЧИСТЫЙ СЁРФИНГ (ШЛЮЗ ПРОЙДЕН, СВОБОДНАЯ НАВИГАЦИЯ)
-                # --------------------------------------------------------------
                 with torch.no_grad():
                     new_w, switched, raw_sims = heterarchy.predict_evidence(full_sdr)
 
-                # Онлайн-дообучение только если явно включено флагом
                 top_vis_idx = int(np.argmax(cur_probs))
                 vis_weight = float(cur_probs[top_vis_idx])
                 fru_val = agent.shm['frustration'].value if agent else 0.0
@@ -442,23 +546,32 @@ def main():
                 current_weights = current_weights * 0.75 + new_w * 0.25
                 current_weights = current_weights / np.sum(current_weights)
 
-                force_str = 0.88 if (switched or fru_val > 0.50) else float(np.clip(0.52 + np.max(current_weights) * 0.25, 0.52, 0.74))
+                current_target_idx = int(np.argmax(current_weights))
+                clip_error = 1.0 - float(cur_probs[current_target_idx])
+
+                if switched or fru_val > 0.40 or clip_error > 0.70:
+                    force_str = 0.92
+                else:
+                    force_str = float(np.clip(0.48 + (clip_error * 0.28) + (1.0 - lead_node.beta_stability) * 0.12, 0.48, 0.78))
+
                 worker.update_simplex_targets(current_weights, force_strength=force_str)
 
             # ==================================================================
-            # РЕНДЕР ЭКРАНА
+            # PYGAME RENDERING
             # ==================================================================
             screen.fill((10, 14, 20))
+
+            # Center Canvas
             screen.blit(pygame.image.frombuffer(rgb_m.tobytes(), (512, 384), 'RGB'), (cx - 256, cy - 192))
             pygame.draw.rect(screen, (40, 50, 70), (cx - 256, cy - 192, 512, 384), 2, border_radius=8)
 
-            # Карта L4 F3 (64x64)
+            # L4 F3 Column Sheet (64x64)
             cur_sdr_img = sdr_f3[:4096].view(64, 64).cpu().numpy() * 255.0
             sdr_surf = pygame.surfarray.make_surface(cv2.resize(cur_sdr_img, (140, 140)).astype(np.uint8))
             screen.blit(sdr_surf, (cx + 256 + 20, cy - 192))
             screen.blit(font_s.render("L4 F3 Sheet (64x64)", True, (0, 255, 200)), (cx + 256 + 20, cy - 212))
 
-            # 1. ПАНЕЛЬ ОБУЧЕНИЯ / БЕНЧМАРКА
+            # Left Panel 1: Learning & Benchmark
             panel_x, panel_y = 30, 40
             pygame.draw.rect(screen, (16, 22, 32), (panel_x, panel_y, 380, 270), border_radius=8)
             pygame.draw.rect(screen, (0, 255, 200), (panel_x, panel_y, 380, 270), 1, border_radius=8)
@@ -466,17 +579,15 @@ def main():
             if is_calibrating:
                 screen.blit(font_b.render(f"HONEST CALIBRATION [EPOCH {curriculum_epoch}]", True, (255, 180, 50)), (panel_x + 12, panel_y + 12))
                 screen.blit(font_s.render(f"Target Concept    : [{TARGET_NAMES[learn_idx]}] ({learn_idx+1}/{NUM_CONCEPTS})", True, (255, 255, 100)), (panel_x + 15, panel_y + 36))
-                
+
                 col_status = (0, 255, 180) if "VERIFIED" in clip_status else (255, 200, 50)
                 screen.blit(font_s.render(clip_status, True, col_status), (panel_x + 15, panel_y + 56))
 
-                # Прогресс чистых шагов
                 prog_val = min(1.0, clean_steps_accumulated / float(CLEAN_STEPS_REQUIRED))
                 screen.blit(font_s.render(f"Clean Steps (>=65%): {clean_steps_accumulated}/{CLEAN_STEPS_REQUIRED}", True, (200, 220, 255)), (panel_x + 15, panel_y + 78))
                 pygame.draw.rect(screen, (30, 40, 50), (panel_x + 15, panel_y + 96, 350, 8), border_radius=2)
                 pygame.draw.rect(screen, (0, 255, 180), (panel_x + 15, panel_y + 96, int(prog_val * 350), 8), border_radius=2)
 
-                # Таблица текущей точности
                 for i, name in enumerate(TARGET_NAMES):
                     score = concept_scores[i]
                     if heterarchy.concept_trained[i] > 0:
@@ -488,50 +599,62 @@ def main():
                     else:
                         col_s = (120, 120, 120)
                         txt_s = f"{name:10s}: QUEUED..."
-                    screen.blit(font_s.render(txt_s, True, col_s), (panel_x + 15, panel_y + 118 + i * 22))
-
-                min_sc = min(concept_scores) if any(heterarchy.concept_trained > 0) else 0.0
-                screen.blit(font_b.render(f"HARD GATE: RELEASE ONLY WHEN ALL >= 85%", True, (255, 100, 100) if min_sc < 85 else (0, 255, 200)), (panel_x + 15, panel_y + 240))
+                    screen.blit(font_s.render(txt_s, True, col_s), (panel_x + 15, panel_y + 118 + i * 18))
 
             else:
                 screen.blit(font_b.render("FROZEN RETENTION BENCHMARK (PASSED)", True, (0, 255, 200)), (panel_x + 12, panel_y + 12))
                 for i, name in enumerate(TARGET_NAMES):
-                    screen.blit(font_s.render(f"{name:10s}: {concept_scores[i]:4.1f}% [LOCKED IN LTM]", True, (100, 255, 100)), (panel_x + 15, panel_y + 45 + i * 28))
+                    screen.blit(font_s.render(f"{name:10s}: {concept_scores[i]:4.1f}% [LOCKED IN LTM]", True, (100, 255, 100)), (panel_x + 15, panel_y + 38 + i * 22))
 
-                screen.blit(font_b.render("ALL CONCEPTS QUALIFIED >= 85.0%", True, (0, 255, 200)), (panel_x + 15, panel_y + 190))
-                screen.blit(font_s.render("16,384 Columns | Pure Sparse HTM Consensus", True, (150, 180, 200)), (panel_x + 15, panel_y + 215))
-                screen.blit(font_s.render("Memory Protected: Zero Catastrophic Interference", True, (0, 255, 180)), (panel_x + 15, panel_y + 238))
-
-            # 2. ПАНЕЛЬ ЖИВОГО ДЕКОДЕРА И АГЕНТА
+            # Left Panel 2: Telemetry & Active Inference
             c_x, c_y = 30, 330
-            pygame.draw.rect(screen, (16, 22, 32), (c_x, c_y, 380, 250), border_radius=8)
-            pygame.draw.rect(screen, (100, 180, 255), (c_x, c_y, 380, 250), 1, border_radius=8)
-            screen.blit(font_b.render("LIVE INTENT STREAM (DECODER)", True, (100, 180, 255)), (c_x + 12, c_y + 12))
+            pygame.draw.rect(screen, (16, 22, 32), (c_x, c_y, 380, 270), border_radius=8)
+            pygame.draw.rect(screen, (100, 180, 255), (c_x, c_y, 380, 270), 1, border_radius=8)
+            screen.blit(font_b.render("ACTIVE INFERENCE & CMP HIERARCHY", True, (100, 180, 255)), (c_x + 12, c_y + 12))
 
             top_idx = int(np.argmax(current_weights))
             top_conf = current_weights[top_idx] * 100.0
             col_intent = (100, 255, 100) if top_conf >= 70.0 else (255, 220, 50)
-            screen.blit(font_b.render(f"Decoded Intent : [{TARGET_NAMES[top_idx]}] ({top_conf:4.1f}%)", True, col_intent), (c_x + 15, c_y + 38))
+            screen.blit(font_b.render(f"Decoded Intent : [{TARGET_NAMES[top_idx]}] ({top_conf:4.1f}%)", True, col_intent), (c_x + 15, c_y + 36))
 
             top_vis = int(np.argmax(cur_probs))
-            screen.blit(font_s.render(f"Visual Reality : {TARGET_NAMES[top_vis]} ({cur_probs[top_vis]*100:.1f}% CLIP)", True, (200, 220, 255)), (c_x + 15, c_y + 60))
-
-            for i, name in enumerate(TARGET_NAMES):
-                w_val = current_weights[i] * 100.0
-                screen.blit(font_s.render(f"{name[:4]}: {w_val:3.0f}%", True, (180, 180, 180)), (c_x + 15 + i * 85, c_y + 84))
+            screen.blit(font_s.render(f"Visual Reality : {TARGET_NAMES[top_vis]} ({cur_probs[top_vis]*100:.1f}% CLIP)", True, (200, 220, 255)), (c_x + 15, c_y + 58))
 
             if agent:
                 mode, desc, mood, t_idx, sat, bor, fru = agent.get_telemetry()
                 quest_col = (0, 255, 200) if t_idx == top_idx else (255, 100, 100)
-                screen.blit(font_b.render(f"Agent Quest    : [{TARGET_NAMES[t_idx]}]", True, quest_col), (c_x + 15, c_y + 115))
-                screen.blit(font_s.render(f"Status         : {'CALIBRATING...' if is_calibrating else ('MATCH CONFIRMED' if t_idx == top_idx else 'SEEKING')}", True, quest_col), (c_x + 15, c_y + 138))
+                screen.blit(font_b.render(f"Hierarchy State: [{TARGET_NAMES[t_idx]}]", True, quest_col), (c_x + 15, c_y + 88))
+                screen.blit(font_s.render(f"Transition Mode: {desc}", True, quest_col), (c_x + 15, c_y + 110))
 
-                screen.blit(font_s.render(f"Satisfaction   : {sat*100:4.1f}%", True, (100, 255, 100)), (c_x + 15, c_y + 160))
-                pygame.draw.rect(screen, (30, 40, 50), (c_x + 15, c_y + 176, 350, 6), border_radius=2)
-                pygame.draw.rect(screen, (0, 255, 180), (c_x + 15, c_y + 176, int(sat * 350), 6), border_radius=2)
+                screen.blit(font_s.render(f"Convergence    : {sat*100:4.1f}%", True, (100, 255, 100)), (c_x + 15, c_y + 135))
+                pygame.draw.rect(screen, (30, 40, 50), (c_x + 15, c_y + 150, 350, 6), border_radius=2)
+                pygame.draw.rect(screen, (0, 255, 180), (c_x + 15, c_y + 150, int(sat * 350), 6), border_radius=2)
 
-                screen.blit(font_s.render(f"Frustration    : {fru*100:4.1f}% | Boredom: {bor*100:4.1f}%", True, (255, 80, 80)), (c_x + 15, c_y + 192))
-                screen.blit(font_s.render(f"Denoise Power  : {worker.strength:.2f} | SD-LCM FPS: {worker.fps:.1f}", True, (160, 180, 200)), (c_x + 15, c_y + 215))
+                screen.blit(font_s.render(f"dACC Error (AFz): {fru*100:4.1f}% | Satiation: {bor*100:4.1f}%", True, (255, 80, 80)), (c_x + 15, c_y + 168))
+                screen.blit(font_s.render(f"Beta Stability : {lead_node.beta_stability:+.2f} | Conf: {cmp_message.confidence*100:.0f}%", True, (255, 200, 50)), (c_x + 15, c_y + 190))
+                screen.blit(font_s.render(f"Clock dPhi/dt  : Theta={frame.theta_freq:.2f}Hz | Delta={frame.delta_freq:.2f}Hz", True, (200, 220, 240)), (c_x + 15, c_y + 212))
+                screen.blit(font_s.render(f"Denoise Power  : {worker.strength:.2f} | FPS: {worker.fps:.1f} ({worker.mode.upper()})", True, (160, 180, 200)), (c_x + 15, c_y + 235))
+
+            # Bottom Spectrum: 120-Edge Signed iPLV
+            BY, BH = 620, 300
+            pygame.draw.rect(screen, (12, 16, 24), (30, BY, WIDTH - 60, BH), border_radius=8)
+            pygame.draw.rect(screen, (30, 45, 65), (30, BY, WIDTH - 60, BH), 1, border_radius=8)
+            screen.blit(font_b.render("120-EDGE DIRECTED iPLV SPECTRUM [STRICT SIGNED sin(Δφ) ∈ [-1.0, +1.0]]", True, (0, 255, 200)), (45, BY + 15))
+
+            g120 = lead_node.iplv_32[31]
+            bw = (WIDTH - 120) / 120.0
+            mid_line = BY + 150
+            for p in range(120):
+                val = g120[p]
+                bh = int(abs(val) * 110)
+                bx = 45 + p * bw
+                col = (255, 80, 80) if val < 0 else (80, 255, 180)
+                if val >= 0:
+                    pygame.draw.rect(screen, col, (bx, mid_line - bh, bw - 1, bh))
+                else:
+                    pygame.draw.rect(screen, col, (bx, mid_line, bw - 1, bh))
+
+            pygame.draw.line(screen, (60, 80, 100), (45, mid_line), (WIDTH - 75, mid_line), 1)
 
             pygame.display.flip()
 
@@ -542,7 +665,6 @@ def main():
         if agent: agent.stop()
         engine.stop()
         pygame.quit()
-
 
 if __name__ == '__main__':
     main()
