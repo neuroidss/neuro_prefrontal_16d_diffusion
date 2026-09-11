@@ -129,7 +129,7 @@ Every $125\text{--}250\text{ ms}$ theta sweep scans across the hierarchy: the de
 ### 2.6 Directed Phase Dynamics: 120-Edge Strictly Signed $i\text{PLV}$ Without Volume Conduction
 Concentric ring micro-arrays directly capture localized Current Source Density (CSD). To eliminate zero-lag contamination, phase coherence is computed using the **imaginary Phase-Locking Value** (Bruña, Maestú, & Pereda, 2018, *J. Neural Eng.*, [DOI: 10.1088/1741-2552/aacfe4](https://doi.org/10.1088/1741-2552/aacfe4) [12]; Nolte et al., 2004, *Clin. Neurophysiol.*, [DOI: 10.1016/j.clinph.2004.04.029](https://doi.org/10.1016/j.clinph.2004.04.029) [13]):
 
-$$i\text{PLV}_{ij}(t) = \Im\left\{ \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\} = \sin\left(\varphi_i(t) - \varphi_j(t)\right) \in [-1.0, +1.0]$$
+$$i\text{PLV}_{ij}(t) = \Im\left\\{ \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left(\frac{\dot{x}_j(t)}{|\dot{x}_j(t)|}\right)^* \right\\} = \sin\left(\varphi_i(t) - \varphi_j(t)\right) \in [-1.0, +1.0]$$
 
 By strictly preserving the **sign of $\sin(\Delta\varphi)$**, the 120-edge spectrum directly encodes the causal transmission direction across all $\frac{16 \times 15}{2} = 120$ electrode pairs: positive values denote $i \to j$ lead; negative values denote $j \to i$ lead; zero-lag volume conduction cancels identically ($\sin(0) \equiv 0$).
 
