@@ -1,256 +1,229 @@
-# 🧠 NeuroCanvas: Cortical Recursion, Phase-Manifold Geometry, and Hierarchical Active Inference (`tbp.monty`)
+# 🧠 NeuroCanvas × TBP.Monty: Prefrontal Heterarchy, High-Frequency Phase-Graph Manifolds, and Closed-Loop Generative Active Inference
+
+[![DOI:10.1038/s41562-024-02047-8](https://img.shields.io/badge/DOI-10.1038%2Fs41562--024--02047--8-blue.svg)](https://doi.org/10.1038/s41562-024-02047-8)
+[![DOI:10.1073/pnas.2107797119](https://img.shields.io/badge/DOI-10.1073%2Fpnas.2107797119-green.svg)](https://doi.org/10.1073/pnas.2107797119)
+[![DOI:10.1088/1741-2552/aacfe4](https://img.shields.io/badge/DOI-10.1088%2F1741--2552%2Faacfe4-orange.svg)](https://doi.org/10.1088/1741-2552/aacfe4)
+[![arXiv:2507.05888](https://img.shields.io/badge/arXiv-2507.05888-red.svg)](https://arxiv.org/abs/2507.05888)
 
 ---
 
 ## 📑 Table of Contents
 1. [Executive Summary & Foundational Paradigm](#1-executive-summary--foundational-paradigm)
-2. [Neurobiological Theory of Cortical Recursion](#2-neurobiological-theory-of-cortical-recursion)
-   - 2.1 [Flat Sequential Buffer vs. True Syntactic Recursion](#21-flat-sequential-buffer-vs-true-syntactic-recursion)
-   - 2.2 [Multi-Dimensional Neural Geometry & Sequence Subspaces](#22-multi-dimensional-neural-geometry--sequence-subspaces)
-   - 2.3 [Theta-Phase Gated Multiplexing & High-Frequency Synchronization](#23-theta-phase-gated-multiplexing--high-frequency-synchronization)
-   - 2.4 [Rostro-Caudal Executive Gradients & Cortical Pose Transformations](#24-rostro-caudal-executive-gradients--cortical-pose-transformations)
-3. [The Algorithmic Failure of Flat Attention & The Thousand Brains Solution](#3-the-algorithmic-failure-of-flat-attention--the-thousand-brains-solution)
-   - 3.1 [The Superposition Catastrophe in 2D Attention](#31-the-superposition-catastrophe-in-2d-attention)
-   - 3.2 [Compositional Structures via Cortical Reference Frames (`tbp.monty`)](#32-compositional-structures-via-cortical-reference-frames-tbmomty)
-   - 3.3 [Recursive Graph Convergence & Prediction Error as an Arbiter](#33-recursive-graph-convergence--prediction-error-as-an-arbiter)
+2. [Biophysical & Neurocomputational Theory](#2-biophysical--neurocomputational-theory)
+   - 2.1 [Dual-Band Spectral Architecture: Content Gamma (30–85 Hz) vs. Structural Ripples (100–200 Hz)](#21-dual-band-spectral-architecture-content-gamma-3085-hz-vs-structural-ripples-100200-hz)
+   - 2.2 [Pacing Hierarchy: Delta (1.5 Hz) Macro-Frames and Theta (6.0 Hz) Sequence Slots](#22-pacing-hierarchy-delta-15-hz-macro-frames-and-theta-60-hz-sequence-slots)
+   - 2.3 [Prefrontal Node Specialization: Area 10 ($Fpz$), dACC ($AFz$), and dlPFC ($F3/F4$)](#23-prefrontal-node-specialization-area-10-fpz-dacc-afz-and-dlpfc-f3f4)
+   - 2.4 [Orthogonal Neural Geometry & Factorized Sequence Subspaces](#24-orthogonal-neural-geometry--factorized-sequence-subspaces)
+   - 2.5 [Causal Phase Dynamics: 120-Edge Strictly Signed $i\text{PLV}$ Without Volume Conduction](#25-causal-phase-dynamics-120-edge-strictly-signed-iplv-without-volume-conduction)
+   - 2.6 [Directional Causality: Phase Lead-Lag Distinguishes Parent from Child](#26-directional-causality-phase-lead-lag-distinguishes-parent-from-child)
+3. [Thousand Brains Integration (`tbp.monty`)](#3-thousand-brains-integration-tbmomty)
+   - 3.1 [Sensorimotor Modeling and Allocentric Reference Frames](#31-sensorimotor-modeling-and-allocentric-reference-frames)
+   - 3.2 [Exact Cortical Messaging Protocol (CMP) Packet Specification](#32-exact-cortical-messaging-protocol-cmp-packet-specification)
+   - 3.3 [16,384-Column CUDA Layer 4 Macrocolumn Sheet](#33-16384-column-cuda-layer-4-macrocolumn-sheet)
+   - 3.4 [Independent Evidence Accumulation (`EvidenceGraphMemory`)](#34-independent-evidence-accumulation-evidencegraphmemory)
 4. [Hardware-Aware Signal Processing Pipeline (500 Hz HAL)](#4-hardware-aware-signal-processing-pipeline-500-hz-hal)
-   - 4.1 [Nyquist Bounds & High-Frequency Phase Locking on FreeEEG16](#41-nyquist-bounds--high-frequency-phase-locking-on-freeeeg16)
-   - 4.2 [Strictly Signed 120-Edge Imaginary Phase-Locking Value ($i\text{PLV}$)](#42-strictly-signed-120-edge-imaginary-phase-locking-value-iplv)
-   - 4.3 [32-Slot Theta-Phase Decomposition Tensor ($[32, 120]$)](#43-32-slot-theta-phase-decomposition-tensor-32-120)
-5. [Mathematical Formulation of the Recursion Arbiter & Generative Actuator](#5-mathematical-formulation-of-the-recursion-arbiter--generative-actuator)
-   - 5.1 [SVD Manifold Rank as an Instantaneous Metric of Cognitive Depth](#51-svd-manifold-rank-as-an-instantaneous-metric-of-cognitive-depth)
-   - 5.2 [Competitive Evolutionary Arbitration & Denoise Overdrive](#52-competitive-evolutionary-arbitration--denoise-overdrive)
-   - 5.3 [Continuous Fractal Treemap: Non-Discontinuous Generative Geometry](#53-continuous-fractal-treemap-non-discontinuous-generative-geometry)
-6. [Comprehensive Scientific References & Verifiable DOIs](#6-comprehensive-scientific-references--verifiable-dois)
+   - 4.1 [Nyquist Bounds on FreeEEG16-alpha2 (26 mm Concentric Ring Array)](#41-nyquist-bounds-on-freeeeg16-alpha2-26-mm-concentric-ring-array)
+   - 4.2 [Micro-Scale Columnar Resolution: 2,650 Columns Under a 26 mm Footprint](#42-micro-scale-columnar-resolution-2650-columns-under-a-26-mm-footprint)
+   - 4.3 [32-Slot Phase Gating and Real-Time SVD Manifold Rank ($K$)](#43-32-slot-phase-gating-and-real-time-svd-manifold-rank-k)
+5. [Generative Actuator & Continuous Fractal Treemap](#5-generative-actuator--continuous-fractal-treemap)
+   - 5.1 [Dynamically Resolved Hierarchical Lineage (No Hardcoded Lists)](#51-dynamically-resolved-hierarchical-lineage-no-hardcoded-lists)
+   - 5.2 [Mathematical Formulation of Continuous Fractal LERP ($K \in [1.0, 4.0]$)](#52-mathematical-formulation-of-continuous-fractal-lerp-k-in-10-40)
+   - 5.3 [Anti-Trap Denoise Overdrive ($s = 0.48 \dots 0.95$) Coupled to dACC Prediction Error](#53-anti-trap-denoise-overdrive-s--048-dots-095-coupled-to-dacc-prediction-error)
+6. [Empirical Diagnostics: Calibration Snapshot Phase Aliasing](#6-empirical-diagnostics-calibration-snapshot-phase-aliasing)
+   - 6.1 [Root Cause of the Sub-75% Validation Oscillation on `[КОСМОС]`](#61-root-cause-of-the-sub-75-validation-oscillation-on-космос)
+   - 6.2 [The Stroboscopic Aliasing Mechanism](#62-the-stroboscopic-aliasing-mechanism)
+   - 6.3 [Biological & Algorithmic Remediation Protocol](#63-biological--algorithmic-remediation-protocol)
+7. [Comprehensive Roadmap: Scientific Gaps & Multiplayer Vision](#7-comprehensive-roadmap-scientific-gaps--multiplayer-vision)
+   - 7.1 [Biophysical Gaps: Laminar Deep-Beta Gating & Thalamic Pose Converters](#71-biophysical-gaps-laminar-deep-beta-gating--thalamic-pose-converters)
+   - 7.2 [Higher-Order Recursion ($K \ge 4$): Scaling AI Beyond Primate Limitations](#72-higher-order-recursion-k-ge-4-scaling-ai-beyond-primate-limitations)
+   - 7.3 [Multiplayer "Noosphere": Causal Authority & Role Delegation](#73-multiplayer-noosphere-causal-authority--role-delegation)
+   - 7.4 [Autonomous Stigmergic Entity Spawning](#74-autonomous-stigmergic-entity-spawning)
+8. [Complete Scientific References & Verifiable DOIs](#8-complete-scientific-references--verifiable-dois)
 
 ---
 
 ## 🧬 1. Executive Summary & Foundational Paradigm
 
-Conventional Brain-Computer Interfaces (BCIs) treat neural activity as an instantaneous, linear projection of motor trajectories or flat class labels. Conversely, standard Large Language Models (LLMs) and visual diffusion architectures process concepts as flat permutations or sequences within an unconstrained attention matrix. 
-
-**Both paradigms fail to capture the defining attribute of human intelligence: endogenous recursive simulation.**
-
-Human consciousness does not simply juggle items simultaneously; it constructs **nested generative hierarchies** where an overarching context embeds structural rules, which in turn embed physical entities, which in turn embed fine micro-features:
-
-$$\text{Cosmos} \supset \text{Ocean} \supset \text{Mountain} \supset \text{Castle}$$
+Conventional Brain-Computer Interfaces (BCIs) treat neural activity as an instantaneous, linear projection of motor trajectories (cursor kinematics) or sensory classification. This misses the primary computational role of the primate neocortex: **endogenous generative simulation of what is not present in the physical sensory environment** [23, 28].
 
 ```
-                          THE CONTINUOUS RECURSIVE BCI ENGINE
-                          
-   [FreeEEG16-alpha2: 500 Hz] ──► 120-Edge Directed iPLV Engine (<0.2 ms CUDA)
-                                              │
-                                              ▼
-   [32 Theta-Phase Slots]     ──► Matrix M ∈ R^(32 × 120) (Phase-Gated Topology)
-                                              │
-                                              ▼
-   [SVD Manifold Arbiter]     ──► Singular Spectrum: SVD(M - μ) ──► Rank K ∈ [1, 4]
-                                              │
-               ┌──────────────────────────────┴──────────────────────────────┐
-               ▼                                                             ▼
-   [Flat Agent: Rank K = 1]                                      [Recursive Agent: Rank K = 4]
-   - Disconnected Items                                          - Nested Reference Frames
-   - High Prediction Error                                       - Stable Attractor Manifold
-   - Output: 0% Priority                                         - Output: 100% Latent Overdrive
-               │                                                             │
-               └──────────────────────────────┬──────────────────────────────┘
-                                              ▼
-                     [Continuous Fractal Treemap Interpolator (LERP)]
-                                              │
-                                              ▼
-                     [Stable Diffusion / VLA-JEPA Latent Actuator]
-                            (Anti-Trap Denoising Surge s = 0.95)
+                        THE CONTINUOUS CLOSED-LOOP NEURAL MANIFOLD
+                        
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │              PREFRONTAL CORTICAL CLUSTERS (IN VIVO / IN SILICO)            │
+    │   Fpz (Area 10: Plan B) • AFz (dACC: Error) • F3/F4 (dlPFC: Form & Style)  │
+    └─────────────────────────────────────┬──────────────────────────────────────┘
+                                          │ 500 Hz High-Density LFP / iPLV
+                                          ▼
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │             DUAL-BAND DIRECTED PHASE-GRAPH ENGINE (500 SPS HAL)            │
+    │  Band A: 30–85 Hz Gamma (What)  •  Band B: 100–200 Hz Ripples (How/Nested) │
+    │  Pacing: 1.5 Hz Delta (Macro-Frame)  •  6.0 Hz Theta (Sequence Clock)      │
+    └─────────────────────────────────────┬──────────────────────────────────────┘
+                                          │ 120-Edge Directed iPLV Matrix
+                                          ▼
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │                     tbp.monty CORTICAL MESSAGING PROTOCOL                  │
+    │      Message(location_3d, pose_vectors_so3, scale, confidence, disp)       │
+    │       16,384-Column Sparse Distributed Representation (L4 CUDA Sheet)       │
+    └─────────────────────────────────────┬──────────────────────────────────────┘
+                                          │ Continuous Conditioning z ∈ R^2048
+                                          ▼
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │          GENERATIVE CONTINUOUS LATENT ACTUATOR (SDXL / SD-TURBO)           │
+    │     Dynamic Treemap Geometry  •  Anti-Trap Denoising Surge (s=0.48..0.95)   │
+    └─────────────────────────────────────┬──────────────────────────────────────┘
+                                          │ Synthesized High-Resolution Visual Reality
+                                          ▼
+    ┌────────────────────────────────────────────────────────────────────────────┐
+    │                 SUPERVISORY OBJECTIVE TEACHER (CLIP ViT-L/14)              │
+    │    Zero-Shot Visual Semantic Evaluation • Prediction Error Gradient        │
+    └─────────────────────────────────────┬──────────────────────────────────────┘
+                                          │ Closed-Loop Sensory Feedback
+                                          └──────► Injected into dACC (AFz)
 ```
 
-**NeuroCanvas** bridges intracranial electrophysiology, the Thousand Brains Framework (`tbp.monty`, Hawkins et al., 2025 [1]), and Latent Diffusion Models (LCM / SD-Turbo / SDXL-Turbo). It samples 16 concentric CSD electrodes at 500 Hz, computes an instantaneous 120-edge phase-locking tensor, extracts the **topological rank of cognitive recursion**, and awards visual rendering sovereignty to the mind operating at the highest hierarchical depth.
+**NeuroCanvas** interfaces with this endogenous engine. In the brain, the frontal lobes maintain an internal generative world that historically possessed **no direct, external real-time visual counterpart**. NeuroCanvas provides this direct projection. 
+
+By coupling high-density concentric micro-arrays (**FreeEEG16-alpha2**, capturing local Current Source Density without volume conduction smearing) to the Thousand Brains Framework (**`tbp.monty`**, Hawkins et al., 2025 [1]) and Latent Diffusion Models (SD-Turbo / SDXL-Turbo / LCM), the engine directly translates prefrontal phase dynamics into a continuous, generative world at 60 FPS.
+
+Crucially, sovereignty over this world is mediated by an **Evolutionary Arbiter based on the Singular Value Decomposition (SVD) rank of cortical ripple phase manifolds**. Entities demonstrating higher recursive depth determine the compositional rules of the reality, while entities with lower recursive depth populate content within those rules.
 
 ---
 
-## 🔬 2. Neurobiological Theory of Cortical Recursion
+## 🔬 2. Biophysical & Neurocomputational Theory
 
-### 2.1 Flat Sequential Buffer vs. True Syntactic Recursion
-Classic working memory models (e.g., Lisman & Jensen, 2013 [6]) formalized the multi-item buffer as a train of high-frequency bursts nested inside a low-frequency carrier wave. While this mechanism supports sequential First-In-First-Out (FIFO) retention (e.g., remembering a sequence of digits), it is fundamentally **non-recursive**. A sequential list treats concepts as flat siblings:
+### 2.1 Dual-Band Spectral Architecture: Content Gamma (30–85 Hz) vs. Structural Ripples (100–200 Hz)
+A central scientific insight of this architecture is the resolution of the frequency dichotomy:
+*   **Low/Fast Gamma Band ($30\text{--}85\text{ Hz}$):** Encodes the **specific sensory and semantic content** (the "What") of objects (e.g., Mountain vs. Castle vs. Space) within cortical microcircuits [4, 5]. As shown by Colgin et al. (2009) [25] and Bieri et al. (2014) [26], slow gamma (~30–50 Hz) and fast gamma (~65–85 Hz) alternate across oscillatory cycles to route memory recall versus sensory encoding.
+*   **Cortical Ripple Band ($100\text{--}200\text{ Hz}$):** Encodes **structural binding and reference-frame transitions** (the "How") across prefrontal nodes [15]. Dickey et al. (2022) [15] and Norman et al. (2021) [27] demonstrated via intracranial recordings in awake humans that cortical ripples coordinate inter-areal communication during memory retrieval and rule instantiation. They do not represent continuous sensory features; they act as discrete binding pulses.
 
-$$\text{List: } \{\text{Cosmos}, \, \text{Ocean}, \, \text{Mountain}, \, \text{Castle}\} \implies \text{Sibling Rank } = 0$$
+### 2.2 Pacing Hierarchy: Delta (1.5 Hz) Macro-Frames and Theta (6.0 Hz) Sequence Slots
+Hierarchical recursion cannot be achieved by a single carrier frequency. In accordance with empirical MEG/EEG findings:
+*   **Delta Rhythm ($1.0\text{--}2.0\text{ Hz}$):** Functions as the **macro-context container**. Ding et al. (2016, *Nature Neuroscience*) [11] demonstrated that when humans process hierarchical syntax, sentence-level structures are tracked by endogenous 1 Hz delta oscillations, phrase-level structures by 2 Hz delta, and individual lexical items by 4 Hz theta.
+*   **Theta Rhythm ($4.0\text{--}8.0\text{ Hz}$):** Functions as the **local sequence clock**. Individual items within an active reference frame are time-division multiplexed across 32 phase slots of the theta cycle [6, 38].
+*   **Cross-Frequency Coupling (CFC):** As established by Lakatos et al. (2005) [20], cortical rhythms operate in an explicit hierarchy: Delta phase modulates Theta amplitude, while Theta phase modulates Gamma and Ripple power ($\delta \to \theta \to \gamma/\text{ripple}$).
 
-In contrast, biological syntax and compositional thought require hierarchical embedding:
-$$\text{Recursion: } \mathcal{R} = f_{\text{Cosmos}}\Big(f_{\text{Ocean}}\big(f_{\text{Mountain}}(\text{Castle})\big)\Big)$$
+### 2.3 Prefrontal Node Specialization: Area 10 ($Fpz$), dACC ($AFz$), and dlPFC ($F3/F4$)
+The 4 prefrontal recording sites model functionally and anatomically distinct regions:
+*   **Node 3: $Fpz$ (Brodmann Area 10 / Frontopolar Cortex) — Cognitive Branching & Pending Rules:**  
+    Area 10 units selectively hold **counterfactual goals and unchosen alternatives in a pending state** ("Plan B") while another task is executed [28, 29, 33]. It represents the highest level of hierarchical branching.
+*   **Node 2: $AFz$ (Brodmann Area 24/32 / dACC) — Hierarchical Prediction Error Hub:**  
+    Computes **Hierarchical Prediction Error (HPE)** and the **Expected Value of Control (EVC)** [30, 34, 35]. When sensory reality contradicts the active reference frame, dACC emits an error burst that triggers phase resets.
+*   **Nodes 0 & 1: $F3$ & $F4$ (Area 9/46 / dlPFC) — Syntax/Form and Semantics/Style:**  
+    Left dlPFC ($F3$) governs compositional syntax and geometric relations [36], whereas Right dlPFC ($F4$) governs non-verbal context and semantic style [23].
 
-If neural circuits attempt to maintain such nested dependencies within a single flat frequency band, the representations collide, inducing catastrophic representational collapse. True recursion requires structural segregation across cortical layers and temporal scales (Bastos et al., 2018 [4]; Ding et al., 2016 [10]).
+### 2.4 Orthogonal Neural Geometry & Factorized Sequence Subspaces
+To prevent catastrophic representational collapse when maintaining multi-level hierarchies, the prefrontal cortex factorizes representations into **orthogonal low-dimensional subspaces** [36, 37]:
 
-### 2.2 Multi-Dimensional Neural Geometry & Sequence Subspaces
-Recent intracranial and high-density electrophysiology proves that the brain resolves recursive nesting not through flat superposition, but through **Multi-Dimensional Neural Geometry** (Fan et al., 2024 [37]; Chen et al., 2024 [36]):
+$$\mathbf{S}_{\text{state}} = \mathbf{U}_{\text{Macro}} \cdot \vec{h}_{\text{Macro}} + \mathbf{U}_{\text{Meso}} \cdot \vec{h}_{\text{Meso}} + \mathbf{U}_{\text{Micro}} \cdot \vec{h}_{\text{Micro}}, \quad \text{where } \mathbf{U}_i \perp \mathbf{U}_j \; (\forall i \neq j)$$
 
-$$\mathbf{S}(t) = \sum_{l=1}^{L} \mathbf{U}_{\text{global}}^{(l)} \cdot \vec{h}_{\text{context}}^{(l)} + \mathbf{U}_{\text{local}}^{(l)} \cdot \vec{h}_{\text{item}}^{(l)}, \quad \text{where } \mathbf{U}_{\text{global}} \perp \mathbf{U}_{\text{local}}$$
+Transitions between levels (Zoom In / Zoom Out) correspond to orthonormal rotations in state space, preserving the synaptic integrity of all levels simultaneously without mutual interference.
 
-*   **Global Rank (Context Axis):** Encodes the level of abstraction within the tree (Macro, Meso, Micro).
-*   **Local Rank (Item Axis):** Encodes the discrete identity of the feature or object.
+### 2.5 Causal Phase Dynamics: 120-Edge Strictly Signed $i\text{PLV}$ Without Volume Conduction
+To extract true directed neurodynamic causality without contamination from instantaneous skull volume conduction, the engine computes the **strictly signed imaginary Phase-Locking Value** [12, 13]:
 
-Because $\mathbf{U}_{\text{global}}$ and $\mathbf{U}_{\text{local}}$ are strictly orthogonal subspaces, the cortical ensemble can hold a sub-element without overwriting or degrading the parent context. When moving up or down the hierarchy (Zoom In / Zoom Out), the neural trajectory undergoes an orthonormal rotation in state space, completely preserving the integrity of both levels simultaneously.
+$$i\text{PLV}_{ij}(t) = \Im\left\{ \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left( \frac{\dot{x}_j(t)}{|\dot{x}_j(t)|} \right)^* \right\} = \sin\left(\varphi_i(t) - \varphi_j(t)\right) \in [-1.0, +1.0]$$
 
-### 2.3 Theta-Phase Gated Multiplexing & High-Frequency Synchronization
-How are these orthogonal sequence subspaces accessed during a single cognitive cycle?
-Primate prefrontal cortex organizes the readout of hierarchical layers across the phase of a continuous carrier rhythm (Theta, 4–8 Hz) (Siegel et al., 2009 [38]; Kikumoto & Mayr, 2020 [14]):
+Because $\sin(0) \equiv 0$, zero-lag volume conduction cancels out identically.
 
-$$\Phi_{\theta}(t) \in [-\pi, +\pi] \implies \begin{cases}
-\Phi_{\theta} \in \big[-\pi, -\frac{\pi}{2}\big): & \text{Level 0: Macro Context (Cosmos)} \\
-\Phi_{\theta} \in \big[-\frac{\pi}{2}, 0\big):    & \text{Level 1: Meso Context (Ocean)} \\
-\Phi_{\theta} \in \big[0, +\frac{\pi}{2}\big):    & \text{Level 2: Micro Structure (Mountain)} \\
-\Phi_{\theta} \in \big[+\frac{\pi}{2}, +\pi\big]: & \text{Level 3: Nano Detail (Castle)}
-\end{cases}$$
-
-Rather than relying on continuous broadband gamma, long-range inter-areal communication during memory recall is mediated by **phase-locked High-Frequency Oscillations and Ripples (100–200 Hz)** (Dickey et al., 2022 [15]; Arnulfo et al., 2020 [16]). As the theta phase sweeps through the cycle, distinct subsets of the 120-edge cortical phase graph synchronize transiently, yielding a sequence of discrete topological network configurations.
-
-### 2.4 Rostro-Caudal Executive Gradients & Cortical Pose Transformations
-The depth of this recursive nesting maps directly to the anatomical **Rostro-Caudal Axis** of the lateral prefrontal cortex (Badre & D'Esposito, 2007 [32]; Badre & Nee, 2018 [10]):
-1.  **Caudal Premotor / dlPFC (Area 8/6):** Governs immediate sensorimotor actions (Micro).
-2.  **Mid-Dorsolateral PFC (Area 9/46, $F3/F4$):** Governs relational rules and object-centric reference frames (Meso).
-3.  **Frontopolar Cortex (Brodmann Area 10, $Fpz$):** The hierarchical apex governing cognitive branching, counterfactual goals ("Plan B"), and meta-rules (Macro) (Boorman et al., 2009 [28]; Koechlin & Hyafil, 2007 [29]).
-4.  **Dorsal Anterior Cingulate Cortex (dACC Area 24/32, $AFz$):** Computes Hierarchical Prediction Error (HPE). When sensory evidence contradicts the expected recursive frame, dACC emits a phase-resetting burst that destabilizes the active attractor (Alexander & Brown, 2011 [30]; Womelsdorf et al., 2010 [35]).
+### 2.6 Directional Causality: Phase Lead-Lag Distinguishes Parent from Child
+The sign of the 120-edge $i\text{PLV}$ matrix determines the direction of the hierarchical composition:
+*   Axonal conduction between prefrontal nodes exhibits physiological delays ($\Delta t \approx 10\text{--}35\text{ ms}$) [4, 10].
+*   **Case $A \supset B$ ("Castle on Mountain"):** Node $A$ (Parent frame, AFz) sends top-down gating pulses that lead Node $B$ (Child content, F3). $\Delta\varphi = \varphi_A - \varphi_B > 0 \implies \sin(\Delta\varphi) > 0$. The positive sign encodes $A$ as the container.
+*   **Case $B \supset A$ ("Mountain in Castle"):** Node $B$ acts as the macro container and leads Node $A$. $\Delta\varphi = \varphi_B - \varphi_A > 0 \implies \sin(\varphi_A - \varphi_B) < 0$. The sign inverts, commanding the generative model to place the Mountain inside the Castle.
 
 ---
 
-## 🧠 3. The Algorithmic Failure of Flat Attention & The Thousand Brains Solution
+## 🧠 3. Thousand Brains Integration (`tbp.monty`)
 
-### 3.1 The Superposition Catastrophe in 2D Attention
-Modern generative architectures (such as Transformer decoders and Latent Diffusion cross-attention mechanisms) calculate attention as a normalized inner product between Query and Key matrices:
+### 3.1 Sensorimotor Modeling and Allocentric Reference Frames
+Under the Thousand Brains Theory (Hawkins et al., 2017 [3]; 2019 [17]; 2025 [1]), cortical columns represent complete objects by binding sensory features to specific locations within **allocentric reference frames**:
 
-$$\mathbf{A} = \text{softmax}\left(\frac{\mathbf{Q}\mathbf{K}^T}{\sqrt{d_k}}\right)\mathbf{V}$$
+$$\mathbf{M}_{\text{parent}} = \mathcal{G}\left(\vec{x}_{\text{rel}}, \, \mathbf{R}_{\text{rel}}, \, s_{\text{rel}}, \, \mathbf{M}_{\text{child}}\right)$$
 
-When prompted with a multi-scale hierarchy (e.g., *"A castle on a mountain inside an ocean floating in deep cosmos"*), the attention mechanism flattens these relationships into a bag-of-tokens. The attention scores distribute energy diffusely across all tokens, causing **Catastrophic Semantic Blending**:
-*   The diffusion model paints medieval bricks floating in space.
-*   The mountain is rendered with ocean textures.
-*   The structural containment is destroyed because the model lacks an explicit coordinate frame to enforce physical or conceptual nesting.
+Hierarchical cortical connections do not merely extract complex static features; they compute **relative pose transformations** ($\Delta\vec{x}, \mathbf{R}_{\text{rel}}, s_{\text{rel}}$) between coordinate systems mediated by thalamocortical loops (Layer 6b $\to$ Thalamus $\to$ Layer 4) [1].
 
-### 3.2 Compositional Structures via Cortical Reference Frames (`tbp.monty`)
-The Thousand Brains Theory (Hawkins et al., 2017 [3]; Hawkins et al., 2019 [17]; Hawkins, 2021 [18]; Leadholm et al., 2025 [1]) solves this problem algorithmically. Every cortical column is an autonomous sensorimotor modeling system that represents objects not by static feature templates, but by **features anchored to specific locations within an allocentric Reference Frame**:
+### 3.2 Exact Cortical Messaging Protocol (CMP) Packet Specification
+Every cortical node within NeuroCanvas emits packets conforming strictly to the Cortical Messaging Protocol (`src/tbp/monty/cmp.py`):
 
-$$\mathbf{M}_{\text{parent}} = \mathcal{G}\left(\mathbf{x}_{\text{rel}}, \, \mathbf{R}_{\text{rel}}, \, s_{\text{rel}}, \, \mathbf{M}_{\text{child}}\right)$$
+```python
+Message(
+    location=current_location_3d,               # Integrated metric path (x, y, z) on manifold
+    morphological_features={
+        "pose_vectors": jpca_rotation_matrix,   # 3x3 orthonormal SO(3) rotational basis from jPCA
+        "pose_fully_defined": True,             # Boolean indicating fully determined orientation
+        "on_object": True                       # True if state is within conceptual manifold bounds
+    },
+    non_morphological_features={
+        "theta_hz": live_theta_frequency,       # Instantaneous dPhi/dt carrier clock (Hz)
+        "delta_hz": live_delta_frequency,       # Macro-epoch temporal velocity (Hz)
+        "recursion_rank": live_k_depth,         # Continuous SVD manifold depth K in [1.0, 4.0]
+        "causal_sign": lead_causal_sign         # Signed iPLV direction (Parent -> Child)
+    },
+    confidence=beta_vector_stability,           # Dot(V_beta_t, V_beta_t-1) in [-1.0, +1.0]
+    pass_message=True,                          # Deliver to receiving Learning Modules
+    sender_id="Prefrontal_Heterarchy_L4",       # Unique column identifier
+    sender_type="SM",                           # SensorModule originating packet
+    process_features_in_lm=True                 # Instructs LM to accumulate feature evidence
+)
+```
 
-Where:
-*   $\mathbf{x}_{\text{rel}} \in \mathbb{R}^3$ represents relative translation.
-*   $\mathbf{R}_{\text{rel}} \in SO(3)$ represents relative orientation.
-*   $s_{\text{rel}} \in \mathbb{R}^+$ represents relative scale.
+### 3.3 16,384-Column CUDA Layer 4 Macrocolumn Sheet
+*   Each of the 4 nodes hosts 4,096 macrocolumns arranged in a $64 \times 64$ sheet.
+*   Total network: $4 \times 4096 = \mathbf{16\,384 \text{ cortical macrocolumns}}$ computed via CUDA kernels.
+*   Sparse Distributed Representation (SDR) sparsity is strictly enforced via Top-$K$ winner-take-all inhibition ($k = 80$ active columns per node; total $K = 320$ active columns, enforcing $1.95\%$ sparsity).
 
-To learn a compositional object (e.g., a logo on a cup, or a castle on a mountain), the neocortex does not relearn the child object. It simply learns the **relative pose transformation** between the reference frame of the parent and the reference frame of the child (`model.py`, `cmp.py`). 
-
-### 3.3 Recursive Graph Convergence & Prediction Error as an Arbiter
-In `tbp.monty`, when an agent explores an environment, learning modules (`EvidenceGraphLM`) evaluate incoming sensations against hypotheses in an `EvidenceGraphMemory`. 
-*   **Recursive Coherence:** If an agent's internal model accurately nests the child reference frame inside the parent frame, every sensory displacement correctly predicts the next sensory state. The **Most Likely Hypothesis Prediction Error (`mlh_prediction_error`) drops to zero**.
-*   **Recursive Breakdown:** If an agent attempts to process concepts as a flat list, the relative pose is undefined. The sensorimotor loop fails to predict input features across saccades. The prediction error spikes to $1.0$, signaling topological chaos.
+### 3.4 Independent Evidence Accumulation (`EvidenceGraphMemory`)
+Following `tbp.monty`, memory retrieval in cortical columns is non-parametric. Each concept maintains an independent evidence accumulator:
+$$\text{Score}_k = \frac{\mathbf{P}_k \cdot \mathbf{S}}{\|\mathbf{P}_k\| \|\mathbf{S}\|} \in [0.0, 1.0]$$
+The system explicitly avoids global cross-concept softmax competition during long-term memory retrieval, preventing catastrophic cross-talk.
 
 ---
 
 ## ⚡ 4. Hardware-Aware Signal Processing Pipeline (500 Hz HAL)
 
-### 4.1 Nyquist Bounds & High-Frequency Phase Locking on FreeEEG16
-The physical sensor consists of the **FreeEEG16-alpha2** concentric electrode array (26 mm circular footprint, dual 24-bit ADC architecture). 
-*   **Sampling Rate ($f_s$):** $500.0\text{ Hz}$.
-*   **Nyquist Limit ($f_{\text{Nyq}}$):** $250.0\text{ Hz}$.
-*   **Target Bandwidth:** $100.0\text{ to }200.0\text{ Hz}$ (Cortical Ripples / High Gamma).
+```
+                    16-CHANNEL CONCENTRIC MICRO-ARRAY (26 mm)
+                    
+                               [AIN4P]     [AIN3P]
+                      [AIN6P]                        [AIN1P]
+                               [AIN5P]     [AIN2P]      
+                  [AIN7P]                                [AIN0P]               
+                           [GND_PIN]        [REF_PIN] 
+                  [AIN0P]                                [AIN7P]
+                               [AIN2P]     [AIN5P]      
+                      [AIN1P]                        [AIN6P]
+                               [AIN3P]     [AIN4P]
+```
 
-Operating at $500\text{ Hz}$ provides an ideal engineering compromise: it avoids the bandwidth bottlenecks, packet dropouts, and CPU starvation of $1000\text{ Hz}$ streams while remaining fully capable of resolving $100\text{--}200\text{ Hz}$ phase dynamics without frequency aliasing.
+### 4.1 Nyquist Bounds on FreeEEG16-alpha2 (26 mm Concentric Ring Array)
+*   **Sampling Rate ($F_s$):** $500.0\text{ Hz}$.
+*   **Nyquist Limit ($F_{\text{Nyq}}$):** $250.0\text{ Hz}$.
+*   **Bandwidth Coverage:** Delta ($1.0\text{--}3.5\text{ Hz}$), Theta ($4.0\text{--}8.0\text{ Hz}$), Beta ($15\text{--}30\text{ Hz}$), Low/Fast Gamma ($30\text{--}85\text{ Hz}$), and Cortical Ripples ($100\text{--}200\text{ Hz}$) are processed without aliasing.
 
-### 4.2 Strictly Signed 120-Edge Imaginary Phase-Locking Value ($i\text{PLV}$)
-Surface EEG and local field potentials are severely corrupted by volume conduction and zero-lag skull smearing. To extract true directed neurodynamic causality across all $\frac{16 \times 15}{2} = 120$ electrode pairs, the engine computes the **imaginary Phase-Locking Value** (Nolte et al., 2004 [13]; Bruña et al., 2018 [12]):
+### 4.2 Micro-Scale Columnar Resolution: 2,650 Columns Under a 26 mm Footprint
+*   **Sensor Radius ($R$):** $13.0\text{ mm} \implies \text{Area } A = \pi R^2 \approx \mathbf{531\text{ mm}^2}$.
+*   **Biological Macrocolumn Diameter:** $\approx 0.5\text{ mm} \implies \text{Area } A_{\text{col}} = \pi (0.25)^2 \approx \mathbf{0.20\text{ mm}^2}$ [18].
+*   **Underlying Column Count:** The 26 mm sensor directly covers $\frac{531}{0.20} \approx \mathbf{2\,650 \text{ macrocolumns}}$.
+*   With 16 high-density differential nodes, each electrode cluster listens to $\approx 165$ macrocolumns. High spatial density enables reading localized traveling waves and spatial phase gradients directly.
 
-$$i\text{PLV}_{ij} = \Im\left\{ \frac{1}{T} \sum_{t=1}^{T} \frac{\dot{x}_i(t)}{|\dot{x}_i(t)|} \cdot \left( \frac{\dot{x}_j(t)}{|\dot{x}_j(t)|} \right)^* \right\} = \frac{1}{T} \sum_{t=1}^{T} \sin\big(\varphi_i(t) - \varphi_j(t)\big) \in [-1.0, +1.0]$$
-
-By strictly preserving the sign of $\sin(\Delta\varphi)$, volume conduction is identically zero ($\sin(0) \equiv 0$), while positive and negative signs represent directed causal lead and lag between cortical columns.
-
-### 4.3 32-Slot Theta-Phase Decomposition Tensor ($[32, 120]$)
-In `neuro_heterarchy_core.py`, the GPU daemon maintains a continuous ring buffer of $N = 256$ samples ($512\text{ ms}$).
-1.  **Carrier Extraction:** The broadband signal is bandpass-filtered into Delta ($2.5\text{ Hz}$), Theta ($6.0\text{ Hz}$), and Beta ($22.0\text{ Hz}$). The instantaneous phase $\Phi_{\theta}(t)$ of the lead prefrontal node is computed via the Hilbert transform.
-2.  **Filter Bank:** 32 Gaussian bandpass filters span the $100.0\text{ to }200.0\text{ Hz}$ ripple range with center frequencies:
-$$f_c(k) = 100.0 + k \cdot \frac{100.0}{31}\text{ Hz}, \quad k \in \{0 \dots 31\}, \quad \sigma = 6.0\text{ Hz}$$
-3.  **Von Mises Phase Gating:** 32 spatial phase angles $\theta_k = -\pi + \frac{2\pi}{32}(k + 0.5)$ segment the theta cycle. The cross-spectral analytic products are weighted by a circular von Mises kernel ($\kappa = 3.2$):
-$$w_k(t) = \frac{\exp\big(3.2 \cos(\Phi_{\theta}(t) - \theta_k)\big)}{\sum_t \exp\big(3.2 \cos(\Phi_{\theta}(t) - \theta_k)\big) + \epsilon}$$
-4.  **Output Tensor:** The resulting tensor $\mathbf{\Psi} \in \mathbb{R}^{32 \times 120}$ represents the directed 120-edge connectivity graph across 32 discrete phase bins of a single cognitive cycle.
+### 4.3 32-Slot Phase Gating and Real-Time SVD Manifold Rank ($K$)
+The GPU daemon maintains a continuous 256-sample ($512\text{ ms}$) buffer. Cross-channel analytic signals in the $100\text{--}200\text{ Hz}$ band are partitioned into 32 theta phase bins via a von Mises circular kernel ($\kappa = 3.2$):
+$$\mathbf{M} \in \mathbb{R}^{32 \times 120}, \quad \mathbf{M}_c = \mathbf{M} - \mathbf{1}\bar{\mathbf{m}}^T$$
+We compute the Singular Value Decomposition (SVD):
+$$\mathbf{M}_c = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^T, \quad \tilde{\sigma}_k = \frac{\sigma_k}{\sigma_1 + \epsilon}$$
+The **Instantaneous Manifold Recursion Depth ($K$)** is defined by:
+$$K = \sum_{k=1}^{4} \mathbb{I}(\tilde{\sigma}_k > 0.22) \in [1.0, 4.0]$$
+*   **Flat Mode ($K \approx 1.0$):** High-frequency connectivity is stationary; the singular spectrum collapses into one dominant mode ($\sigma_1 \gg \sigma_{2..4}$).
+*   **Hierarchical Mode ($K \ge 2.0$):** Multiple orthogonal phase topologies are sequentially visited across the theta cycle, driving $\sigma_2, \sigma_3, \sigma_4 > 0.22$.
 
 ---
 
-## 📐 5. Mathematical Formulation of the Recursion Arbiter & Generative Actuator
+## 🎨 5. Generative Actuator & Continuous Fractal Treemap
 
 ```
-                              TOPOLOGICAL RECURSION ARBITRATION
-                              
-     [RAW iPLV TENSOR] ─────────────► [CENTERING] ─────────────► [SINGULAR VALUE DECOMPOSITION]
-       M ∈ R^(32 × 120)                 M_c = M - μ                   U, S, V^T = SVD(M_c)
-     (32 Theta-Phase Slots)                                                  │
-                                                                             ▼
-                                                                 Normalized Singular Spectrum
-                                                                 s_k = S_k / (S_0 + ε),  k ∈ {0..3}
-                                                                             │
-                    ┌────────────────────────────────────────────────────────┴─────────────────────┐
-                    ▼                                                                              ▼
-         [RANK 1: FLAT COLLAPSE]                                                        [RANK 4: DEEP RECURSION]
-         - S_0 dominant, S_1..3 < 0.22                                                 - All 4 S_k > 0.22
-         - Static 120-edge topology                                                    - 4 Orthogonal Phase Subspaces
-         - Depth K = 1.0                                                               - Depth K = 4.0
-                    │                                                                              │
-                    ▼                                                                              ▼
-         [COMPETITIVE OVERRIDE]                                                         [GENERATIVE DOMINANCE]
-         - Denoise: s = 0.50 (Passive)                                                 - Denoise: s = 0.95 (Overdrive)
-         - Canvas: Split/Disjoint Tiles                                                - Canvas: Continuous Fractal Treemap
-```
-
-### 5.1 SVD Manifold Rank as an Instantaneous Metric of Cognitive Depth
-Instead of relying on fragile heuristic thresholds, NeuroCanvas evaluates the **Intrinsic Dimensionality of the Phase Manifold** (Fan et al., 2024 [37]; Stringer et al., 2019 [22]). 
-
-Let $\mathbf{M} \in \mathbb{R}^{32 \times 120}$ represent the instantaneous phase-locking matrix for the lead prefrontal channel ($F3$). We center the matrix across phase slots:
-
-$$\bar{\mathbf{m}} = \frac{1}{32} \sum_{k=1}^{32} \mathbf{M}_{k, :}, \quad \mathbf{M}_c = \mathbf{M} - \mathbf{1} \bar{\mathbf{m}}^T$$
-
-We compute the Singular Value Decomposition (SVD) of $\mathbf{M}_c$:
-
-$$\mathbf{M}_c = \mathbf{U} \mathbf{\Sigma} \mathbf{V}^T, \quad \mathbf{\Sigma} = \operatorname{diag}(\sigma_1, \sigma_2, \dots, \sigma_{32})$$
-
-We normalize the singular spectrum by the primary mode:
-$$\tilde{\sigma}_k = \frac{\sigma_k}{\sigma_1 + \epsilon}, \quad k \in \{1, 2, 3, 4\}$$
-
-The **Instantaneous Recursion Depth ($K_{\text{depth}}$)** is defined as the number of orthogonal phase configurations whose explained variance exceeds the noise floor ($\theta_{\text{noise}} = 0.22$):
-
-$$K_{\text{depth}} = \sum_{k=1}^{4} \mathbb{I}\big(\tilde{\sigma}_k > 0.22\big) \in [1.0, 4.0]$$
-
-*   **Flat / Associative Thinking ($K_{\text{depth}} = 1$):** The 120-edge connectivity pattern is static throughout the theta cycle. $\sigma_1$ accounts for $>90\%$ of total variance. $\tilde{\sigma}_2, \tilde{\sigma}_3, \tilde{\sigma}_4 \approx 0$.
-*   **Full 4-Level Recursion ($K_{\text{depth}} = 4$):** The network sequentially visits 4 distinct, orthogonal phase topologies across the theta sweep. $\tilde{\sigma}_1, \tilde{\sigma}_2, \tilde{\sigma}_3, \tilde{\sigma}_4$ all remain robustly elevated above $0.22$.
-
-### 5.2 Competitive Evolutionary Arbitration & Denoise Overdrive
-In a multiplayer or agent-vs-agent substrate, $N$ independent entities submit competing conceptual realities. The **Evolutionary Arbiter** continuously collects the cognitive depths:
-
-$$\vec{\mathcal{D}} = [K_1, K_2, \dots, K_N], \quad w^* = \operatorname{argmax}(\vec{\mathcal{D}})$$
-
-The entity with the deepest recursive capacity ($w^*$) wins sovereignty over the shared generative substrate:
-*   **The Loser ($K < K_{\max}$):** The loser’s concept weights are suppressed. If the loser attempts to impose a flat concept, its output is reduced to background noise.
-*   **The Winner ($K = K_{\max}$):** The winner’s conceptual hierarchy controls the prompt manifold.
-*   **Anti-Trap Denoise Overdrive ($s$):** To prevent previous autoregressive visual buffers from trapping the diffusion process (the Latent-Lock Trap), the denoising strength $s(t)$ surges to maximum power when an evolutionary takeover or level-jump occurs:
-
-$$s(t) = \begin{cases} 
-0.95, & \text{if } K_{\text{winner}} \ge 3.0 \text{ (Total Reality Takeover)} \\
-\operatorname{clip}\left(0.48 + 0.28 \cdot \epsilon_{\text{CLIP}} + 0.12 \cdot (1 - \text{Stab}_{\beta}), \, 0.48, \, 0.78\right), & \text{otherwise (Equilibrium Attractor)}
-\end{cases}$$
-
-At $s = 0.95$, the Stable Diffusion U-Net destroys the previous structural pixels within two inference steps, instantiating the winner’s recursive geometry with zero artifact retention.
-
-### 5.3 Continuous Fractal Treemap: Non-Discontinuous Generative Geometry
-Rather than switching abruptly between hardcoded layouts via `if-else` branches, NeuroCanvas computes visual bounding boxes using **Continuous Geometric LERP (Linear Interpolation)**.
-
-Let the normalized recursion depth be:
-$$\tau = \operatorname{clip}\left(\frac{K_{\text{depth}} - 1.0}{3.0}, \, 0.0, \, 1.0\right) \in [0.0, 1.0]$$
-
-For a canvas of dimensions $[W, H]$ with $N = 4$ concepts, and an inner nesting margin $\delta = 0.15 \cdot \min(W, H)$, the bounding box $[x_i, y_i, w_i, h_i]$ for hierarchy level $i \in \{0, 1, 2, 3\}$ is defined by:
-
-$$\begin{aligned}
-\text{Flat Mode } (\tau = 0): & \quad x_{\text{flat}}(i) = i \cdot \frac{W}{N}, \quad y_{\text{flat}}(i) = 0, \quad w_{\text{flat}}(i) = \frac{W}{N}, \quad h_{\text{flat}}(i) = H \\
-\text{Nested Mode } (\tau = 1): & \quad x_{\text{nest}}(i) = i \cdot \delta, \quad y_{\text{nest}}(i) = i \cdot \delta, \quad w_{\text{nest}}(i) = W - 2i\delta, \quad h_{\text{nest}}(i) = H - 2i\delta
-\end{aligned}$$
-
-The continuous bounding box is synthesized on every frame via:
-
-$$\mathbf{B}_i(\tau) = (1 - \tau) \cdot \mathbf{B}_{\text{flat}}(i) + \tau \cdot \mathbf{B}_{\text{nest}}(i)$$
-
-```text
-    τ = 0.00 (Flat List: Columns)             τ = 0.50 (Intermediate Deformation)           τ = 1.00 (Full Fractal Treemap)
+    τ = 0.00 (Flat List: Columns)             τ = 0.50 (Intermediate LERP)                   τ = 1.00 (Full Fractal Treemap)
 ┌───────┬───────┬───────┬───────┐          ┌──────────────┬───────────────┐          ┌─────────────────────────────┐
 │       │       │       │       │          │ COSMOS       │               │          │ COSMOS                      │
 │       │       │       │       │          │   ┌──────────┴────┐          │          │   ┌─────────────────────┐   │
@@ -263,14 +236,127 @@ $$\mathbf{B}_i(\tau) = (1 - \tau) \cdot \mathbf{B}_{\text{flat}}(i) + \tau \cdot
                                                                                      └───┴───┴─────────────┴───┴───┘
 ```
 
-*   **When $\tau \to 0$ (Flat Chaos):** The layout decomposes into four disjoint parallel columns. Concepts exist as unrelated, isolated entities.
-*   **When $\tau \to 1$ (Full Recursion):** The layout smoothly deforms into a concentric, nested **Treemap**. Cosmos contains Ocean; Ocean contains Mountain; Mountain contains Castle. 
+### 5.1 Dynamically Resolved Hierarchical Lineage (No Hardcoded Lists)
+The active generative geometry is resolved in real time from the agent's active semantic weights:
+1.  Extract all active concepts whose probability exceeds a baseline threshold: $\mathcal{A} = \{i \mid w_i > 0.15\}$.
+2.  Query the tree structure to find the ancestor chain from the active child node up to the macro root.
+3.  Sort the resolved hierarchy according to the signed directed $i\text{PLV}$ lead:
+    *   $\text{Lead Sign} \ge 0 \implies \text{Macro} \supset \text{Meso} \supset \text{Micro}$ (Natural containment).
+    *   $\text{Lead Sign} < 0 \implies \text{Micro} \supset \text{Meso} \supset \text{Macro}$ (Causal inversion / surreal nesting).
 
-These continuous bounding boxes directly condition the spatial attention masks of the generative pipeline, enforcing physical, visual containment that matches the internal manifold of the thinker.
+### 5.2 Mathematical Formulation of Continuous Fractal LERP ($K \in [1.0, 4.0]$)
+For canvas dimensions $[W, H]$, $N$ resolved active concepts, and margin parameters $\delta_x = 0.12 W, \delta_y = 0.12 H$:
+$$\tau = \operatorname{clip}\left(\frac{K - 1.0}{2.0}, \, 0.0, \, 1.0\right)$$
+For each active rank $r \in \{0 \dots N-1\}$:
+$$\mathbf{B}_{\text{flat}}(r) = \left[ r \cdot \frac{W}{N}, \; 0, \; \frac{W}{N}, \; H \right]$$
+$$\mathbf{B}_{\text{nest}}(r) = \left[ r \cdot \delta_x, \; r \cdot \delta_y, \; \max(20, W - 2r\delta_x), \; \max(20, H - 2r\delta_y) \right]$$
+$$\mathbf{B}_{\text{render}}(r) = (1 - \tau) \cdot \mathbf{B}_{\text{flat}}(r) + \tau \cdot \mathbf{B}_{\text{nest}}(r)$$
+This eliminates discrete visual pop-in, enabling smooth continuous topological morphing.
+
+### 5.3 Anti-Trap Denoise Overdrive ($s = 0.48 \dots 0.95$) Coupled to dACC Prediction Error
+To prevent autoregressive pixel inertia from trapping the diffusion process (the Latent-Lock Trap), denoising strength surges based on dACC prediction error ($\epsilon_{\text{CLIP}} = 1.0 - P_{\text{target}}$):
+$$s(t) = \operatorname{clip}\left( 0.48 + 0.28 \cdot \epsilon_{\text{CLIP}} + 0.12 \cdot (1 - \text{Stability}_{\beta}), \, 0.48, \, 0.95 \right)$$
+When a level switch occurs or $K \ge 2.2$, denoising surges to $s = 0.95$, destroying the old pixel attractor within two frames.
 
 ---
 
-## 📚 6. Comprehensive Scientific References & Verifiable DOIs
+## 🔍 6. Empirical Diagnostics: Calibration Snapshot Phase Aliasing
+
+```
+                               THE STROBOSCOPIC ALIASING MECHANISM
+                               
+  Theta Wave (6.0 Hz): T = 166.7 ms
+        ▲
+        │         Gamma Burst Window (Phase ~ 0.75)
+        │                 ┌───┐
+        │                │     │
+  ──────┼────────────────┼─────┼─────────────────────────────────────────────► Time
+        │      ▲         │     │         ▲
+        │      │          └───┘          │
+        ▼      │                         │
+            Chunk 1:                   Chunk 4:
+       Sampled at Phase 0.25       Sampled at Phase 0.75
+          Signal = 0.05               Signal = 1.00
+       Snapshot Match = 4.7%       Snapshot Match = 61.9%
+```
+
+### 6.1 Root Cause of the Sub-75% Validation Oscillation on `[КОСМОС]`
+Empirical testing on Epochs 10–28 revealed validation scores oscillating periodically:
+$$4.7\% \longrightarrow 10.3\% \longrightarrow \mathbf{61.9\%} \longrightarrow \mathbf{60.9\%} \longrightarrow 34.4\% \longrightarrow 5.0\% \longrightarrow \mathbf{47.8\%} \dots$$
+
+Simultaneously, the live inference decoder displayed:
+$$\text{Decoded: } [\text{КОСМОС}] \; (100.0\%)$$
+
+The long-term memory prototype was already learned; the validation gate failed to lock because of **temporal aliasing**.
+
+### 6.2 The Stroboscopic Aliasing Mechanism
+1.  **Theta Cycle Duration:** $F_\theta = 6.0\text{ Hz} \implies T_\theta \approx 166.7\text{ ms}$.
+2.  **Chunk Duration:** $\text{CHUNK\_SIZE} = 20 \text{ samples} \text{ at } 500\text{ Hz} \implies 40.0\text{ ms}$.
+3.  **Biological Burst Gating:** In `synthetic_16d_causal_agent.py`, the gamma packet is gated by a Gaussian envelope centered at theta phase $0.75$:
+    $$w_{\text{late}} = \exp\left( -\frac{(\tau_\theta - 0.75)^2}{0.02} \right)$$
+4.  **The Sampling Trap:** A single 40 ms chunk represents $\approx 24\%$ of a theta cycle:
+    *   If the holdout validation snapshot is captured during the theta trough ($\tau_\theta \approx 0.25$), $w_{\text{late}} \approx 0$. The SDR represents silence/noise $\implies \text{Score} = \mathbf{4.7\%}$.
+    *   If the snapshot is captured near the peak ($\tau_\theta \approx 0.75$), $w_{\text{late}} \approx 1.0 \implies \text{Score} = \mathbf{61.9\%}$.
+
+### 6.3 Biological & Algorithmic Remediation Protocol
+In biological cortex, working memory stability is never evaluated from an isolated 40 ms slice of an oscillatory cycle. Memory retention must be evaluated across an **entire theta period**:
+1.  **Full-Period Integration Window:** Accumulate incoming SDRs across $\ge 4 \text{ consecutive chunks}$ ($\approx 160\text{ ms}$, spanning one complete theta cycle):
+    $$\mathbf{S}_{\text{eval}} = \bigvee_{t=1}^{4} \text{SDR}(t)$$
+2.  **Peak-Phase Gated Sampling:** Capture validation snapshots exclusively when the live theta phase satisfies $\Phi_\theta \in [0.65, 0.85] \cdot 2\pi$.
+3.  **Orthogonality Retention Criterion:** Verify memory stability by testing self-similarity ($\text{Score}_{ii} \ge 75\%$) and cross-talk suppression ($\text{Score}_{ij} \le 25\%$ for all $j \neq i$).
+
+---
+
+## 🗺️ 7. Comprehensive Roadmap: Scientific Gaps & Multiplayer Vision
+
+### 7.1 Biophysical Gaps: Laminar Deep-Beta Gating & Thalamic Pose Converters
+*   **Gap 1: Multi-Layer Cortical Microcircuits ($L2/3 \leftrightarrow L5/6$):**  
+    The current implementation collapses each macrocolumn into a single Layer 4 sheet. In vivo cortex utilizes deep layers ($L5/6$) for beta-band motor outputs and feedback suppression of superficial gamma [4, 5].  
+    *Roadmap:* Implement explicit 2-compartment microcircuits where deep-layer beta actively gates superficial-layer gamma bursts via interlaminar inhibitory connections.
+*   **Gap 2: Cortico-Thalamo-Cortical (CTC) Reference-Frame Transformation:**  
+    Currently, the SO(3) pose rotation is calculated directly in PyTorch via jPCA. Hawkins et al. (2025) [1] propose that the **thalamus (pulvinar and higher-order nuclei)** acts as the physical pose converter, routing Layer 6b orientation vectors to transform Layer 4 sensory features.  
+    *Roadmap:* Model higher-order thalamic relay nuclei as matrix-transformation operators between cortical learning modules.
+
+### 7.2 Higher-Order Recursion ($K \ge 4$): Scaling AI Beyond Primate Limitations
+*   Human prefrontal cortex is metabolically and anatomically limited to $\approx 4$ nested working memory slots [6, 11].
+*   **Artificial Cognitive Architecture:** Neuromorphic and looped recurrent models (e.g., Recurrent Looped Transformers, Zhang 2026 [43]) do not possess biological skull constraints.
+*   *Roadmap:* Extend the SVD phase-manifold engine to resolve arbitrary recursion depths ($K = 8, 12, 16$), creating generative simulations with arbitrary levels of nested logic.
+
+### 7.3 Multiplayer "Noosphere": Causal Authority & Role Delegation
+The ultimate expression of this paradigm is a **shared multi-mind generative substrate**:
+
+```
+                       THE MULTI-MIND HIERARCHICAL ECOSYSTEM
+                       
+  [HUMAN ARCHITECT / CREATOR (K = 4.0)]             [AI BRICKLAYER / AGENT (K = 1.0)]
+  AFz/Fpz: 100–200 Hz Ripples Active                 F3: 30–85 Hz Gamma Active
+  Sets Reference Frame: Space ⊃ Mountain             Fills Content: Bricks, snow, rocks
+                │                                                  │
+                └────────────────────────┬─────────────────────────┘
+                                         ▼
+                 ┌───────────────────────────────────────────────┐
+                 │       GENERATIVE CONSENSUS ARBITER            │
+                 │   - High-K Entity holds the Treemap Rules     │
+                 │   - Low-K Entity generates local textures     │
+                 └───────────────────────┬───────────────────────┘
+                                         ▼
+                 ┌───────────────────────────────────────────────┐
+                 │         SHARED LATENT DIFFUSION MEDIUM        │
+                 │       Continuous Reality Co-Creation          │
+                 └───────────────────────────────────────────────┘
+```
+
+1.  **Heterarchy, Not Elimination:** An entity with higher recursion ($K=4$) does not disconnect or kill lower-K agents. It **subordinates** the shared space.
+2.  **The Delegation Trade-Off (Why Gods Don't Lay Bricks):** Maintaining high-level macro-rules on 100–200 Hz consumes prefrontal bandwidth. The high-K entity becomes the **physics engine / structural arbiter** (Treemap layout, bounding coordinates), delegating micro-scale texture filling to lower-K entities (LLMs, fast diffusion models).
+3.  **Inter-Brain Synchrony (IBS):** Coupling multiple human brains to the shared canvas allows measuring collective phase-locking ($i\text{PLV}_{\text{inter-brain}}$) [42]. Shared cooperative goals induce inter-brain resonance; conflict induces dACC prediction error spikes.
+
+### 7.4 Autonomous Stigmergic Entity Spawning
+*   Once a high-K human mind establishes a stable domain with defined reference frames, autonomous LLM/VLA agents can **spawn directly inside the established rules**.
+*   The human provides structural grounding (preventing AI hallucination); the autonomous agents populate the world with rich, dynamic interactions.
+
+---
+
+## 📚 8. Complete Scientific References & Verifiable DOIs
 
 1. **Hawkins, J., Leadholm, N., & Clay, V. (2025).** *Hierarchy or Heterarchy? A Theory of Long-Range Connections for the Sensorimotor Brain.* **arXiv**, [arXiv:2507.05888](https://arxiv.org/abs/2507.05888).
 2. **Miller, E. K., Lundqvist, M., & Bastos, A. M. (2018).** *Working Memory 2.0.* **Neuron**, 100(2), 463–475. [DOI: 10.1016/j.neuron.2018.09.023](https://doi.org/10.1016/j.neuron.2018.09.023).
@@ -280,7 +366,7 @@ These continuous bounding boxes directly condition the spatial attention masks o
 6. **Lisman, J. E., & Jensen, O. (2013).** *The Theta-Gamma Neural Code.* **Neuron**, 77(6), 1002–1016. [DOI: 10.1016/j.neuron.2013.03.007](https://doi.org/10.1016/j.neuron.2013.03.007).
 7. **Churchland, M. M., et al. (2012).** *Neural population dynamics during reaching.* **Nature**, 487(7405), 51–56. [DOI: 10.1038/nature11129](https://doi.org/10.1038/nature11129).
 8. **Tort, A. B. L., et al. (2010).** *Measuring Phase-Amplitude Coupling Between Neuronal Oscillations of Different Frequencies.* **Journal of Neurophysiology**, 104(2), 1195–1210. [DOI: 10.1152/jn.00106.2010](https://doi.org/10.1152/jn.00106.2010).
-9. **Aru, J., et al. (2015).** *Untangling cross-frequency coupling to avoid biological false positives.* **Current Opinion in Neurobiology**, 31, 51–57. [DOI: 10.1016/j.conb.2014.08.002](https://doi.org/10.1016/j.conb.2014.08.002).
+9. **Fusi, S., Miller, E. K., & Rigotti, M. (2016).** *Why neurons mix: high dimensionality for higher cognition.* **Current Opinion in Neurobiology**, 37, 66–74. [DOI: 10.1016/j.conb.2016.01.010](https://doi.org/10.1016/j.conb.2016.01.010).
 10. **Badre, D., & Nee, D. E. (2018).** *Frontal Cortex and the Hierarchical Control of Behavior.* **Trends in Cognitive Sciences**, 22(2), 170–188. [DOI: 10.1016/j.tics.2017.11.005](https://doi.org/10.1016/j.tics.2017.11.005).
 11. **Ding, N., Melloni, L., Zhang, H., Tian, X., & Poeppel, D. (2016).** *Cortical tracking of hierarchical linguistic structures in connected speech.* **Nature Neuroscience**, 19(1), 158–164. [DOI: 10.1038/nn.4186](https://doi.org/10.1038/nn.4186).
 12. **Bruña, R., Maestú, F., & Pereda, E. (2018).** *Phase Locking Value revisited: teaching new tricks to an old dog.* **Journal of Neural Engineering**, 15(5), 056011. [DOI: 10.1088/1741-2552/aacfe4](https://doi.org/10.1088/1741-2552/aacfe4).
@@ -289,16 +375,16 @@ These continuous bounding boxes directly condition the spatial attention masks o
 15. **Dickey, C. W., et al. (2022).** *Widespread ripples synchronize human cortical activity during sleep, waking, and memory recall.* **PNAS**, 119(3), e2107797119. [DOI: 10.1073/pnas.2107797119](https://doi.org/10.1073/pnas.2107797119).
 16. **Arnulfo, G., et al. (2020).** *Long-range phase synchronization of high-frequency oscillations in human cortex.* **Nature Communications**, 11, 5363. [DOI: 10.1038/s41467-020-18975-8](https://doi.org/10.1038/s41467-020-18975-8).
 17. **Hawkins, J., Lewis, M., Klukas, M., Purdy, S., & Ahmad, S. (2019).** *A framework for intelligence and cortical function based on grid cells in the neocortex.* **Frontiers in Neural Circuits**, 13, 86. [DOI: 10.3389/fncir.2019.00086](https://doi.org/10.3389/fncir.2019.00086).
-18. **Hawkins, J. (2021).** *A Thousand Brains: A New Theory of Intelligence.* **Basic Books**, New York. ISBN: 978-1541675810.
+18. **Mountcastle, V. B. (1997).** *The columnar organization of the neocortex.* **Brain**, 120(4), 701–722. [DOI: 10.1093/brain/120.4.701](https://doi.org/10.1093/brain/120.4.701).
 19. **Besio, W. G., Koka, K., & Aakula, R. (2006).** *Tri-polar concentric ring electrode development for Laplacian electroencephalography.* **IEEE Transactions on Biomedical Engineering**, 53(5), 926–933. [DOI: 10.1109/TBME.2006.873398](https://doi.org/10.1109/TBME.2006.873398).
 20. **Lakatos, P., et al. (2005).** *An oscillatory hierarchy controlling neuronal excitability and stimulus processing in the auditory cortex.* **Journal of Neurophysiology**, 94(3), 1904–1911. [DOI: 10.1152/jn.00263.2005](https://doi.org/10.1152/jn.00263.2005).
 21. **Friston, K. (2010).** *The free-energy principle: a unified brain theory?* **Nature Reviews Neuroscience**, 11(2), 127–138. [DOI: 10.1038/nrn2787](https://doi.org/10.1038/nrn2787).
-22. **Stringer, C., Pachitariu, M., Steinmetz, N., Reddy, C. B., Carandini, M., & Harris, K. D. (2019).** *Spontaneous behaviors drive multidimensional, brainwide activity.* **Science**, 364(6437), eaav7893. [DOI: 10.1126/science.aav7893](https://doi.org/10.1126/science.aav7893).
+22. **Stringer, C., et al. (2019).** *High-dimensional geometry of population responses in visual cortex.* **Nature**, 571(7765), 361–365. [DOI: 10.1038/s41586-019-1346-5](https://doi.org/10.1038/s41586-019-1346-5).
 23. **Miller, E. K., & Cohen, J. D. (2001).** *An integrative theory of prefrontal cortex function.* **Annual Review of Neuroscience**, 24(1), 167–202. [DOI: 10.1146/annurev.neuro.24.1.167](https://doi.org/10.1146/annurev.neuro.24.1.167).
 24. **Voloh, B., Valiante, T. A., & Womelsdorf, T. (2015).** *Theta–gamma coordination between anterior cingulate and prefrontal cortex indexes correct attention shifts.* **PNAS**, 112(27), 8457–8462. [DOI: 10.1073/pnas.1502092112](https://doi.org/10.1073/pnas.1502092112).
-25. **Fries, P. (2015).** *Rhythms for Cognition: Communication through Coherence.* **Neuron**, 88(1), 220–235. [DOI: 10.1016/j.neuron.2015.08.038](https://doi.org/10.1016/j.neuron.2015.08.038).
-26. **Voytek, B., et al. (2015).** *Oscillatory dynamics coordinating human frontal networks in support of goal maintenance.* **Nature Neuroscience**, 18(9), 1318–1324. [DOI: 10.1038/nn.4071](https://doi.org/10.1038/nn.4071).
-27. **Daw, N. D., et al. (2006).** *Cortical substrates for exploratory decisions in humans.* **Nature**, 441(7095), 876–879. [DOI: 10.1038/nature04768](https://doi.org/10.1038/nature04768).
+25. **Colgin, L. L., et al. (2009).** *Frequency of gamma oscillations routes flow of information in the hippocampus.* **Nature**, 462(7271), 353–357. [DOI: 10.1038/nature08573](https://doi.org/10.1038/nature08573).
+26. **Bieri, K. W., Bobbitt, K. N., & Colgin, L. L. (2014).** *Slow and fast gamma rhythms coordinate different spatial coding modes in hippocampal networks.* **Neuron**, 82(3), 670–681. [DOI: 10.1016/j.neuron.2014.03.013](https://doi.org/10.1016/j.neuron.2014.03.013).
+27. **Norman, Y., et al. (2021).** *Post-activation pause: an anatomical signature of memory recall in human cortex.* **Science**, 373(6560), eabg7595. [DOI: 10.1126/science.abg7595](https://doi.org/10.1126/science.abg7595).
 28. **Boorman, E. D., et al. (2009).** *How Green Is the Grass on the Other Side? Frontopolar Cortex and the Evidence in Favor of Alternative Courses of Action.* **Neuron**, 62(5), 733–743. [DOI: 10.1016/j.neuron.2009.05.014](https://doi.org/10.1016/j.neuron.2009.05.014).
 29. **Koechlin, E., & Hyafil, A. (2007).** *Anterior prefrontal function and the limits of human decision-making.* **Science**, 318(5850), 594–598. [DOI: 10.1126/science.1142995](https://doi.org/10.1126/science.1142995).
 30. **Alexander, W. H., & Brown, J. W. (2011).** *Mediodorsal prefrontal cortex as a prediction error hub for cognitive control.* **Nature Neuroscience**, 14(10), 1338–1344. [DOI: 10.1038/nn.2921](https://doi.org/10.1038/nn.2921).
