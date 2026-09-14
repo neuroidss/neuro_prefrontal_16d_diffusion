@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-🧠 NEUROCANVAS × TBP.MONTY: FULL 3-LEVEL HIERARCHY ENGINE (v320.0)
+🧠 NEUROCANVAS × TBP.MONTY: FULL 3-LEVEL HIERARCHY ENGINE (v400.0)
 - 16 384 Macrocolumns (4 Nodes x 64x64 L4 Sheets) running CUDA-accelerated.
 - Universal support for LCM, SD-Turbo, and SDXL-Turbo via dynamic server negotiation.
-- Complete dimension matching: 768 (SD 1.5), 1024 (SD 2.1), 2048+1280 (SDXL).
 - Cortical Messaging Protocol (CMP) passing displacement, SO(3) pose, and scale.
-- Active Inference closed loop with Visual CLIP validation and Anti-Trap Denoising.
+- iPLV SVD-ранг рекурсии по 32 слотам Теты (500 Hz Ripple Band).
+- Continuous Fractal Treemap Rendering (Математический маппинг без IF-ELSE).
+- Нажмите [ПРОБЕЛ] для инверсии рекурсии живого агента (демонстрация фазового коллапса).
 """
 
 import os
@@ -53,7 +54,7 @@ except ImportError:
 
 from neuro_heterarchy_core import HeterarchicalBrainEngine, DEVICE
 
-WIDTH, HEIGHT = 1600, 960
+WIDTH, HEIGHT = 1800, 960
 
 ELECTRODE_X = np.array([
     10.14,  7.43,  2.75,  2.72, -2.72, -2.75, -7.42, -10.14,
@@ -64,6 +65,31 @@ ELECTRODE_Y = np.array([
     -2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42,  -2.73,
      2.72,  7.43,  4.76,  10.14, 10.15,  4.77,  7.42,   2.71
 ], dtype=np.float32)
+
+# ==============================================================================
+# FRACTAL TREEMAP MATH (БЕЗ IF-ELSE)
+# ==============================================================================
+def calculate_fractal_layout(x, y, w, h, num_concepts, r_score):
+    boxes = []
+    margin = min(w, h) * 0.15 
+    normalized_r = float(np.clip((r_score - 1.0) / 3.0, 0.0, 1.0))
+    for i in range(num_concepts):
+        flat_w = w / num_concepts
+        flat_x = x + i * flat_w
+        flat_y = y
+        flat_h = h
+        
+        nest_x = x + i * margin
+        nest_y = y + i * margin
+        nest_w = max(10, w - 2 * i * margin)
+        nest_h = max(10, h - 2 * i * margin)
+        
+        cur_x = flat_x * (1.0 - normalized_r) + nest_x * normalized_r
+        cur_y = flat_y * (1.0 - normalized_r) + nest_y * normalized_r
+        cur_w = flat_w * (1.0 - normalized_r) + nest_w * normalized_r
+        cur_h = flat_h * (1.0 - normalized_r) + nest_h * normalized_r
+        boxes.append((int(cur_x), int(cur_y), int(cur_w), int(cur_h)))
+    return boxes
 
 # ==============================================================================
 # 1. LAYER 4 HTM MACROCOLUMN (64x64 CUDA SHEET PER NODE)
@@ -172,6 +198,8 @@ class FrontalExecutiveHeterarchy(nn.Module):
             inter = (full_sdr * self.last_sdr).sum()
             anomaly = 1.0 - (inter / float(self.total_k_active)).item()
             self.plan_b_active = anomaly > 0.65
+        else:
+            anomaly = 1.0
         self.last_sdr = full_sdr.clone()
 
         return weights.cpu().numpy(), self.plan_b_active, raw_similarities.cpu().numpy()
@@ -273,13 +301,11 @@ class ToroidalDiffusionWorker:
                 try:
                     self.conn = Client(('localhost', 6000), authkey=b'brain')
                     
-                    # 1. Согласовываем режим работы пайплайна
                     self.conn.send({'cmd': 'init_mode', 'mode': self.mode})
                     init_ack = self.conn.recv()
                     self.is_sdxl = init_ack.get('is_sdxl', False)
                     actual_mode = init_ack.get('mode', self.mode)
                     
-                    # 2. Получаем точно сгенерированные сервером эмбеддинги
                     self.conn.send({'cmd': 'encode_base_prompts', 'prompts': self.prompts})
                     enc_resp = self.conn.recv()
                     
@@ -293,7 +319,6 @@ class ToroidalDiffusionWorker:
                         self.c_pooled_bases = None
                         self.pooled_active = None
 
-                    # 3. Стартовый прогревочный кадр
                     dummy = np.random.randint(100, 150, (384, 512, 3), dtype=np.uint8)
                     init_payload = {
                         'cmd': 'generate',
@@ -349,29 +374,18 @@ def main():
     parser.add_argument('--online-learn', action='store_true', default=False, help="Enable adaptive ground-truth updates during inference")
     parser.add_argument('--online-lr', type=float, default=0.02, help="Online plasticity rate")
     parser.add_argument('--mode', type=str, default="lcm", choices=["lcm", "turbo", "sdxl-turbo"],
-                        help="Active diffusion pipeline mode (Default: sdxl-turbo)")
+                        help="Active diffusion pipeline mode (Default: lcm)")
     parser.add_argument('--turbo', action='store_true', help="Alias for --mode turbo")
     parser.add_argument('--sdxl', action='store_true', help="Alias for --mode sdxl-turbo")
     args = parser.parse_args()
 
-    # Разрешаем псевдонимы аргументов
     active_mode = args.mode
     if args.sdxl:
         active_mode = "sdxl-turbo"
     elif args.turbo:
         active_mode = "turbo"
 
-    ALL_NAMES = [
-        "КОСМОС",
-        "ПЛАНЕТА",
-        "КИБЕРПАНК",
-        "НЕБОСКРЕБ",
-        "ГОРА",
-        "ЗАМОК",
-        "ОКЕАН",
-        "ДЖУНГЛИ"
-    ]
-
+    ALL_NAMES = ["КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ГОРА", "ЗАМОК", "ОКЕАН", "ДЖУНГЛИ"]
     ALL_PROMPTS = [
         "deep outer space, glowing colorful nebula, bright stars, galaxy, 8k, sharp detailed",
         "spherical alien planet with atmosphere, continents and oceans in space, 8k, sharp detailed",
@@ -407,7 +421,7 @@ def main():
     clip_teacher = VisualCLIPTeacher(TARGET_NAMES, PROMPTS)
     heterarchy = FrontalExecutiveHeterarchy(num_concepts=NUM_CONCEPTS, num_columns_per_node=4096, k_active_per_node=80).to(DEVICE)
 
-    cx, cy = WIDTH // 2 + 140, HEIGHT // 2
+    cx, cy = 400, HEIGHT // 2 - 100
     current_weights = np.ones(NUM_CONCEPTS, dtype=np.float32) / NUM_CONCEPTS
 
     last_frame_id = -1
@@ -418,12 +432,36 @@ def main():
     clean_steps_accumulated = 0
     CLEAN_STEPS_REQUIRED = 15
     CLIP_HONEST_THRESHOLD = 0.65
+    clip_status = "INITIALIZING CALIBRATION..."
 
     concept_snapshots = {}
     concept_scores = [0.0] * NUM_CONCEPTS
     curriculum_epoch = 1
 
     monty_location = np.array([0.0, 0.0, 0.0], dtype=np.float64)
+
+    # Инициализация переменных эволюционного арбитра ДО цикла
+    smooth_depth = 1.0
+    svd_spectrum = np.zeros(4)
+    bot1_r = 1.0
+    bot2_r = 2.0
+    bot3_r = 3.6
+    winner_id = 0
+    active_depth_render = 1.0
+
+    FRACTAL_COLORS = [(20, 20, 60), (30, 80, 120), (100, 100, 110), (150, 100, 50),
+                      (40, 100, 60), (80, 40, 80), (10, 10, 20), (20, 80, 40)]
+                      
+    # Защита от падения при переходе из калибровки
+    t_idx = 0
+    top_idx = 0
+    a_mode = "CALIBRATION"
+    a_desc = "Initializing"
+    a_mood = "LEARNING"
+    sat = 1.0
+    bor = 0.0
+    fru = 0.0
+    is_rec = True
 
     print(f"🧠 [SYSTEM] Pipeline Active [{active_mode.upper()}]. Honest Calibration Gate running...")
 
@@ -434,6 +472,13 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     raise KeyboardInterrupt
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE and agent is not None:
+                        if hasattr(agent, 'toggle_recursion'):
+                            is_rec = agent.toggle_recursion()
+                            print(f"🔄 АГЕНТ: {'ИСТИННАЯ РЕКУРСИЯ (K4)' if is_rec else 'ПЛОСКИЙ СПИСОК (K1)'}")
+                        else:
+                            print("ℹ️ В agent отсутствует toggle_recursion")
 
             frame = engine.get_frame()
             node_tensors = {
@@ -442,6 +487,29 @@ def main():
                 "AFz": torch.tensor(frame.nodes[2].iplv_32, dtype=torch.float32, device=DEVICE),
                 "Fpz": torch.tensor(frame.nodes[3].iplv_32, dtype=torch.float32, device=DEVICE)
             }
+
+            # ==================================================================
+            # РАСЧЕТ ИСТИННОГО РАНГА РЕКУРСИИ ЧЕРЕЗ SVD ПО 32 СЛОТАМ
+            # ==================================================================
+            with torch.no_grad():
+                iplv_raw = node_tensors["F3"]
+                iplv_centered = iplv_raw - torch.mean(iplv_raw, dim=0, keepdim=True)
+                S_vals = torch.linalg.svdvals(iplv_centered)
+                S_norm = S_vals[:4] / (S_vals[0] + 1e-6)
+                svd_spectrum = S_norm.cpu().numpy()
+
+                live_depth = float(torch.sum(S_norm > 0.22).item())
+                live_depth = max(1.0, min(4.0, live_depth))
+                smooth_depth = smooth_depth * 0.90 + live_depth * 0.10
+
+            # Обновление ботов и арбитра НА КАЖДОМ КАДРЕ (гарантия инициализации переменных)
+            bot1_r = 1.2 + 0.2 * math.sin(time.time() * 2.0)   # Плоский бот (K1)
+            bot2_r = 2.4 + 0.2 * math.cos(time.time() * 0.5)   # Средний бот (K2)
+            bot3_r = 3.6                                       # RLT бот (K3-K4)
+
+            all_r = [smooth_depth, bot1_r, bot2_r, bot3_r]
+            winner_id = int(np.argmax(all_r))
+            active_depth_render = all_r[winner_id]
 
             with worker.lock:
                 rgb_m, fid = worker.current_rgb.copy(), worker.frame_id
@@ -452,6 +520,10 @@ def main():
 
             if agent:
                 agent.update_visual_state(cur_probs)
+                telem = agent.get_telemetry()
+                if telem:
+                    a_mode, a_desc, a_mood, t_idx, sat, bor, fru = telem[:7]
+                    is_rec = telem[7] if len(telem) > 7 else True
 
             with torch.no_grad():
                 full_sdr, sdr_f3 = heterarchy.get_current_sdr(node_tensors)
@@ -462,15 +534,8 @@ def main():
 
             cmp_message = Message(
                 location=monty_location.copy(),
-                morphological_features={
-                    "pose_vectors": lead_node.pose_matrix,
-                    "pose_fully_defined": True,
-                    "on_object": True
-                },
-                non_morphological_features={
-                    "theta_hz": frame.theta_freq,
-                    "delta_hz": frame.delta_freq
-                },
+                morphological_features={"pose_vectors": lead_node.pose_matrix, "pose_fully_defined": True, "on_object": True},
+                non_morphological_features={"theta_hz": frame.theta_freq, "delta_hz": frame.delta_freq},
                 confidence=max(0.0, min(1.0, (lead_node.beta_stability + 1.0) / 2.0)),
                 pass_message=True,
                 sender_id="F3_Macrocolumn",
@@ -480,16 +545,14 @@ def main():
             cmp_message.set_displacement(lead_node.disp_xyz)
 
             # ==================================================================
-            # HONEST HARD-GATE CALIBRATION
+            # ЧЕСТНАЯ КАЛИБРОВКА (ОРИГИНАЛЬНАЯ ЛОГИКА)
             # ==================================================================
             if is_calibrating:
                 vis_conf = float(cur_probs[learn_idx])
-
                 target_sim = np.zeros(NUM_CONCEPTS, dtype=np.float32)
                 target_sim[learn_idx] = 1.0
                 worker.update_simplex_targets(target_sim, force_strength=1.0)
-                if agent:
-                    agent.set_calibration_target(True, learn_idx)
+                if agent: agent.set_calibration_target(True, learn_idx)
 
                 if vis_conf >= CLIP_HONEST_THRESHOLD:
                     clip_status = f"CLIP VERIFIED ({vis_conf*100:.1f}% >= 65%) -> IMPRINTING"
@@ -502,33 +565,42 @@ def main():
                 if clean_steps_accumulated >= CLEAN_STEPS_REQUIRED:
                     heterarchy.finalize_slot(learn_idx)
 
+                    # 1. Пересчитываем скоры всех слотов
                     with torch.no_grad():
                         for chk_i in range(NUM_CONCEPTS):
                             if chk_i in concept_snapshots and heterarchy.concept_trained[chk_i] > 0:
                                 p_w, _, _ = heterarchy.predict_evidence(concept_snapshots[chk_i])
                                 concept_scores[chk_i] = float(p_w[chk_i]) * 100.0
 
-                    learn_idx += 1
                     clean_steps_accumulated = 0
 
-                    if learn_idx >= NUM_CONCEPTS:
-                        min_score = min(concept_scores)
-                        if min_score >= 85.0 and all(heterarchy.concept_trained > 0):
+                    # 2. Первичный проход: если есть еще вообще не обученные слоты — идем к ним
+                    untrained = [i for i in range(NUM_CONCEPTS) if heterarchy.concept_trained[i] == 0]
+                    if untrained:
+                        learn_idx = untrained[0]
+                    else:
+                        # 3. ВСЕ СЛОТЫ ИНИЦИАЛИЗИРОВАНЫ. ПРИНЦИП "НЕ СЛОМАЛОСЬ — НЕ ЧИНИ":
+                        # Ищем только те, кто РЕАЛЬНО упал ниже порога 85%
+                        broken_slots = [i for i in range(NUM_CONCEPTS) if concept_scores[i] < 85.0]
+
+                        if not broken_slots:
+                            # КРАСНЫХ НЕТ! Все слоты >= 85%. Финиш!
                             is_calibrating = False
-                            if agent:
+                            if agent: 
                                 agent.set_calibration_target(False)
-                            print("🏆 [HARD GATE PASSED] All hierarchical slots locked in LTM >= 85%!")
+                            print("🏆 [HARD GATE PASSED] Все слоты зафиксированы в LTM >= 85%!")
                         else:
+                            # Берем ТОЛЬКО самый слабый из сломанных, зеленые не трогаем!
                             curriculum_epoch += 1
-                            learn_idx = int(np.argmin(concept_scores))
+                            learn_idx = min(broken_slots, key=lambda i: concept_scores[i])
                             heterarchy.reset_accumulator(learn_idx)
-                            print(f"⚠️ [RE-LEARNING] Retraining weakest node: [{TARGET_NAMES[learn_idx]}] ({concept_scores[learn_idx]:.1f}% < 85%)")
+                            print(f"⚠️ [РЕМОНТ] Чиню только сломанный: [{TARGET_NAMES[learn_idx]}] ({concept_scores[learn_idx]:.1f}% < 85%). Зелёные не трогаем!")
 
                 current_weights = target_sim
                 switched = False
 
             # ==================================================================
-            # ACTIVE INFERENCE SURFING & LEVEL TRANSITION
+            # ACTIVE INFERENCE & EVOLUTIONARY ARBITER (СОРЕВНОВАНИЕ)
             # ==================================================================
             else:
                 with torch.no_grad():
@@ -536,11 +608,17 @@ def main():
 
                 top_vis_idx = int(np.argmax(cur_probs))
                 vis_weight = float(cur_probs[top_vis_idx])
-                fru_val = agent.shm['frustration'].value if agent else 0.0
+                
+                telem = agent.get_telemetry() if agent else None
+                if telem:
+                    a_mode, a_desc, a_mood, t_idx, sat, bor, fru = telem[:7]
+                    is_rec = telem[7] if len(telem) > 7 else True
+                else:
+                    a_mode, a_desc, a_mood, t_idx, sat, bor, fru, is_rec = "", "", "", 0, 0.0, 0.0, 0.0, True
 
                 if args.online_learn:
                     pred_winner = int(np.argmax(new_w))
-                    if (vis_weight >= 0.75) and (pred_winner == top_vis_idx) and (fru_val <= 0.25):
+                    if (vis_weight >= 0.75) and (pred_winner == top_vis_idx) and (fru <= 0.25):
                         heterarchy.online_grounding_update(top_vis_idx, full_sdr, lr=args.online_lr)
 
                 current_weights = current_weights * 0.75 + new_w * 0.25
@@ -549,23 +627,31 @@ def main():
                 current_target_idx = int(np.argmax(current_weights))
                 clip_error = 1.0 - float(cur_probs[current_target_idx])
 
-                if switched or fru_val > 0.40 or clip_error > 0.70:
-                    force_str = 0.92
+                if winner_id == 0:
+                    # Живой агент побеждает: плавно настраиваем силу денойза
+                    if switched or fru > 0.40 or clip_error > 0.70:
+                        force_str = 0.92
+                    else:
+                        force_str = float(np.clip(0.48 + (clip_error * 0.28) + (1.0 - lead_node.beta_stability) * 0.12, 0.48, 0.78))
+                    worker.update_simplex_targets(current_weights, force_strength=force_str)
                 else:
-                    force_str = float(np.clip(0.48 + (clip_error * 0.28) + (1.0 - lead_node.beta_stability) * 0.12, 0.48, 0.78))
-
-                worker.update_simplex_targets(current_weights, force_strength=force_str)
+                    # Бот перехватывает управление: выжигает холст под свой концепт
+                    bot_target = 7 if winner_id == 3 else 3
+                    bot_w = np.zeros(NUM_CONCEPTS, dtype=np.float32)
+                    bot_w[bot_target] = 1.0
+                    force_str = 0.95
+                    worker.update_simplex_targets(bot_w, force_strength=force_str)
 
             # ==================================================================
             # PYGAME RENDERING
             # ==================================================================
             screen.fill((10, 14, 20))
 
-            # Center Canvas
+            # Центральный холст (SD)
             screen.blit(pygame.image.frombuffer(rgb_m.tobytes(), (512, 384), 'RGB'), (cx - 256, cy - 192))
             pygame.draw.rect(screen, (40, 50, 70), (cx - 256, cy - 192, 512, 384), 2, border_radius=8)
 
-            # L4 F3 Column Sheet (64x64)
+            # L4 F3 Column Sheet
             cur_sdr_img = sdr_f3[:4096].view(64, 64).cpu().numpy() * 255.0
             sdr_surf = pygame.surfarray.make_surface(cv2.resize(cur_sdr_img, (140, 140)).astype(np.uint8))
             screen.blit(sdr_surf, (cx + 256 + 20, cy - 192))
@@ -573,88 +659,110 @@ def main():
 
             # Left Panel 1: Learning & Benchmark
             panel_x, panel_y = 30, 40
-            pygame.draw.rect(screen, (16, 22, 32), (panel_x, panel_y, 380, 270), border_radius=8)
-            pygame.draw.rect(screen, (0, 255, 200), (panel_x, panel_y, 380, 270), 1, border_radius=8)
+            pygame.draw.rect(screen, (16, 22, 32), (panel_x, panel_y, 330, 270), border_radius=8)
+            pygame.draw.rect(screen, (0, 255, 200), (panel_x, panel_y, 330, 270), 1, border_radius=8)
 
             if is_calibrating:
                 screen.blit(font_b.render(f"HONEST CALIBRATION [EPOCH {curriculum_epoch}]", True, (255, 180, 50)), (panel_x + 12, panel_y + 12))
-                screen.blit(font_s.render(f"Target Concept    : [{TARGET_NAMES[learn_idx]}] ({learn_idx+1}/{NUM_CONCEPTS})", True, (255, 255, 100)), (panel_x + 15, panel_y + 36))
-
-                col_status = (0, 255, 180) if "VERIFIED" in clip_status else (255, 200, 50)
-                screen.blit(font_s.render(clip_status, True, col_status), (panel_x + 15, panel_y + 56))
-
-                prog_val = min(1.0, clean_steps_accumulated / float(CLEAN_STEPS_REQUIRED))
-                screen.blit(font_s.render(f"Clean Steps (>=65%): {clean_steps_accumulated}/{CLEAN_STEPS_REQUIRED}", True, (200, 220, 255)), (panel_x + 15, panel_y + 78))
-                pygame.draw.rect(screen, (30, 40, 50), (panel_x + 15, panel_y + 96, 350, 8), border_radius=2)
-                pygame.draw.rect(screen, (0, 255, 180), (panel_x + 15, panel_y + 96, int(prog_val * 350), 8), border_radius=2)
-
+                screen.blit(font_s.render(f"Target Concept    : [{TARGET_NAMES[learn_idx]}]", True, (255, 255, 100)), (panel_x + 15, panel_y + 36))
                 for i, name in enumerate(TARGET_NAMES):
                     score = concept_scores[i]
-                    if heterarchy.concept_trained[i] > 0:
-                        col_s = (100, 255, 100) if score >= 85.0 else (255, 80, 80)
-                        txt_s = f"{name:10s}: {score:4.1f}% [Target >= 85%]"
-                    elif i == learn_idx:
-                        col_s = (255, 220, 50)
-                        txt_s = f"{name:10s}: CURRENTLY LEARNING..."
-                    else:
-                        col_s = (120, 120, 120)
-                        txt_s = f"{name:10s}: QUEUED..."
-                    screen.blit(font_s.render(txt_s, True, col_s), (panel_x + 15, panel_y + 118 + i * 18))
-
+                    col_s = (100, 255, 100) if score >= 85.0 else (255, 80, 80)
+                    txt_s = f"{name:10s}: {score:4.1f}%" if heterarchy.concept_trained[i] > 0 else f"{name:10s}: QUEUED..."
+                    if i == learn_idx: txt_s, col_s = f"{name:10s}: LEARNING...", (255, 220, 50)
+                    screen.blit(font_s.render(txt_s, True, col_s), (panel_x + 15, panel_y + 70 + i * 18))
             else:
                 screen.blit(font_b.render("FROZEN RETENTION BENCHMARK (PASSED)", True, (0, 255, 200)), (panel_x + 12, panel_y + 12))
                 for i, name in enumerate(TARGET_NAMES):
                     screen.blit(font_s.render(f"{name:10s}: {concept_scores[i]:4.1f}% [LOCKED IN LTM]", True, (100, 255, 100)), (panel_x + 15, panel_y + 38 + i * 22))
 
-            # Left Panel 2: Telemetry & Active Inference
+            # Left Panel 2: Telemetry
             c_x, c_y = 30, 330
-            pygame.draw.rect(screen, (16, 22, 32), (c_x, c_y, 380, 270), border_radius=8)
-            pygame.draw.rect(screen, (100, 180, 255), (c_x, c_y, 380, 270), 1, border_radius=8)
+            pygame.draw.rect(screen, (16, 22, 32), (c_x, c_y, 330, 270), border_radius=8)
+            pygame.draw.rect(screen, (100, 180, 255), (c_x, c_y, 330, 270), 1, border_radius=8)
             screen.blit(font_b.render("ACTIVE INFERENCE & CMP HIERARCHY", True, (100, 180, 255)), (c_x + 12, c_y + 12))
 
-            top_idx = int(np.argmax(current_weights))
-            top_conf = current_weights[top_idx] * 100.0
-            col_intent = (100, 255, 100) if top_conf >= 70.0 else (255, 220, 50)
-            screen.blit(font_b.render(f"Decoded Intent : [{TARGET_NAMES[top_idx]}] ({top_conf:4.1f}%)", True, col_intent), (c_x + 15, c_y + 36))
-
-            top_vis = int(np.argmax(cur_probs))
-            screen.blit(font_s.render(f"Visual Reality : {TARGET_NAMES[top_vis]} ({cur_probs[top_vis]*100:.1f}% CLIP)", True, (200, 220, 255)), (c_x + 15, c_y + 58))
-
-            if agent:
-                mode, desc, mood, t_idx, sat, bor, fru = agent.get_telemetry()
+            if not is_calibrating and agent:
+                top_idx = int(np.argmax(current_weights))
+                top_conf = current_weights[top_idx] * 100.0
+                screen.blit(font_b.render(f"Decoded Intent : [{TARGET_NAMES[top_idx]}] ({top_conf:4.1f}%)", True, (100, 255, 100)), (c_x + 15, c_y + 36))
                 quest_col = (0, 255, 200) if t_idx == top_idx else (255, 100, 100)
-                screen.blit(font_b.render(f"Hierarchy State: [{TARGET_NAMES[t_idx]}]", True, quest_col), (c_x + 15, c_y + 88))
-                screen.blit(font_s.render(f"Transition Mode: {desc}", True, quest_col), (c_x + 15, c_y + 110))
-
-                screen.blit(font_s.render(f"Convergence    : {sat*100:4.1f}%", True, (100, 255, 100)), (c_x + 15, c_y + 135))
-                pygame.draw.rect(screen, (30, 40, 50), (c_x + 15, c_y + 150, 350, 6), border_radius=2)
-                pygame.draw.rect(screen, (0, 255, 180), (c_x + 15, c_y + 150, int(sat * 350), 6), border_radius=2)
-
-                screen.blit(font_s.render(f"dACC Error (AFz): {fru*100:4.1f}% | Satiation: {bor*100:4.1f}%", True, (255, 80, 80)), (c_x + 15, c_y + 168))
-                screen.blit(font_s.render(f"Beta Stability : {lead_node.beta_stability:+.2f} | Conf: {cmp_message.confidence*100:.0f}%", True, (255, 200, 50)), (c_x + 15, c_y + 190))
-                screen.blit(font_s.render(f"Clock dPhi/dt  : Theta={frame.theta_freq:.2f}Hz | Delta={frame.delta_freq:.2f}Hz", True, (200, 220, 240)), (c_x + 15, c_y + 212))
-                screen.blit(font_s.render(f"Denoise Power  : {worker.strength:.2f} | FPS: {worker.fps:.1f} ({worker.mode.upper()})", True, (160, 180, 200)), (c_x + 15, c_y + 235))
+                screen.blit(font_b.render(f"Hierarchy State: [{TARGET_NAMES[t_idx]}]", True, quest_col), (c_x + 15, c_y + 70))
+                screen.blit(font_s.render(f"Transition Mode: {a_desc}", True, quest_col), (c_x + 15, c_y + 90))
+                screen.blit(font_s.render(f"dACC Error (AFz): {fru*100:4.1f}% | Satiation: {bor*100:4.1f}%", True, (255, 80, 80)), (c_x + 15, c_y + 120))
+                screen.blit(font_s.render(f"Beta Stability : {lead_node.beta_stability:+.2f}", True, (255, 200, 50)), (c_x + 15, c_y + 140))
+                
+                rec_str = "RECURSIVE (K4)" if is_rec else "FLAT (K1)"
+                rec_col = (100, 255, 100) if is_rec else (255, 50, 50)
+                screen.blit(font_b.render(f"Agent Phase Mode: {rec_str}", True, rec_col), (c_x + 15, c_y + 170))
+                screen.blit(font_s.render("[SPACE] to toggle Live Recursion", True, (150, 150, 150)), (c_x + 15, c_y + 190))
 
             # Bottom Spectrum: 120-Edge Signed iPLV
             BY, BH = 620, 300
-            pygame.draw.rect(screen, (12, 16, 24), (30, BY, WIDTH - 60, BH), border_radius=8)
-            pygame.draw.rect(screen, (30, 45, 65), (30, BY, WIDTH - 60, BH), 1, border_radius=8)
-            screen.blit(font_b.render("120-EDGE DIRECTED iPLV SPECTRUM [STRICT SIGNED sin(Δφ) ∈ [-1.0, +1.0]]", True, (0, 255, 200)), (45, BY + 15))
+            pygame.draw.rect(screen, (12, 16, 24), (30, BY, 760, BH), border_radius=8)
+            pygame.draw.rect(screen, (30, 45, 65), (30, BY, 760, BH), 1, border_radius=8)
+            screen.blit(font_b.render("120-EDGE SIGNED iPLV (SLOT 31)", True, (0, 255, 200)), (45, BY + 15))
 
             g120 = lead_node.iplv_32[31]
-            bw = (WIDTH - 120) / 120.0
+            bw = 700.0 / 120.0
             mid_line = BY + 150
             for p in range(120):
                 val = g120[p]
                 bh = int(abs(val) * 110)
                 bx = 45 + p * bw
                 col = (255, 80, 80) if val < 0 else (80, 255, 180)
-                if val >= 0:
-                    pygame.draw.rect(screen, col, (bx, mid_line - bh, bw - 1, bh))
-                else:
-                    pygame.draw.rect(screen, col, (bx, mid_line, bw - 1, bh))
+                if val >= 0: pygame.draw.rect(screen, col, (bx, mid_line - bh, bw - 1, bh))
+                else: pygame.draw.rect(screen, col, (bx, mid_line, bw - 1, bh))
 
-            pygame.draw.line(screen, (60, 80, 100), (45, mid_line), (WIDTH - 75, mid_line), 1)
+            # Right Panel: Evolutionary Arbiter & Continuous Treemap
+            rx, ry = 830, 40
+            pygame.draw.rect(screen, (20, 15, 30), (rx, ry, 930, 880), border_radius=8)
+            pygame.draw.rect(screen, (255, 100, 200), (rx, ry, 930, 880), 1, border_radius=8)
+            screen.blit(font_b.render("iPLV MANIFOLD ARBITER (32-SLOT SVD RANK)", True, (255, 100, 200)), (rx + 20, ry + 20))
+
+            # Бары участников
+            y_offset = ry + 60
+            agents_data = [
+                ("YOU (Live 32-Slot SVD)", smooth_depth),
+                ("Bot 1 (Flat Chaos)", bot1_r),
+                ("Bot 2 (Meso Context)", bot2_r),
+                ("Bot 3 (RLT Macro Agent)", bot3_r)
+            ]
+            for i, (name, r_val) in enumerate(agents_data):
+                col = (255, 255, 100) if i == winner_id else (100, 150, 200)
+                screen.blit(font_s.render(f"{name}: K={r_val:.2f}", True, col), (rx + 20, y_offset))
+                pygame.draw.rect(screen, (40, 30, 50), (rx + 280, y_offset, 250, 14))
+                pygame.draw.rect(screen, col, (rx + 280, y_offset, int(250 * (r_val / 4.0)), 14))
+                y_offset += 25
+
+            # Отрисовка SVD-спектра сингулярных чисел
+            y_offset += 10
+            screen.blit(font_s.render("SVD Сингулярный Спектр Фазового Пространства:", True, (150, 150, 150)), (rx + 20, y_offset))
+            for i, sv in enumerate(svd_spectrum):
+                color = (0, 255, 180) if sv > 0.22 else (100, 100, 100)
+                bh = int(sv * 45)
+                pygame.draw.rect(screen, color, (rx + 20 + i*60, y_offset + 25 + (45 - bh), 45, bh))
+                screen.blit(font_s.render(f"S{i+1}", True, (200, 200, 200)), (rx + 30 + i*60, y_offset + 75))
+
+            # Статус доминирования
+            win_text = "ВЫ ПРАВИТЕ ГЕТЕРАРХИЕЙ" if winner_id == 0 else f"ПЕРЕХВАТ! ДОМИНИРУЕТ БОТ {winner_id}"
+            win_col = (100, 255, 100) if winner_id == 0 else (255, 50, 50)
+            screen.blit(font_b.render(win_text, True, win_col), (rx + 20, y_offset + 105))
+
+            # Continuous Fractal Treemap
+            map_x, map_y = rx + 20, y_offset + 140
+            map_w, map_h = 890, 480
+            pygame.draw.rect(screen, (10, 10, 10), (map_x, map_y, map_w, map_h))
+            pygame.draw.rect(screen, (255, 255, 255), (map_x-2, map_y-2, map_w+4, map_h+4), 2)
+            screen.blit(font_b.render(f"GENERATIVE GEOMETRY (Continuous Lerp Treemap K={active_depth_render:.2f})", True, (255, 255, 255)), (map_x, map_y - 25))
+
+            boxes = calculate_fractal_layout(map_x, map_y, map_w, map_h, 4, active_depth_render)
+            for i, (bx, by, bw, bh) in enumerate(boxes):
+                pygame.draw.rect(screen, FRACTAL_COLORS[i], (bx, by, bw, bh))
+                pygame.draw.rect(screen, (200, 200, 200), (bx, by, bw, bh), 2)
+                txt = font_b.render(TARGET_NAMES[i], True, (255, 255, 255))
+                if bw > txt.get_width() + 10 and bh > txt.get_height() + 10:
+                    screen.blit(txt, (bx + 10, by + 10))
 
             pygame.display.flip()
 

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """
-🧠 NEURO-HETERARCHY CORE v85.0 (TBP.MONTY + 120-EDGE DIRECTED iPLV HAL)
-- Полный CUDA конвейер: Delta, Theta, Alpha, Beta, Gamma.
+🧠 NEURO-HETERARCHY CORE v90.0 (500 Hz RIPPLE-BAND DIRECTED iPLV HAL)
+- Конвейер 500 SPS: Delta, Theta, Alpha, Beta, 32 Ripple-фильтра (100-200 Гц).
 - 100% знаковая направленная когерентность: sin(Δφ) ∈ [-1, +1].
-- Расчет фазовых производных (dPhi/dt) для тактирования шагов Monty.
-- jPCA ротационная динамика (Churchland 2012) для вычисления displacement.
-- Векторная стабильность Беты (Stability_Beta ∈ [-1, +1]) как мера Confidence.
+- 32 Тета-фазовых слота кросс-частотного кодирования (PAC).
+- Выходная матрица iPLV: [NUM_MAX_DEVICES, 32 слота, 120 пар].
 """
 
 import os
@@ -23,11 +22,11 @@ try:
 except RuntimeError:
     pass
 
-FS = 250.0
-BUF_SIZE = 256
+FS = 500.0          # 500 Гц (Найквист = 250 Гц, идеально для 100-200 Гц рипплов)
+BUF_SIZE = 256      # 256 сэмплов = 512 мс буфер (~3 полных цикла Теты)
 NUM_CHANNELS = 16
 NUM_MAX_DEVICES = 4
-NUM_FREQS = 32
+NUM_FREQS = 32      # 32 фильтра и 32 фазовых слота
 NUM_PAIRS = 120
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -64,7 +63,7 @@ class NodeState:
     disp_xyz: np.ndarray        # [3] displacement для CMP Message
     pose_matrix: np.ndarray     # [3, 3] pose_vectors для CMP Message
     kinematics: Kinematics4D
-    iplv_32: np.ndarray         # [32, 120] знаковый iPLV
+    iplv_32: np.ndarray         # [32, 120] знаковый iPLV по 32 слотам
 
 @dataclass
 class UniversalFrame:
@@ -84,12 +83,14 @@ class GPU_Daemon_Process(mp.Process):
 
     def run(self):
         freqs = torch.fft.fftfreq(BUF_SIZE, d=1.0/FS).to(DEVICE)
+        
+        # Режекторный фильтр наводки 50 Гц и гармоники 100 Гц
         notch = torch.ones_like(freqs)
         notch[(torch.abs(freqs) >= 48.0) & (torch.abs(freqs) <= 52.0)] = 0.0
         notch[(torch.abs(freqs) >= 98.0) & (torch.abs(freqs) <= 102.0)] = 0.0
         notch = notch.view(1, 1, BUF_SIZE)
 
-        # Фазовые фильтры без амплитудной нормализации
+        # Фазовые фильтры низких частот
         f_delta = (torch.exp(-0.5 * ((freqs - 2.5) / 0.8)**2) * 2.0).view(1, 1, BUF_SIZE)
         f_delta[:, :, freqs < 0] = 0.0
 
@@ -99,11 +100,14 @@ class GPU_Daemon_Process(mp.Process):
         f_beta  = (torch.exp(-0.5 * ((freqs - 22.0) / 6.0)**2) * 2.0).view(1, 1, BUF_SIZE)
         f_beta[:, :, freqs < 0] = 0.0
 
-        gamma_centers = torch.linspace(30.0, 85.0, NUM_FREQS, device=DEVICE).view(1, NUM_FREQS, 1, 1)
+        # 32 фильтра в Ripple-диапазоне (100–200 Гц)
+        # Шаг: (200 - 100) / 31 ≈ 3.2 Гц. Ширина полосы: σ = 6.0 Гц (FWHM ≈ 14.1 Гц > 2*f_theta)
+        ripple_centers = torch.linspace(100.0, 200.0, NUM_FREQS, device=DEVICE).view(1, NUM_FREQS, 1, 1)
         freqs_4d = freqs.view(1, 1, 1, BUF_SIZE)
-        gamma_filters = torch.exp(-0.5 * ((freqs_4d - gamma_centers) / 4.5)**2) * 2.0
-        gamma_filters[:, :, :, freqs < 0] = 0.0
+        ripple_filters = torch.exp(-0.5 * ((freqs_4d - ripple_centers) / 6.0)**2) * 2.0
+        ripple_filters[:, :, :, freqs < 0] = 0.0
 
+        # 32 фазовых угла разбивки одного цикла Теты (от -pi до +pi)
         slot_angles = (-math.pi + (2.0 * math.pi / NUM_FREQS) * (torch.arange(NUM_FREQS, device=DEVICE) + 0.5)).view(1, NUM_FREQS, 1, 1)
 
         # jPCA кососимметричная матрица
@@ -154,7 +158,7 @@ class GPU_Daemon_Process(mp.Process):
                                         connected_uids.add(s_uid)
                                         stream_names[slot_i] = s.name()
                                         stream_uids[slot_i] = s.source_id()
-                                        print(f"✅ [CORE HAL] Подключен Slot [{slot_i}] <- '{s.name()}'")
+                                        print(f"✅ [CORE HAL 500Hz] Подключен Slot [{slot_i}] <- '{s.name()}'")
                                         break
                                     except Exception:
                                         pass
@@ -199,7 +203,7 @@ class GPU_Daemon_Process(mp.Process):
                         first_active = idx
                         break
 
-                # 1. Тета и Дельта производные (Часы контура)
+                # 1. Тета и Дельта производные
                 Z_theta = torch.fft.ifft(fft_clean * f_theta, dim=-1)
                 P_theta = Z_theta / (torch.abs(Z_theta) + 1e-12)
                 mean_th_phasors = torch.mean(P_theta, dim=1)
@@ -235,37 +239,37 @@ class GPU_Daemon_Process(mp.Process):
                 beta_stabs = torch.clamp(dot_b / norm_b, -1.0, 1.0)
                 prev_beta_vecs.copy_(cur_beta_vecs)
 
-                # 3. 32 слота Гаммы и знаковый iPLV
+                # 3. 32 слота Рипплов (100–200 Гц) и знаковый iPLV
                 fft_exp = fft_clean.unsqueeze(1)
-                Z_gamma = torch.fft.ifft(fft_exp * gamma_filters, dim=-1)
-                P_gamma = Z_gamma / (torch.abs(Z_gamma) + 1e-12)
+                Z_ripple = torch.fft.ifft(fft_exp * ripple_filters, dim=-1)
+                P_ripple = Z_ripple / (torch.abs(Z_ripple) + 1e-12)
 
                 p_diff = phi_theta_all[first_active:first_active+1].view(1, 1, 1, BUF_SIZE) - slot_angles
                 w = torch.exp(3.2 * torch.cos(p_diff))
                 w = w / (torch.sum(w, dim=-1, keepdim=True) + 1e-6)
 
-                cg_gamma = P_gamma[:, :, I_GPU, :] * torch.conj(P_gamma[:, :, J_GPU, :])
-                psi_field = torch.sum(cg_gamma * w, dim=-1)
+                cg_ripple = P_ripple[:, :, I_GPU, :] * torch.conj(P_ripple[:, :, J_GPU, :])
+                psi_field = torch.sum(cg_ripple * w, dim=-1)
                 past_anchor = psi_field[:, 0:1, :]
-                gamma_120 = torch.imag(psi_field * torch.conj(past_anchor)) # [4, 32, 120] ∈ [-1, 1]
+                ripple_120 = torch.imag(psi_field * torch.conj(past_anchor)) # [4, 32, 120] ∈ [-1, 1]
 
-                # 4. jPCA смещение и матрицы ориентации для всех узлов
-                v_gx = torch.sum(gamma_120[:, 31] * DX_GPU, dim=-1) / 120.0
-                v_gy = torch.sum(gamma_120[:, 31] * DY_GPU, dim=-1) / 120.0
-                g_vecs = torch.stack([v_gx, v_gy, v_gx * 0.5], dim=-1) # [4, 3]
+                # 4. jPCA смещение и матрицы ориентации
+                v_rx = torch.sum(ripple_120[:, 31] * DX_GPU, dim=-1) / 120.0
+                v_ry = torch.sum(ripple_120[:, 31] * DY_GPU, dim=-1) / 120.0
+                g_vecs = torch.stack([v_rx, v_ry, v_rx * 0.5], dim=-1)
 
-                disp_all = torch.matmul(g_vecs, M_skew.T) * dt * 4.0 # [4, 3]
+                disp_all = torch.matmul(g_vecs, M_skew.T) * dt * 4.0
 
                 u1 = disp_all / (torch.norm(disp_all, dim=-1, keepdim=True) + 1e-6)
                 up_ref = torch.tensor([0.0, 0.0, 1.0], device=DEVICE).view(1, 3).expand(NUM_MAX_DEVICES, 3)
                 u2 = torch.cross(u1, up_ref, dim=-1)
                 u2 = u2 / (torch.norm(u2, dim=-1, keepdim=True) + 1e-6)
                 u3 = torch.cross(u1, u2, dim=-1)
-                pose_matrices = torch.stack([u1, u2, u3], dim=1) # [4, 3, 3]
+                pose_matrices = torch.stack([u1, u2, u3], dim=1)
 
                 # Кинематика 4D
-                lx = v_gx
-                ly = v_gy
+                lx = v_rx
+                ly = v_ry
                 rx = beta_stabs
                 ry = self.shm['theta_freq'].value / 10.0
                 kinematics_gpu = torch.stack([lx, ly, rx, torch.tensor([ry]*4, device=DEVICE)], dim=-1)
@@ -275,7 +279,7 @@ class GPU_Daemon_Process(mp.Process):
                 np.copyto(sh_disp, disp_all.cpu().numpy())
                 np.copyto(sh_pose, pose_matrices.contiguous().view(NUM_MAX_DEVICES, 9).cpu().numpy())
                 np.copyto(sh_beta_stab, beta_stabs.cpu().numpy())
-                np.copyto(sh_iplv, gamma_120.cpu().numpy())
+                np.copyto(sh_iplv, ripple_120.cpu().numpy())
 
 class HeterarchicalBrainEngine:
     def __init__(self):

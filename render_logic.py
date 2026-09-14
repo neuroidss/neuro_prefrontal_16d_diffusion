@@ -24,34 +24,22 @@ class NeuroRender:
         print(f"[NeuroRender] Initializing {self.mode.upper()} pipeline on {self.device}...")
         
         if self.mode in ["sdxl-turbo", "sdxl"]:
+            # Родной VAE модели SDXL от StabilityAI (БЕЗ TAESD!)
             self.pipe = AutoPipelineForImage2Image.from_pretrained(
                 "stabilityai/sdxl-turbo",
                 torch_dtype=self.dtype,
                 variant="fp16"
             ).to(self.device)
-            try:
-                self.pipe.vae = AutoencoderTiny.from_pretrained(
-                    "madebyollin/taesdxl",
-                    torch_dtype=self.dtype
-                ).to(self.device)
-            except Exception as e:
-                print(f"[!] Warning: fast taesdxl not available, using default VAE: {e}")
 
         elif self.mode in ["turbo", "sd-turbo"]:
+            # Родной VAE модели SD 2.1 от StabilityAI (БЕЗ TAESD!)
             self.pipe = AutoPipelineForImage2Image.from_pretrained(
                 "stabilityai/sd-turbo",
                 torch_dtype=self.dtype,
                 variant="fp16"
             ).to(self.device)
-            try:
-                self.pipe.vae = AutoencoderTiny.from_pretrained(
-                    "madebyollin/taesd",
-                    torch_dtype=self.dtype
-                ).to(self.device)
-            except Exception:
-                pass
 
-        else:  # default: lcm
+        else:  # default: lcm (ЗДЕСЬ TAESD ОСТАЕТСЯ, ТАК КАК ЭТО РОДНОЙ SD 1.5)
             self.mode = "lcm"
             self.pipe = StableDiffusionImg2ImgPipeline.from_pretrained(
                 "SimianLuo/LCM_Dreamshaper_v7",
@@ -92,15 +80,14 @@ class NeuroRender:
                     p_emb, _, pool, _ = self.pipe.encode_prompt(
                         prompt="warmup", device=self.device, num_images_per_prompt=1, do_classifier_free_guidance=False
                     )
-                    self.generate(image=dummy_image, prompt_embeds=p_emb, pooled_prompt_embeds=pool, strength=1.0)
+                    self.generate(image=dummy_image, prompt_embeds=p_emb, pooled_prompt_embeds=pool, strength=0.7)
                 else:
                     p_emb, _ = self.pipe.encode_prompt(
                         prompt="warmup", device=self.device, num_images_per_prompt=1, do_classifier_free_guidance=False
                     )
-                    self.generate(image=dummy_image, prompt_embeds=p_emb, strength=1.0)
+                    self.generate(image=dummy_image, prompt_embeds=p_emb, strength=0.7)
 
     def encode_prompts_universal(self, prompt_list):
-        """Кодирует список строк на сервере в точные тензоры активной модели."""
         p_embeds_list = []
         pooled_list = []
         with torch.no_grad():
@@ -125,12 +112,12 @@ class NeuroRender:
         }
 
     def generate(self, **kwargs):
-        """Универсальный запуск генерации с защитой параметров под активный режим."""
         if 'strength' in kwargs:
             kwargs['strength'] = float(np.clip(kwargs['strength'], 0.35, 0.95))
 
         if self.mode in ["turbo", "sd-turbo", "sdxl-turbo", "sdxl"]:
             kwargs.setdefault("strength", 0.5)
+            # 2 шага — стандарт для родного VAE Turbo
             kwargs.setdefault("num_inference_steps", 2)
             kwargs.setdefault("guidance_scale", 0.0)
         else:
