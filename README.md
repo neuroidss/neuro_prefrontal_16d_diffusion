@@ -107,13 +107,13 @@ $$\text{Spike Burst} \xrightarrow{\quad} \text{Calcium Trace (STM)} \xrightarrow
 2. **Long-Term Memory (LTM) — Structural Synaptic Plasticity (The Engram):**  
    True learning (consolidation) requires coincident pre- and postsynaptic activation verified by visual feedback (CLIP). Synapses between active Layer 4 input columns and Layer 2/3 executive concept assemblies undergo Long-Term Potentiation (LTP) via AMPA receptor recruitment, bounded by saturation [44]:
    
-   $$\mathbf{W}_{\text{synaptic}}^{(i)} \leftarrow \operatorname{clamp}\left(\mathbf{W}_{\text{synaptic}}^{(i)} + \eta \cdot \mathbf{C}(t),\, 0.0,\, 1.0\right)$$
+$$\mathbf{W}_{\text{synaptic}}^{(i)} \leftarrow \operatorname{clamp}\left(\mathbf{W}_{\text{synaptic}}^{(i)} + \eta \cdot \mathbf{C}(t),\, 0.0,\, 1.0\right)$$
    
    Once an engram reaches consolidation ($\sum [\mathbf{W} > 0.5] \ge K_{\text{target}}$), it is structurally preserved. It does not decay when the neuron stops firing [44].
 3. **Working Memory (WM) / Readout — Leaky Integrate-and-Fire Dynamics:**  
    The instantaneous consciousness of a concept is the postsynaptic somatic membrane potential $V_m$. It acts as a leaky integrator driven by synaptic currents:
    
-   $$I_{\text{syn}}(t) = \frac{\mathbf{W}_{\text{synaptic}} \cdot \mathbf{C}(t)}{|\mathbf{W}|_2 |\mathbf{C}|_2^2}, \qquad \tau_m \frac{dV_m}{dt} = -V_m + I_{\text{syn}}(t)$$
+$$I_{\text{syn}}(t) = \frac{\mathbf{W}_{\text{synaptic}} \cdot \mathbf{C}(t)}{|\mathbf{W}|_2 |\mathbf{C}|_2^2}, \qquad \tau_m \frac{dV_m}{dt} = -V_m + I_{\text{syn}}(t)$$
    
    When $V_m$ crosses the threshold ($75\%$), the concept enters active attention. When input ceases, $V_m$ leaks back to resting potential, clearing the workspace for the next thought without wiping the structural LTM engram [2, 10].
 
