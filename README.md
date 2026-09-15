@@ -107,7 +107,7 @@ $$\text{Spike Burst} \xrightarrow{\quad} \text{Calcium Trace (STM)} \xrightarrow
 2. **Long-Term Memory (LTM) — Structural Synaptic Plasticity (The Engram):**  
    True learning (consolidation) requires coincident pre- and postsynaptic activation verified by visual feedback (CLIP). Synapses between active Layer 4 input columns and Layer 2/3 executive concept assemblies undergo Long-Term Potentiation (LTP) via AMPA receptor recruitment, bounded by saturation [44]:
    
-$$\mathbf{W}_{\text{synaptic}}^{(i)} \leftarrow \operatorname{clamp}\left(\mathbf{W}_{\text{synaptic}}^{(i)} + \eta \cdot \mathbf{C}(t),\, 0.0,\, 1.0\right)$$
+$$\mathbf{W}_{\text{synaptic}}^{(i)} \leftarrow \mathrm{clamp}\left(\mathbf{W}_{\text{synaptic}}^{(i)} + \eta \cdot \mathbf{C}(t),\, 0.0,\, 1.0\right)$$
    
    Once an engram reaches consolidation ($\sum [\mathbf{W} > 0.5] \ge K_{\text{target}}$), it is structurally preserved. It does not decay when the neuron stops firing [44].
 3. **Working Memory (WM) / Readout — Leaky Integrate-and-Fire Dynamics:**  
