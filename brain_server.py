@@ -10,7 +10,7 @@ from render_logic import NeuroRender
 
 def main():
     parser = argparse.ArgumentParser(description="NeuroCanvas Fast Brain Server")
-    parser.add_argument('--mode', type=str, default="sdxl-turbo", choices=["lcm", "turbo", "sdxl-turbo"],
+    parser.add_argument('--mode', type=str, default="lcm", choices=["lcm", "turbo", "sdxl-turbo"],
                         help="Active diffusion pipeline mode")
     args = parser.parse_args()
 
