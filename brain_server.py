@@ -33,11 +33,13 @@ def main():
                     
                     if cmd == 'init_mode':
                         req_mode = msg.get('mode', current_mode)
-                        if req_mode != current_mode:
-                            print(f"[SERVER] Switching pipeline: {current_mode.upper()} -> {req_mode.upper()}...")
+                        req_taesd = msg.get('use_taesd', getattr(render, 'use_taesd', True))
+                        
+                        if req_mode != current_mode or req_taesd != getattr(render, 'use_taesd', True):
+                            print(f"[SERVER] Switching pipeline: {current_mode.upper()} -> {req_mode.upper()} (TAESD: {req_taesd})...")
                             del render
                             torch.cuda.empty_cache()
-                            render = NeuroRender(mode=req_mode)
+                            render = NeuroRender(mode=req_mode, use_taesd=req_taesd)
                             current_mode = req_mode
                         conn.send({'status': 'ok', 'mode': current_mode, 'is_sdxl': render.is_sdxl})
                         continue
