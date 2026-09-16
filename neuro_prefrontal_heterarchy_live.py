@@ -308,7 +308,7 @@ def main():
     parser = argparse.ArgumentParser(description="NeuroCanvas × tbp.monty: Pure Biological Decoder Engine")
     parser.add_argument('--sim', action='store_true', default=True, help="Start the external stigmergic agent swarm")
     parser.add_argument('--concepts', type=int, default=8, choices=[4, 8], help="Number of active concepts in hierarchy")
-    parser.add_argument('--mode', type=str, default="sdxl-turbo", choices=["lcm", "turbo", "sdxl-turbo"],
+    parser.add_argument('--mode', type=str, default="lcm", choices=["lcm", "turbo", "sdxl-turbo"],
                         help="Active diffusion pipeline mode")
     parser.add_argument('--turbo', action='store_true', help="Alias for --mode turbo")
     parser.add_argument('--sdxl', action='store_true', help="Alias for --mode sdxl-turbo")
