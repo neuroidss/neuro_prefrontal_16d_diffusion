@@ -151,7 +151,7 @@ On **F3 (left dorsolateral prefrontal cortex, BA9/46)**, neural populations do n
 * **Neurobiology:** Within each theta wave, early phases ($0 \dots 15$) represent retrospective retention (anchoring to past input), while late phases ($16 \dots 31$) represent prospective lookahead (planning upcoming items) (Bieri et al., 2014 *Neuron* [26]; Lisman & Jensen, 2013 [6]).
 * **Mathematical Definition:**
   
-  $$ry = \frac{\|\text{traj}_{16\dots 31}\| - \|\text{traj}_{0\dots 15}\|}{\|\text{traj}_{16\dots 31}\| + \|\text{traj}_{0\dots 15}\| + \epsilon} \in [-1.0, 1.0]$$
+$$ry = \frac{\|\text{traj}_{16\dots 31}\| - \|\text{traj}_{0\dots 15}\|}{\|\text{traj}_{16\dots 31}\| + \|\text{traj}_{0\dots 15}\| + \epsilon} \in [-1.0, 1.0]$$
 
 * **Generative Role:** Dynamically modulates diffusion strength. When $ry > 0$ (prospective intent), the model increases latent drift rate ($\Delta c$) to manifest anticipated changes. When $ry < 0$ (retrospective holding), diffusion strength drops, stabilizing the active image.
 
@@ -159,7 +159,7 @@ On **F3 (left dorsolateral prefrontal cortex, BA9/46)**, neural populations do n
 * **Neurobiology:** When an attractor transition in prefrontal cortex is direct and committed ($A \to B$), the population trajectory follows a low-curvature geodesic. When there is conflict, hesitation, or deliberation between competing options, the trajectory bends significantly in state space (Shenoy et al., 2013 [7]; Vyas et al., 2020 [37]).
 * **Mathematical Definition:**
   
-  $$rx = \frac{1}{16 \cdot \|\vec{L}\|} \sum_{k=1}^{30} \big( L_x \cdot \text{traj}_y[k] - L_y \cdot \text{traj}_x[k] \big) \in [-1.0, 1.0]$$
+$$rx = \frac{1}{16 \cdot \|\vec{L}\|} \sum_{k=1}^{30} \big( L_x \cdot \text{traj}_y[k] - L_y \cdot \text{traj}_x[k] \big) \in [-1.0, 1.0]$$
 
 * **Generative Role:** Modulates **attractor purity versus semantic interpolation**. When $|rx| \approx 0$, the generator locks onto a single discrete concept (100% purity). When $|rx| \gg 0$, the generator smoothly blends multiple concepts, reflecting prefrontal deliberation.
 
@@ -332,11 +332,11 @@ Pixel-level objectives fail in embodied control due to high-frequency appearance
 In `FullJepaVideoAgent`:
 1. The agent encodes incoming video frames into continuous latent world states using the frozen V-JEPA 2 encoder:
    
-   $$\mathbf{z}_t = E_\theta(I_t) \in \mathbb{R}^{1 \times 77 \times 2048}$$
+$$\mathbf{z}_t = E_\theta(I_t) \in \mathbb{R}^{1 \times 77 \times 2048}$$
 
 2. It evaluates the latent prediction error against its internal goal:
    
-   $$\mathcal{E}_{\text{JEPA}} = \|\mathbf{z}_t - \mathbf{z}_{\text{target}}\|_1$$
+$$\mathcal{E}_{\text{JEPA}} = |\mathbf{z}_t - \mathbf{z}_{\text{target}}|_1$$
 
 3. This latent energy modulates the evidence accumulation rate in the agent's SPRT drift engine:
    
