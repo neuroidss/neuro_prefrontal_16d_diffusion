@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-🤖 SYNTHETIC ACTIVE INFERENCE SWARM v2200.0
-- УДАЛЕНЫ ВСЕ ХАРДКОДНЫЕ ПЕРЕСТАНОВКИ. Инициализация через конкурентное распределение (Chen et al. 2024 Neuron).
-- Топология Тора Джанаты вычисляется эмпирически через MDS матрицу RDM (Fan et al. 2024 Nat Hum Behav).
-- Когнитивное ветвление Fpz (BA10) управляется тестом Вальда SPRT/DDM (Boorman et al. 2009 Neuron, Gold & Shadlen 2007).
-- Физиологические кортикальные рипплы человека ~89.5 Гц (Dickey et al. 2022 PNAS).
-- VLA-JEPA минимизация свободной энергии в латентном пространстве мира (V-JEPA 2, Assran 2025; Sun 2026).
+🤖 SYNTHETIC ACTIVE INFERENCE SWARM v2200.2 (TOPOLOGICAL + CLI COMPATIBLE)
+- Полная поддержка параметров командной строки (--hardcoded-bots N, --jepa-bots M).
+- Cortical Montage: Подключение девайсов по 3D-координатам.
+- Graceful Degradation: Деградация функций при отсутствии узлов AFz/Fpz.
+- Раздельная маршрутизация Гамма- и Риппл-волн.
 """
 
 import time
 import math
+import json
+import os
 import traceback
 import threading
 import multiprocessing as mp
@@ -23,54 +24,72 @@ NUM_DEVICES = 4
 TWO_PI = 2.0 * math.pi
 VIDEO_BUFFER_LEN = 16
 
-COORDS_X = np.array([
-    10.14,  7.43,  2.75,  2.72, -2.72, -2.75, -7.42, -10.14,
-   -10.14, -7.43, -2.75, -2.72,  2.72,  2.75,  7.43,  10.14
-], dtype=np.float32)
-
-COORDS_Y = np.array([
-    -2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42,  -2.73,
-     2.72,  7.43,  4.76,  10.14, 10.15,  4.77,  7.42,   2.71
-], dtype=np.float32)
-
+COORDS_X = np.array([10.14, 7.43, 2.75, 2.72, -2.72, -2.75, -7.42, -10.14, -10.14, -7.43, -2.75, -2.72, 2.72, 2.75, 7.43, 10.14], dtype=np.float32)
+COORDS_Y = np.array([-2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42, -2.73, 2.72, 7.43, 4.76, 10.14, 10.15, 4.77, 7.42, 2.71], dtype=np.float32)
 COORDS_Z = np.sqrt(np.maximum(100.0 - COORDS_X**2 - COORDS_Y**2, 0.0)).astype(np.float32)
 
 ALL_NAMES = ["КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ГОРА", "ЗАМОК", "ОКЕАН", "ДЖУНГЛИ"]
 
 def torus_geodesic_distance(u1, v1, u2, v2):
-    """
-    Геодезическое расстояние на 2D-торе T^2 = S^1 x S^1 (Janata 2002 Science).
-    """
     du = abs(u1 - u2) % TWO_PI
     if du > math.pi: du = TWO_PI - du
     dv = abs(v1 - v2) % TWO_PI
     if dv > math.pi: dv = TWO_PI - dv
     return math.sqrt(du**2 + dv**2)
 
+class CorticalMontage:
+    def __init__(self, config_dict):
+        self.devices = config_dict.get('montage', {}).get('devices', [])
+
+    def get_nodes_by_names(self, names: list) -> list[int]:
+        matched_ids = []
+        for dev in self.devices:
+            if any(dev['name'].startswith(n) for n in names):
+                matched_ids.append(dev['id'])
+        return list(set(matched_ids))
+
+    def get_nodes_by_radius(self, anchor_xyz: list, radius: float) -> list[int]:
+        matched_ids = []
+        anchor = np.array(anchor_xyz)
+        for dev in self.devices:
+            dist = np.linalg.norm(np.array(dev['coords']) - anchor)
+            if dist <= radius:
+                matched_ids.append(dev['id'])
+        return list(set(matched_ids))
+        
+    def check_feature(self, active_nodes: list, feature_name: str) -> bool:
+        """Проверяет, есть ли среди активных узлов тот, что отвечает за указанную функцию (по имени)"""
+        for dev in self.devices:
+            if dev['id'] in active_nodes and feature_name in dev['name']:
+                return True
+        return False
 
 class BaseActiveAgent:
-    def __init__(self, bot_id: int, initial_idx: int, num_concepts: int = 8):
+    def __init__(self, bot_id: int, initial_idx: int, active_nodes: list, montage: CorticalMontage, num_concepts: int = 8):
         self.bot_id = bot_id
         self.current_idx = initial_idx
         self.target_name = ALL_NAMES[initial_idx]
         self.num_concepts = num_concepts
+        self.active_nodes = active_nodes
         
-        # Альтернативные гипотезы в очереди ожидания Fpz (BA10, Koechlin 2007)
+        # Graceful Degradation: проверка наличия высших когнитивных центров
+        self.has_afz = montage.check_feature(active_nodes, "AFz")
+        self.has_fpz = montage.check_feature(active_nodes, "Fpz")
+        
         all_other = [i for i in range(num_concepts) if i != initial_idx]
         np.random.seed(bot_id * 101)
         self.plan_b_queue = list(np.random.permutation(all_other))
         
         self.role = "LEADER"
-        self.sprt_log_evidence = 0.0 # Аккумулятор логарифма правдоподобия Вальда (SPRT)
+        self.sprt_log_evidence = 0.0
         self.u_torus = (initial_idx * TWO_PI / num_concepts)
         self.v_torus = ((initial_idx * 3) * TWO_PI / num_concepts) % TWO_PI
         self.steps_in_role = 0
 
     def trigger_fpz_cognitive_branch(self):
-        """
-        Когнитивное ветвление Fpz (Boorman et al., 2009 Neuron; Gold & Shadlen 2007):
-        Сброс аккумулятора и фазовый скачок на 120° к следующей альтернативной гипотезе.
-        """
+        if not self.has_fpz:
+            return False # Нет аппарата для ветвления (зависание во фрустрации)
+            
         self.sprt_log_evidence = 0.0
         old_idx = self.current_idx
         self.plan_b_queue.append(old_idx)
@@ -80,29 +99,27 @@ class BaseActiveAgent:
         self.v_torus = ((self.current_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
         self.role = "LEADER"
         self.steps_in_role = 0
-        print(f"🔀 [Fpz BA10 BRANCHING] Бот {self.bot_id} переключил фокус: {ALL_NAMES[old_idx]} ➔ {self.target_name} (SPRT Bound Exceeded)!")
+        print(f"🔀 [Fpz BRANCHING] Бот {self.bot_id} переключил фокус: {ALL_NAMES[old_idx]} ➔ {self.target_name}!")
+        return True
 
     def generate_waves(self, role: str, dp_so3: np.ndarray | None, t_vec: np.ndarray, theta_norm: np.ndarray):
         freq = 35.0 + (self.current_idx % 8) * 3.5
         offset_ch = np.linspace(-1.0, 1.0, NUM_CHANNELS, dtype=np.float32)
-
         spatial_phase_ch = (COORDS_X * math.cos(self.u_torus) + COORDS_Y * math.sin(self.v_torus)) * 0.18 + offset_ch
 
-        # Мультиплексирование фаз Теты (Bieri et al., 2014 Neuron)
         if role in ["LEADER", "SUPER_PARENT"]:
-            target_phase = 0.25  # Ранняя тета (Macro-контейнер)
+            target_phase = 0.25
             amp = 5.0
         elif role == "SUB_CHILD":
-            target_phase = 0.75  # Поздняя тета (Вложенная деталь)
+            target_phase = 0.75
             amp = 3.8
-        else: # PEER
-            target_phase = 0.50  # Средняя тета (Равноправный сосед)
+        else:
+            target_phase = 0.50
             amp = 4.2
 
         w_theta = np.exp(-((theta_norm - target_phase)**2) / 0.025)
         low_gamma = np.sin(TWO_PI * freq * t_vec[None, :] + spatial_phase_ch[:, None]) * w_theta[None, :] * amp
 
-        # Физиологические кортикальные рипплы ~89.5 Гц (Dickey et al., PNAS 2022)
         high_ripple = np.zeros_like(low_gamma)
         if dp_so3 is not None:
             w_ripple = np.exp(-((theta_norm - ((target_phase + 0.15) % 1.0))**2) / 0.015)
@@ -111,47 +128,43 @@ class BaseActiveAgent:
 
         return low_gamma, high_ripple
 
-
 class FullDynamicHardcodedBot(BaseActiveAgent):
-    """
-    Активный агент с накоплением ошибки по Вальду (SPRT) и перебором ролей в гетерархии TBT 2.0.
-    """
     def step(self, world_probs: np.ndarray):
         target_p = float(world_probs[self.current_idx]) if self.current_idx < len(world_probs) else 0.0
         dominant_idx = int(np.argmax(world_probs))
         dominant_p = float(world_probs[dominant_idx])
 
-        # 1. Аттрактор взят (наша цель отображается на холсте)
         if target_p >= 0.28:
             self.sprt_log_evidence = max(0.0, self.sprt_log_evidence - 0.20)
             self.role = "LEADER"
             self.steps_in_role = 0
             return self.role, None, self.sprt_log_evidence
 
-        # 2. На холсте доминирует другой концепт: навигация по Тору Джанаты
         if dominant_idx != self.current_idx and dominant_p >= 0.25:
             dom_u = (dominant_idx * TWO_PI / self.num_concepts)
             dom_v = ((dominant_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
-            d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v)
+            
+            if self.has_afz:
+                d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v)
+            else:
+                d_torus = math.pi # Fallback эвристика если нет доступа к Тору
 
-            # Модель аккумуляции ошибки Вальда (SPRT): логарифм расхождения вероятностей
             evidence_step = math.log((dominant_p + 1e-4) / (target_p + 1e-4)) * (0.5 + d_torus / math.pi)
             self.sprt_log_evidence += 0.04 * evidence_step
             self.steps_in_role += 1
 
-            # Попытка смены гетерархической роли (Child -> Peer -> Super)
             if self.steps_in_role > 18:
                 self.steps_in_role = 0
                 if self.role == "LEADER": self.role = "SUB_CHILD"
                 elif self.role == "SUB_CHILD": self.role = "PEER"
                 elif self.role == "PEER": self.role = "SUPER_PARENT"
 
-            # Порог когнитивного ветвления Вальда (Boorman 2009, Gold & Shadlen 2007)
             if self.sprt_log_evidence > 1.35:
-                self.trigger_fpz_cognitive_branch()
-                return "BRANCH_HOP", None, self.sprt_log_evidence
+                if self.trigger_fpz_cognitive_branch():
+                    return "BRANCH_HOP", None, self.sprt_log_evidence
+                else:
+                    self.sprt_log_evidence = 1.35 # Зависание из-за отсутствия узла Fpz
 
-            # Относительная поза SO(3) на Торе Джанаты
             du = self.u_torus - dom_u
             dv = self.v_torus - dom_v
             dp_so3 = np.array([math.sin(du), math.cos(dv), math.sin(du + dv)], dtype=np.float32)
@@ -162,14 +175,9 @@ class FullDynamicHardcodedBot(BaseActiveAgent):
         self.sprt_log_evidence = max(0.0, self.sprt_log_evidence - 0.05)
         return self.role, None, self.sprt_log_evidence
 
-
 class FullJepaVideoAgent(BaseActiveAgent):
-    """
-    Агент VLA-JEPA: использует энкодер мира V-JEPA 2 (Assran et al. 2025, Sun et al. 2026).
-    Минимизирует свободную энергию в латентном пространстве.
-    """
-    def __init__(self, bot_id: int, initial_idx: int, jepa_wrapper, num_concepts: int = 8):
-        super().__init__(bot_id, initial_idx, num_concepts)
+    def __init__(self, bot_id: int, initial_idx: int, active_nodes: list, montage: CorticalMontage, jepa_wrapper, num_concepts: int = 8):
+        super().__init__(bot_id, initial_idx, active_nodes, montage, num_concepts)
         self.jepa = jepa_wrapper
         self.video_buffer = []
         self.last_jepa_energy = 1.0
@@ -180,15 +188,13 @@ class FullJepaVideoAgent(BaseActiveAgent):
             self.video_buffer.pop(0)
 
     def evaluate_and_plan(self, world_probs: np.ndarray):
-        if len(self.video_buffer) < 2:
-            return self.role, None, self.sprt_log_evidence
+        if len(self.video_buffer) < 2: return self.role, None, self.sprt_log_evidence
 
         try:
             target_p = float(world_probs[self.current_idx]) if self.current_idx < len(world_probs) else 0.0
             dominant_idx = int(np.argmax(world_probs))
             dominant_p = float(world_probs[dominant_idx])
 
-            # Энергия ошибки предсказания в латентном пространстве V-JEPA 2 (Assran et al. 2025)
             if self.jepa is not None and len(self.video_buffer) >= 2:
                 z_cur = self.jepa.encode_world_state(self.video_buffer[-1])
                 norm_val = float(z_cur.abs().mean().item()) if hasattr(z_cur, 'abs') else 0.5
@@ -203,9 +209,12 @@ class FullJepaVideoAgent(BaseActiveAgent):
             if dominant_idx != self.current_idx and dominant_p >= 0.25:
                 dom_u = (dominant_idx * TWO_PI / self.num_concepts)
                 dom_v = ((dominant_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
-                d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v)
+                
+                if self.has_afz:
+                    d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v)
+                else:
+                    d_torus = math.pi
 
-                # Шаг SPRT, взвешенный латентной энергией V-JEPA 2
                 evidence_step = math.log((dominant_p + 1e-4) / (target_p + 1e-4)) * (0.6 + 0.4 * self.last_jepa_energy)
                 self.sprt_log_evidence += 0.045 * evidence_step
                 self.steps_in_role += 1
@@ -217,8 +226,10 @@ class FullJepaVideoAgent(BaseActiveAgent):
                     elif self.role == "PEER": self.role = "SUPER_PARENT"
 
                 if self.sprt_log_evidence > 1.35:
-                    self.trigger_fpz_cognitive_branch()
-                    return "BRANCH_HOP", None, self.sprt_log_evidence
+                    if self.trigger_fpz_cognitive_branch():
+                        return "BRANCH_HOP", None, self.sprt_log_evidence
+                    else:
+                        self.sprt_log_evidence = 1.35
 
                 du = self.u_torus - dom_u
                 dv = self.v_torus - dom_v
@@ -233,50 +244,91 @@ class FullJepaVideoAgent(BaseActiveAgent):
         except Exception:
             return self.role, None, 0.0
 
-
 class AutonomousSwarmProcess(mp.Process):
-    def __init__(self, shm, num_hardcoded: int, num_jepa: int, num_concepts: int = 8):
+    def __init__(self, shm, config_path: str, num_hardcoded: int, num_jepa: int, num_concepts: int = 8):
         super().__init__()
         self.daemon = True
         self.shm = shm
+        self.config_path = config_path
         self.num_hardcoded = num_hardcoded
         self.num_jepa = num_jepa
         self.num_concepts = num_concepts
 
     def run(self):
         try:
+            config_dict = {}
+            if os.path.exists(self.config_path):
+                with open(self.config_path, 'r', encoding='utf-8') as f:
+                    config_dict = json.load(f)
+            else:
+                # ДИНАМИЧЕСКАЯ ГЕНЕРАЦИЯ ЕСЛИ ФАЙЛА НЕТ (Совместимость с CLI)
+                print(f"⚠️ Конфиг {self.config_path} не найден! Генерирую динамическую гетерархию из CLI (--hardcoded {self.num_hardcoded}, --jepa {self.num_jepa}).")
+                config_dict = {
+                    "montage": {
+                        "system": "10-20-extended",
+                        "devices": [
+                            {"id": 0, "name": "F3", "coords": [-4.0, 3.0, 5.0]},
+                            {"id": 1, "name": "F4", "coords": [4.0, 3.0, 5.0]},
+                            {"id": 2, "name": "AFz", "coords": [0.0, 6.0, 4.0]},
+                            {"id": 3, "name": "Fpz", "coords": [0.0, 8.0, 2.0]}
+                        ]
+                    },
+                    "agents": []
+                }
+                if self.num_hardcoded > 0:
+                    config_dict["agents"].append({
+                        "type": "hardcoded", "count": self.num_hardcoded,
+                        "profile": "CLI_Hardcoded_Bot", "bind_mode": "names",
+                        "bind_target": ["F3", "F4", "AFz", "Fpz"]
+                    })
+                if self.num_jepa > 0:
+                    config_dict["agents"].append({
+                        "type": "jepa", "count": self.num_jepa,
+                        "profile": "CLI_JEPA_Bot", "bind_mode": "names",
+                        "bind_target": ["F3", "F4", "AFz", "Fpz"]
+                    })
+
+            montage = CorticalMontage(config_dict)
+
             outlets = [
                 StreamOutlet(StreamInfo(f'FreeEEG_Node{i}', 'EEG', NUM_CHANNELS, FS, 'float32', f'sim_node_{i}'))
                 for i in range(NUM_DEVICES)
             ]
 
             jepa_wrapper = None
-            if self.num_jepa > 0:
+            if any(a.get('type') == 'jepa' for a in config_dict.get('agents', [])):
                 try:
                     from vla_jepa_wrapper import VLA_JEPA_Wrapper
                     jepa_wrapper = VLA_JEPA_Wrapper(port=6001)
-                    print(f"🤖 [SWARM] VLA-JEPA обертка подключена (порт 6001).")
                 except Exception as e:
                     print(f"⚠️ [SWARM] VLA-JEPA недоступна: {e}")
 
-            # НАУЧНАЯ ИНИЦИАЛИЗАЦИЯ: Конкурентное распределение по ортогональным подпространствам (Chen 2024 Neuron)
-            # Никаких захардкоженных списков! Равномерная псевдослучайная перестановка пространства задач.
             rng = np.random.RandomState(42)
             available_slots = list(rng.permutation(self.num_concepts))
             self.bots = []
+            bot_idx = 1
 
-            for i in range(self.num_hardcoded):
-                c_idx = available_slots[i % len(available_slots)]
-                self.bots.append(FullDynamicHardcodedBot(
-                    bot_id=i+1, initial_idx=c_idx, num_concepts=self.num_concepts
-                ))
-
-            for j in range(self.num_jepa):
-                b_id = self.num_hardcoded + j + 1
-                c_idx = available_slots[(self.num_hardcoded + j) % len(available_slots)]
-                self.bots.append(FullJepaVideoAgent(
-                    bot_id=b_id, initial_idx=c_idx, jepa_wrapper=jepa_wrapper, num_concepts=self.num_concepts
-                ))
+            for agent_cfg in config_dict.get('agents', []):
+                count = agent_cfg.get('count', 1)
+                for _ in range(count):
+                    c_idx = available_slots[(bot_idx - 1) % len(available_slots)]
+                    
+                    mode = agent_cfg.get('bind_mode', 'names')
+                    if mode == 'radius':
+                        tgt = agent_cfg.get('bind_target', {})
+                        active_nodes = montage.get_nodes_by_radius(tgt.get('anchor', [0,0,0]), tgt.get('radius', 5.0))
+                    else:
+                        active_nodes = montage.get_nodes_by_names(agent_cfg.get('bind_target', []))
+                    
+                    if not active_nodes: active_nodes = [0] # Fallback
+                    
+                    if agent_cfg.get('type') == 'jepa':
+                        bot = FullJepaVideoAgent(bot_idx, c_idx, active_nodes, montage, jepa_wrapper, self.num_concepts)
+                    else:
+                        bot = FullDynamicHardcodedBot(bot_idx, c_idx, active_nodes, montage, self.num_concepts)
+                        
+                    self.bots.append(bot)
+                    bot_idx += 1
 
             start_time = time.time()
             regional_delays = [0.0, 0.035, 0.070, 0.105]
@@ -301,9 +353,8 @@ class AutonomousSwarmProcess(mp.Process):
                         pass
                     time.sleep(0.08)
 
-            if self.num_jepa > 0:
-                t_jepa = threading.Thread(target=async_jepa_worker, daemon=True)
-                t_jepa.start()
+            if any(isinstance(b, FullJepaVideoAgent) for b in self.bots):
+                threading.Thread(target=async_jepa_worker, daemon=True).start()
 
             self.shm['is_swarm_ready'].value = True
             last_hardcoded_plan = 0.0
@@ -318,8 +369,9 @@ class AutonomousSwarmProcess(mp.Process):
                 calib_idx = int(self.shm['calib_target_idx'].value)
                 world_probs = np.array(self.shm['clip_probs'][:self.num_concepts], dtype=np.float32)
 
-                low_gamma_sig = np.zeros((NUM_CHANNELS, CHUNK_SIZE), dtype=np.float32)
-                high_gamma_sig = np.zeros((NUM_CHANNELS, CHUNK_SIZE), dtype=np.float32)
+                # РАЗДЕЛЬНЫЕ БУФЕРЫ ПО ДЕВАЙСАМ
+                device_lg = [np.zeros((NUM_CHANNELS, CHUNK_SIZE), dtype=np.float32) for _ in range(NUM_DEVICES)]
+                device_hg = [np.zeros((NUM_CHANNELS, CHUNK_SIZE), dtype=np.float32) for _ in range(NUM_DEVICES)]
 
                 owners = [-1] * 8
 
@@ -329,7 +381,8 @@ class AutonomousSwarmProcess(mp.Process):
                     v = ((calib_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
                     spatial_phase_ch = (COORDS_X * math.cos(u) + COORDS_Y * math.sin(v)) * 0.18
                     w_late = np.exp(-((theta_phase_norm - 0.75)**2) / 0.02)
-                    low_gamma_sig = np.sin(TWO_PI * (35.0 + calib_idx * 3.5) * t_vec[None, :] + spatial_phase_ch[:, None]) * w_late[None, :] * 6.0
+                    lg = np.sin(TWO_PI * (35.0 + calib_idx * 3.5) * t_vec[None, :] + spatial_phase_ch[:, None]) * w_late[None, :] * 6.0
+                    for i in range(NUM_DEVICES): device_lg[i] += lg
                     status_str = f"CALIBRATING: [{cur_name}]"
                 else:
                     if t_now - last_hardcoded_plan >= (1.0 / 6.0):
@@ -339,27 +392,30 @@ class AutonomousSwarmProcess(mp.Process):
                                 if isinstance(bot, FullDynamicHardcodedBot):
                                     bot_evals[bot.bot_id] = bot.step(world_probs)
 
-                    status_str = f"SWARM(H:{self.num_hardcoded},J:{self.num_jepa}):"
-                    with eval_lock:
-                        current_evals = dict(bot_evals)
+                    status_str = "SWARM:"
+                    with eval_lock: current_evals = dict(bot_evals)
 
                     for bot in self.bots:
                         owners[bot.current_idx] = bot.bot_id
                         role, dp, sprt_val = current_evals.get(bot.bot_id, ("LEADER", None, 0.0))
                         
                         lg, hg = bot.generate_waves(role, dp, t_vec, theta_phase_norm)
-                        low_gamma_sig += lg
-                        high_gamma_sig += hg
+                        
+                        # РОУТИНГ ТОЛЬКО В РАЗРЕШЕННЫЕ УЗЛЫ БОТА
+                        for node_i in bot.active_nodes:
+                            if node_i < NUM_DEVICES:
+                                device_lg[node_i] += lg
+                                device_hg[node_i] += hg
 
                         prefix = "H" if isinstance(bot, FullDynamicHardcodedBot) else "J"
-                        status_str += f" [{prefix}{bot.bot_id}-{bot.target_name[:4]}:{role[:3]}|E:{sprt_val:.2f}]"
+                        nodes_str = "".join([str(n) for n in bot.active_nodes])
+                        status_str += f" [{prefix}{bot.bot_id}({nodes_str})-{bot.target_name[:4]}:{role[:3]}|E:{sprt_val:.2f}]"
 
-                    low_gamma_sig = np.clip(low_gamma_sig, -6.0, 6.0)
-                    high_gamma_sig = np.clip(high_gamma_sig, -6.0, 6.0)
+                for i in range(NUM_DEVICES):
+                    device_lg[i] = np.clip(device_lg[i], -6.0, 6.0)
+                    device_hg[i] = np.clip(device_hg[i], -6.0, 6.0)
 
-                for i in range(8):
-                    self.shm['concept_owners'][i] = owners[i]
-
+                for i in range(8): self.shm['concept_owners'][i] = owners[i]
                 self.shm['agent_desc'].value = status_str.encode('utf-8', errors='replace')[:250]
 
                 has_active_signal = is_calib or (len(self.bots) > 0)
@@ -373,13 +429,14 @@ class AutonomousSwarmProcess(mp.Process):
                         raw_sig = (
                             3.0 * np.sin(TWO_PI * 6.0 * t_vec + delay)[None, :] +
                             2.0 * np.sin(TWO_PI * 1.5 * t_vec + delay)[None, :] +
-                            low_gamma_sig +
-                            high_gamma_sig +
+                            device_lg[node_i] +
+                            device_hg[node_i] +
                             np.sin(TWO_PI * 22.0 * t_vec)[None, :] * 1.8 +
                             noise
                         )
-                        if node_i == 2 and not is_calib and np.any(high_gamma_sig):
-                            raw_sig += high_gamma_sig * 1.5
+                        # Добавка сверхбыстрых рипплов только для AFz
+                        if node_i == 2 and not is_calib and np.any(device_hg[node_i]):
+                            raw_sig += device_hg[node_i] * 1.5
 
                     outlets[node_i].push_chunk(raw_sig.T.tolist())
 
@@ -389,9 +446,8 @@ class AutonomousSwarmProcess(mp.Process):
             print(f"❌ [SWARM CRASH]: {err}")
             traceback.print_exc()
 
-
 class SyntheticAutonomousAgent:
-    def __init__(self, num_concepts: int = 8, num_hardcoded: int = 1, num_jepa: int = 0):
+    def __init__(self, config_path: str = "swarm_config.json", num_hardcoded: int = 1, num_jepa: int = 0, num_concepts: int = 8):
         ctx = mp.get_context('spawn')
         self.num_concepts = num_concepts
         self.shm = {
@@ -405,12 +461,13 @@ class SyntheticAutonomousAgent:
             'concept_owners': ctx.Array('i', [-1] * 8)
         }
         self.process = AutonomousSwarmProcess(
-            self.shm, num_hardcoded=num_hardcoded, num_jepa=num_jepa, num_concepts=num_concepts
+            self.shm, config_path, num_hardcoded=num_hardcoded, num_jepa=num_jepa, num_concepts=num_concepts
         )
         self.process.start()
 
     def is_ready(self) -> bool: return bool(self.shm['is_swarm_ready'].value)
     def is_alive(self) -> bool: return self.process.is_alive()
+    
     def update_visual_state(self, visual_data):
         if isinstance(visual_data, np.ndarray):
             if visual_data.ndim == 3:
