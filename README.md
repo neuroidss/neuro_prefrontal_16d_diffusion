@@ -306,7 +306,7 @@ $$\Delta \mathbf{p}_{SO(3)} = \begin{bmatrix} \sin(\Delta u) \\ \cos(\Delta v) \
 
 * **Hebbian Plasticity & Consolidation Threshold:** When sensory feedback confirms concept emergence ($P_{\text{CLIP}} \ge 0.25$), active synapses are potentiated:
   
-  $$\mathbf{W}_{ij} \leftarrow \mathrm{clamp}(\mathbf{W}_{ij} + \eta \cdot \mathbf{C}_j, \, 0.0, \, 1.0)$$
+$$\mathbf{W}_{ij} \leftarrow \mathrm{clamp}(\mathbf{W}_{ij} + \eta \cdot \mathbf{C}_j, 0.0, 1.0)$$
 
   A concept is verified as `[CONSOLIDATED]` only when its functional synaptic density satisfies:
   
