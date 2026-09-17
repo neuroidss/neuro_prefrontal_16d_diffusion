@@ -302,7 +302,7 @@ $$\Delta \mathbf{p}_{SO(3)} = \begin{bmatrix} \sin(\Delta u) \\ \cos(\Delta v) \
 * **Sparse Distributed Representation (SDR):** Local lateral inhibition maintains an active population sparsity of $1.95\%$ ($k = 80$ active columns per node, $K_{\text{total}} = 320$ active units across the sheet) (Hawkins et al., 2017 [3]).
 * **Presynaptic Calcium Traces ($\text{Ca}^{2+}$):**
   
-  $$\mathbf{C}(t) = \max(\mathbf{C}(t - \Delta t) \cdot 0.90, \; \mathbf{SDR}(t))$$
+$$\mathbf{C}(t) = \max(\mathbf{C}(t - \Delta t) \cdot 0.90, \; \mathbf{SDR}(t))$$
 
 * **Hebbian Plasticity & Consolidation Threshold:** When sensory feedback confirms concept emergence ($P_{\text{CLIP}} \ge 0.25$), active synapses are potentiated:
   
@@ -346,8 +346,8 @@ $$\mathcal{E}_{\text{JEPA}} = |\mathbf{z}_t - \mathbf{z}_{\text{target}}|_1$$
 
 ### 4.3 Phase-Division Multiple Access (PDMA) Across Theta Cycles
 Multiple agents broadcasting simultaneously avoid spectral interference via **Phase-Division Multiple Access (PDMA)** across the $6.0\text{ Hz}$ theta cycle (Lisman & Jensen, 2013 [6]; Bieri et al., 2014 [26]):
-* **Leader / Enclosing Parent ($\text{Role} \in \{\text{LEADER}, \text{SUPER\_PARENT}\}$):** Fires at **early theta phases ($\theta \approx 0.20\text{--}0.35$)** (retrospective macro-context).
-* **Embedded Sub-Component ($\text{Role} = \text{SUB\_CHILD}$):** Fires at **late theta phases ($\theta \approx 0.70\text{--}0.85$)** (prospective local modification).
+* **Leader / Enclosing Parent** ($\text{Role} \in \{\text{LEADER}, \text{SUPER\_PARENT}\}$): Fires at early theta phases ($\theta \approx 0.20 \text{--} 0.35$) (retrospective macro-context).
+* **Embedded Sub-Component** ($\text{Role} = \text{SUB\_CHILD}$): Fires at late theta phases ($\theta \approx 0.70 \text{--} 0.85$) (prospective local modification).
 * **Co-Equal Peer ($\text{Role} = \text{PEER}$):** Fires at **mid-theta phases ($\theta \approx 0.45\text{--}0.55$)**.
 
 ---
