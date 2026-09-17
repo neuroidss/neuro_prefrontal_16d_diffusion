@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-🧠 NEUROCANVAS × TBP.MONTY: TOPOLOGICAL CONFIGURATION & GRACEFUL DEGRADATION
-- Читает swarm_config.json или работает по аргументам из консоли.
-- Динамически привязывает UI и вычисления к конкретным девайсам по их именам (F3, F4, AFz, Fpz).
-- Включает все классы (L4 HTM Column, Heterarchy, LDM Worker, CLIP Teacher) в одном файле.
+🧠 NEUROCANVAS × TBP.MONTY: TOPOLOGICAL CONFIGURATION & SCIENTIFIC DUAL-CONTOUR
+- Полная обратная совместимость по дефолтным параметрам.
+- Добавлены флаги --strength-high / --strength-low (решают проблему FPS).
+- Добавлен флаг --gamma-100 (переключает локальную гамму в континуум 30-100 Гц).
+- Число концептов (--concepts) принимает любое значение >= 2.
 """
 
 import os
@@ -36,20 +37,15 @@ from synthetic_16d_causal_agent import SyntheticAutonomousAgent, CorticalMontage
 
 WIDTH, HEIGHT = 1800, 960
 
-# --- ГЛОБАЛЬНЫЕ КОНСТАНТЫ ---
-ALL_NAMES = ["КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ГОРА", "ЗАМОК", "ОКЕАН", "ДЖУНГЛИ"]
+ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ЗАМОК", "ОКЕАН"]
+#ALL_NAMES = ["КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ГОРА", "ЗАМОК", "ОКЕАН", "ДЖУНГЛИ"]
 
 ELECTRODE_X = np.array([10.14, 7.43, 2.75, 2.72, -2.72, -2.75, -7.42, -10.14,
                         -10.14, -7.43, -2.75, -2.72, 2.72, 2.75, 7.43, 10.14], dtype=np.float32)
 ELECTRODE_Y = np.array([-2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42, -2.73,
                          2.72, 7.43, 4.76, 10.14, 10.15, 4.77, 7.42, 2.71], dtype=np.float32)
 
-# =====================================================================
-# ВТОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ТОПОЛОГИЯ
-# =====================================================================
-
 def compute_empirical_mds_torus(text_features_tensor: torch.Tensor) -> np.ndarray:
-    """Вычисляет координаты (u, v) на Торе Джанаты строго через 2D классический MDS матрицы RDM."""
     sim = torch.mm(text_features_tensor, text_features_tensor.t()).cpu().numpy()
     D = np.clip(1.0 - sim, 0.0, 2.0)
     n = D.shape[0]
@@ -69,7 +65,6 @@ def compute_empirical_mds_torus(text_features_tensor: torch.Tensor) -> np.ndarra
     return torus_coords
 
 def calculate_emergent_treemap(x, y, w, h, active_weights, k_score, lead_sign):
-    """Эмерджентная гетерархия (Treemap)."""
     active_indices = [i for i, val in enumerate(active_weights) if val > 0.05]
     if not active_indices:
         top_i = int(np.argmax(active_weights))
@@ -116,7 +111,6 @@ def calculate_emergent_treemap(x, y, w, h, active_weights, k_score, lead_sign):
     return boxes, sorted_by_weight
 
 def apply_color_surgery(img_np, old_f32):
-    """Синтез коррекции цвета для стабильности потока."""
     res = img_np.astype(np.float32)
     mu = np.mean(res, axis=(0, 1))
     target_g = (mu[0] + mu[2]) / 2.0
@@ -131,10 +125,6 @@ def apply_color_surgery(img_np, old_f32):
     t_std = std_t * 0.85 + std_s * 0.15
     res = (res - mu_t.reshape(1, 1, 3)) * (t_std / (std_t + 1e-5)).reshape(1, 1, 3) + mu_t.reshape(1, 1, 3)
     return np.clip(res, 0, 255).astype(np.uint8)
-
-# =====================================================================
-# КЛАССЫ: HTM, LTM HETERARCHY, DIFFUSION WORKER, CLIP
-# =====================================================================
 
 class CanonicalHTMColumn(nn.Module):
     def __init__(self, node_id: str = "Node", num_columns: int = 4096, k_active: int = 80):
@@ -187,7 +177,6 @@ class FrontalExecutiveHeterarchy(nn.Module):
     def get_current_sdr(self, iplv_gamma_nodes: list[torch.Tensor]):
         num_to_process = min(4, len(iplv_gamma_nodes))
         sdrs = [self.nodes[i].compute_sdr(iplv_gamma_nodes[i]) for i in range(num_to_process)]
-        # Если девайсов меньше 4, дополняем нулями
         while len(sdrs) < 4:
             sdrs.append(torch.zeros(self.nodes[0].num_columns, device=DEVICE))
         return torch.cat(sdrs, dim=0), sdrs[0]
@@ -223,13 +212,13 @@ class FrontalExecutiveHeterarchy(nn.Module):
         weights = torch.softmax(self.membrane_potential * 10.0, dim=0).cpu().numpy()
         return weights, wm_scores.cpu().numpy(), ltm_scores
 
-    def save_to_file(self, filepath: str):
+    def save_to_file(self, filepath: str, concept_names: list):
         ltm_scores = self.get_ltm_scores()
         num_trained = int(np.sum(ltm_scores >= 75.0))
         payload = {
             'format_version': '5.0',
             'num_concepts': self.num_concepts,
-            'concept_names': ALL_NAMES[:self.num_concepts],
+            'concept_names': concept_names,
             'synaptic_weights': self.synaptic_weights.cpu(),
             'timestamp': time.time()
         }
@@ -301,7 +290,7 @@ class ToroidalDiffusionWorker:
         self.thread = threading.Thread(target=self._loop, daemon=True)
         self.thread.start()
 
-    def update_hemispheric_target(self, left_form_idx: int, right_style_idx: int, beta_f3: float, beta_f4: float):
+    def update_hemispheric_target(self, left_form_idx: int, right_style_idx: int, beta_f3: float, beta_f4: float, rx_sagitta: float = 0.0):
         if not self.initialized or self.c_bases is None: return
 
         with torch.inference_mode():
@@ -315,8 +304,8 @@ class ToroidalDiffusionWorker:
             target[:, :half_d] = base_form[:, :half_d]
             target[:, half_d:] = base_style[:, half_d:]
 
-            alpha_form = float(np.clip(1.0 - beta_f3 * 0.7, 0.15, 0.85))
-            alpha_style = float(np.clip(1.0 - beta_f4 * 0.7, 0.15, 0.85))
+            alpha_form = float(np.clip(1.0 - beta_f3 * 0.7 + rx_sagitta * 0.2, 0.15, 0.85))
+            alpha_style = float(np.clip(1.0 - beta_f4 * 0.7 - rx_sagitta * 0.2, 0.15, 0.85))
             mean_alpha = (alpha_form + alpha_style) / 2.0
 
             with self.lock:
@@ -366,7 +355,7 @@ class ToroidalDiffusionWorker:
                     'cmd': 'generate',
                     'image_np': img,
                     'prompt_embeds': latent,
-                    'strength': max(0.40, s_val)
+                    'strength': max(0.10, min(0.99, s_val))
                 }
                 if pooled is not None: req['pooled_prompt_embeds'] = pooled
                 if self.speed == "fast": req['num_inference_steps'] = 3
@@ -391,44 +380,71 @@ class ToroidalDiffusionWorker:
                 self.initialized = False
                 time.sleep(0.5)
 
-# =====================================================================
-# ОСНОВНАЯ ФУНКЦИЯ MAIN
-# =====================================================================
-
 def main():
-    parser = argparse.ArgumentParser(description="NeuroCanvas × tbp.monty: Topological Config")
+    parser = argparse.ArgumentParser(description="NeuroCanvas × tbp.monty: Topological Config & Kinematics")
     parser.add_argument('--config', type=str, default="swarm_config.json", help="Path to config file")
     parser.add_argument('--sim', action='store_true', default=True, help="Start external agent swarm")
-    parser.add_argument('--concepts', type=int, default=8, choices=[4, 8])
+    
+    # Гибкое количество концептов (любое int >= 2)
+    parser.add_argument('--concepts', type=int, default=8, help="Number of active concepts (e.g. 2, 4, 8)")
+    
+    # Параметры диффузии
     parser.add_argument('--mode', type=str, default="lcm", choices=["lcm", "turbo", "sdxl-turbo"])
     parser.add_argument('--speed', type=str, default="fast", choices=["fast", "quality"])
+    
+    # Сила диффузии: вынесена в CLI (решает проблему 4.6 FPS)
+    parser.add_argument('--strength-high', type=float, default=0.85, help="Strength when transitioning/focused")
+    parser.add_argument('--strength-low', type=float, default=0.50, help="Strength during steady state")
+    
+    # Научные режимы спектра
+    parser.add_argument('--gamma-100', action='store_true', help="Extend local gamma contour to 30-100 Hz continuum")
+    parser.add_argument('--use-kinematics', action='store_true', help="Use rx for style blending and ry for dynamic strength")
+    
+    # Боты (если конфиг не найден)
     parser.add_argument('--hardcoded-bots', type=int, default=1)
     parser.add_argument('--jepa-bots', type=int, default=0)
+    
     parser.add_argument('--weights', type=str, default="monty_ltm_weights.pt")
     parser.add_argument('--force-recalib', action='store_true')
     parser.add_argument('--no-taesd', action='store_true')
     parser.add_argument('--no-color', action='store_true')
     args = parser.parse_args()
 
-    TARGET_NAMES = ALL_NAMES[:args.concepts]
-    PROMPTS = [
+    BASE_PROMPTS = [
+        "giant snowy mountain peak, rocky cliffs, clear blue sky, sharp focus, 8k",
+        "dense lush green tropical jungle, giant trees, vines, sunlight piercing through leaves, 8k",
         "deep outer space, glowing colorful nebula, bright stars, galaxy, 8k, sharp detailed",
         "spherical alien planet with atmosphere, continents and oceans in space, 8k, sharp detailed",
         "futuristic cyberpunk city street, neon lights, rain, glowing signs, sharp linework, 8k",
         "modern glass skyscraper buildings, downtown city, geometric architecture, sharp focus, 8k",
-        "giant snowy mountain peak, rocky cliffs, clear blue sky, sharp focus, 8k",
         "ancient medieval stone castle fortress towers, daytime, sharp focus, 8k",
-        "open stormy dark blue ocean, pure water surface, giant ocean waves, sea foam, no land, 8k",
-        "dense lush green tropical jungle, giant trees, vines, sunlight piercing through leaves, 8k"
-    ][:args.concepts]
+        "open stormy dark blue ocean, pure water surface, giant ocean waves, sea foam, no land, 8k"
+    ]
+#    BASE_PROMPTS = [
+#        "deep outer space, glowing colorful nebula, bright stars, galaxy, 8k, sharp detailed",
+#        "spherical alien planet with atmosphere, continents and oceans in space, 8k, sharp detailed",
+#        "futuristic cyberpunk city street, neon lights, rain, glowing signs, sharp linework, 8k",
+#        "modern glass skyscraper buildings, downtown city, geometric architecture, sharp focus, 8k",
+#        "giant snowy mountain peak, rocky cliffs, clear blue sky, sharp focus, 8k",
+#        "ancient medieval stone castle fortress towers, daytime, sharp focus, 8k",
+#        "open stormy dark blue ocean, pure water surface, giant ocean waves, sea foam, no land, 8k",
+#        "dense lush green tropical jungle, giant trees, vines, sunlight piercing through leaves, 8k"
+#    ]
+    
+    PROMPTS = []
+    TARGET_NAMES = []
+    for i in range(args.concepts):
+        idx = i % 8
+        prefix = f"Variant {i//8}: " if i >= 8 else ""
+        PROMPTS.append(prefix + BASE_PROMPTS[idx])
+        TARGET_NAMES.append(f"{ALL_NAMES[idx]}_{i//8}" if i >= 8 else ALL_NAMES[idx])
 
-    # ПАРСИНГ КОНФИГА
     config_dict = {}
     if os.path.exists(args.config):
         with open(args.config, 'r', encoding='utf-8') as f: 
             config_dict = json.load(f)
     else:
-        print(f"⚠️ Конфиг {args.config} не найден, используем дефолтные имена (F3, F4, AFz, Fpz).")
+        print(f"⚠️ Конфиг {args.config} не найден, используем параметры из CLI.")
 
     montage = CorticalMontage(config_dict)
     f3_nodes = montage.get_nodes_by_names(["F3"])
@@ -436,7 +452,6 @@ def main():
     afz_nodes = montage.get_nodes_by_names(["AFz"])
     fpz_nodes = montage.get_nodes_by_names(["Fpz"])
 
-    # Fallback to standard 0,1,2,3 if not found in config
     f3_idx = f3_nodes[0] if f3_nodes else 0
     f4_idx = f4_nodes[0] if f4_nodes else 1
     afz_idx = afz_nodes[0] if afz_nodes else 2
@@ -455,12 +470,14 @@ def main():
 
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption(f"NeuroCanvas × tbp.monty: Emergent Heterarchy [{args.mode.upper()}]")
+    pygame.display.set_caption(f"NeuroCanvas × tbp.monty: Emergent Heterarchy [{args.mode.upper()}] (Concepts: {args.concepts})")
     clock = pygame.time.Clock()
     font_b = pygame.font.SysFont("consolas", 13, bold=True)
     font_s = pygame.font.SysFont("consolas", 11)
 
-    engine = HeterarchicalBrainEngine()
+    # Инициализация ядра с выбранным верхним порогом гаммы (65 или 100 Гц)
+    gamma_max = 100.0 if args.gamma_100 else 65.0
+    engine = HeterarchicalBrainEngine(gamma_max=gamma_max)
     engine.start()
 
     if agent:
@@ -474,9 +491,6 @@ def main():
     heterarchy = FrontalExecutiveHeterarchy(num_concepts=args.concepts).to(DEVICE)
 
     empirical_torus_coords = compute_empirical_mds_torus(clip_teacher.text_features)
-    print(f"📊 [JANATA TORUS] Эмпирическая 2D топология тора рассчитана из CLIP RDM:")
-    for i, name in enumerate(TARGET_NAMES):
-        print(f"   {name:10s} -> u: {empirical_torus_coords[i, 0]:.2f} rad, v: {empirical_torus_coords[i, 1]:.2f} rad")
     
     is_calibrating = True
     learn_idx = 0
@@ -525,12 +539,11 @@ def main():
             frame = engine.get_frame()
             has_live_eeg = (frame.num_live > 0)
 
-            node_gamma_tensors  = [torch.tensor(n.iplv_gamma, dtype=torch.float32, device=DEVICE) for n in frame.nodes]
+            node_gamma_tensors = [torch.tensor(n.iplv_gamma, dtype=torch.float32, device=DEVICE) for n in frame.nodes]
             
             with torch.no_grad():
                 full_sdr, sdr_f3 = heterarchy.get_current_sdr(node_gamma_tensors)
 
-            # ИСПОЛЬЗУЕМ ДИНАМИЧЕСКИЙ ИНДЕКС AFz ДЛЯ СПЕКТРА
             with torch.no_grad():
                 afz_ripple = torch.tensor(frame.nodes[afz_idx].iplv_human_ripple, dtype=torch.float32, device=DEVICE)
                 ripple_centered = afz_ripple - torch.mean(afz_ripple, dim=0, keepdim=True)
@@ -552,13 +565,14 @@ def main():
             with torch.no_grad():
                 live_human_w, wm_scores, ltm_scores = heterarchy.predict_evidence(full_sdr, dt=dt)
 
-            # ИСПОЛЬЗУЕМ ДИНАМИЧЕСКИЕ ИНДЕКСЫ
             node_f3  = frame.nodes[f3_idx]
             node_f4  = frame.nodes[f4_idx]
             node_afz = frame.nodes[afz_idx]
             node_fpz = frame.nodes[fpz_idx]
 
-            # ШТАТНАЯ ЭМИССИЯ CMP MESSAGE
+            rx_sagitta = node_f3.gamepad_axes.rx if args.use_kinematics else 0.0
+            ry_temp_bias = node_f3.gamepad_axes.ry if args.use_kinematics else 0.0
+
             cmp_message = Message(
                 location=node_f3.disp_xyz.astype(np.float64),
                 morphological_features={
@@ -583,8 +597,8 @@ def main():
             if is_calibrating:
                 target_sim = np.zeros(args.concepts, dtype=np.float32)
                 target_sim[learn_idx] = 1.0
-                worker.update_hemispheric_target(learn_idx, learn_idx, 0.0, 0.0)
-                worker.strength = 0.75 
+                worker.update_hemispheric_target(learn_idx, learn_idx, 0.0, 0.0, rx_sagitta=0.0)
+                worker.strength = args.strength_high 
                 if agent: agent.set_calibration_target(True, learn_idx)
 
                 vis_conf = float(live_probs[learn_idx])
@@ -592,7 +606,7 @@ def main():
                     heterarchy.stream_learn_accumulate(learn_idx, full_sdr, lr=0.04)
 
                 if ltm_scores[learn_idx] >= 75.0:
-                    heterarchy.save_to_file(args.weights)
+                    heterarchy.save_to_file(args.weights, TARGET_NAMES)
                     heterarchy.reset_calcium()
                     untrained = [i for i in range(args.concepts) if ltm_scores[i] < 75.0]
                     if untrained: learn_idx = untrained[0]
@@ -609,10 +623,15 @@ def main():
                     left_form_idx=leader_form_idx,
                     right_style_idx=child_style_idx,
                     beta_f3=node_f3.beta_power,
-                    beta_f4=node_f4.beta_power
+                    beta_f4=node_f4.beta_power,
+                    rx_sagitta=rx_sagitta
                 )
 
-                worker.strength = 0.85 if (smooth_depth >= 2.5 or node_afz.beta_power < 0.3) else 0.50
+                base_strength = args.strength_high if (smooth_depth >= 2.5 or node_afz.beta_power < 0.3) else args.strength_low
+                if args.use_kinematics:
+                    worker.strength = np.clip(base_strength + ry_temp_bias * 0.15, 0.10, 0.99)
+                else:
+                    worker.strength = base_strength
 
                 active_mask = (wm_scores > 20.0)
                 if np.any(active_mask):
@@ -640,14 +659,14 @@ def main():
             cur_sdr_img = sdr_f3[:4096].view(64, 64).cpu().numpy() * 255.0
             sdr_surf = pygame.surfarray.make_surface(cv2.resize(cur_sdr_img, (140, 140)).astype(np.uint8))
             screen.blit(sdr_surf, (img_x, 445))
-            screen.blit(font_s.render("L4 F3 Sheet (30–65 Гц)", True, (0, 255, 200)), (img_x, 428))
+            screen.blit(font_s.render(f"L4 F3 Sheet (30–{int(gamma_max)} Гц)", True, (0, 255, 200)), (img_x, 428))
 
             dbg_x, dbg_y, dbg_w, dbg_h = img_x + 160, 430, 400, 170
             pygame.draw.rect(screen, (14, 18, 26), (dbg_x, dbg_y, dbg_w, dbg_h), border_radius=6)
             pygame.draw.rect(screen, (40, 70, 100), (dbg_x, dbg_y, dbg_w, dbg_h), 1, border_radius=6)
-            screen.blit(font_b.render("LIVE WORKING MEMORY ENSEMBLES (Vm):", True, (0, 255, 200)), (dbg_x + 10, dbg_y + 8))
+            screen.blit(font_b.render(f"LIVE WORKING MEMORY ENSEMBLES (Vm):", True, (0, 255, 200)), (dbg_x + 10, dbg_y + 8))
 
-            for i, name in enumerate(TARGET_NAMES):
+            for i, name in enumerate(TARGET_NAMES[:min(8, args.concepts)]):
                 score = wm_scores[i]
                 col_bar = (0, 255, 180) if score > 20.0 else (80, 80, 90)
                 bx = dbg_x + 10 + (i % 2) * 195
@@ -667,7 +686,7 @@ def main():
                 pygame.draw.rect(screen, (255, 180, 50), (panel_x, panel_y, 330, 270), 1, border_radius=8)
                 screen.blit(font_b.render("SYNAPTIC CALIBRATION (LTP)", True, (255, 180, 50)), (panel_x + 12, panel_y + 12))
                 screen.blit(font_s.render(f"Target: [{TARGET_NAMES[learn_idx]}]", True, (255, 255, 100)), (panel_x + 15, panel_y + 32))
-                for i, name in enumerate(TARGET_NAMES):
+                for i, name in enumerate(TARGET_NAMES[:min(10, args.concepts)]):
                     score = ltm_scores[i]
                     if score >= 75.0:
                         col_s = (100, 255, 100)
@@ -678,11 +697,11 @@ def main():
                     else:
                         col_s = (160, 160, 160)
                         txt_s = f"{name:10s}: {score:4.1f}% [QUEUED]"
-                    screen.blit(font_s.render(txt_s, True, col_s), (panel_x + 15, panel_y + 55 + i * 24))
+                    screen.blit(font_s.render(txt_s, True, col_s), (panel_x + 15, panel_y + 55 + i * 20))
             else:
                 pygame.draw.rect(screen, (0, 255, 200), (panel_x, panel_y, 330, 270), 1, border_radius=8)
                 screen.blit(font_b.render("FROZEN RETENTION (LTM CONSOLIDATED)", True, (0, 255, 200)), (panel_x + 12, panel_y + 12))
-                for i, name in enumerate(TARGET_NAMES):
+                for i, name in enumerate(TARGET_NAMES[:min(10, args.concepts)]):
                     score = ltm_scores[i]
                     col_s = (100, 255, 100) if score >= 75.0 else (255, 80, 80)
                     status_lbl = "[CONSOLIDATED]" if score >= 75.0 else "[UNTRAINED]"
@@ -707,7 +726,7 @@ def main():
             screen.blit(font_s.render(f"Lat. 768: Form[0:384]=F3 | Style[384:768]=F4", True, (150, 255, 200)), (c_x + 15, c_y + 188))
             screen.blit(font_s.render(f"Beta Gates: F3={node_f3.beta_power:.2f} | F4={node_f4.beta_power:.2f}", True, (255, 180, 180)), (c_x + 15, c_y + 208))
             screen.blit(font_s.render(f"Pacing: Theta={frame.theta_freq:.2f}Hz | Delta={frame.delta_freq:.2f}Hz", True, (200, 220, 240)), (c_x + 15, c_y + 228))
-            screen.blit(font_s.render(f"Pipeline: {args.mode.upper()} ({worker.fps:.1f} FPS)", True, (180, 180, 220)), (c_x + 15, c_y + 248))
+            screen.blit(font_s.render(f"Pipeline: {args.mode.upper()} ({worker.fps:.1f} FPS, Str: {worker.strength:.2f})", True, (180, 180, 220)), (c_x + 15, c_y + 248))
 
             BY, BH = 620, 300
             pygame.draw.rect(screen, (12, 16, 24), (20, BY, 870, BH), border_radius=8)
@@ -748,13 +767,15 @@ def main():
             screen.blit(font_b.render(treemap_title, True, (255, 255, 255)), (map_x, map_y - 25))
 
             owners = agent.get_owners() if agent else [-1] * 8
-
+            
             for concept_idx in resolved_hierarchy:
+                if concept_idx >= len(FRACTAL_COLORS): continue
+                
                 bx, by, bw, bh, rank = boxes[concept_idx]
-                pygame.draw.rect(screen, FRACTAL_COLORS[concept_idx], (bx, by, bw, bh))
+                pygame.draw.rect(screen, FRACTAL_COLORS[concept_idx % 8], (bx, by, bw, bh))
                 pygame.draw.rect(screen, (220, 220, 220), (bx, by, bw, bh), 2)
                 
-                owner_id = owners[concept_idx]
+                owner_id = owners[concept_idx] if concept_idx < len(owners) else -1
                 if owner_id == 0 and frame.is_real: owner_name = "YOU"
                 elif owner_id > 0: owner_name = f"Bot {owner_id}"
                 else: owner_name = "CONSENSUS"
@@ -774,7 +795,7 @@ def main():
 
     finally:
         worker.running = False
-        heterarchy.save_to_file(args.weights)
+        heterarchy.save_to_file(args.weights, TARGET_NAMES)
         if agent: agent.stop()
         engine.stop()
         pygame.quit()
