@@ -218,7 +218,7 @@ $$g(t) = \frac{P_\gamma(t)}{P_\gamma(t) + \kappa P_\beta(t) + \epsilon}$$
 ### 2.7 Causal Directionality: Volume-Conduction-Free Corrected $ci\text{PLV}$
 To eliminate instantaneous volume conduction artifacts ($\Delta \varphi = 0$) across the scalp while preserving true axonal delays, NeuroCanvas computes the **Corrected Imaginary Phase-Locking Value ($ci\text{PLV}$)** across all 120 electrode pairs in the $89.5\text{ Hz}$ ripple band (Bruña, Maestú, & Pereda, 2018 *J. Neural Eng.*, Eq. 14 [12]):
 
-$$ci\text{PLV}_{j, k} = \frac{\frac{1}{T} \Im \left\{ \sum_{t=1}^T \dot{x}_j(t) \cdot \dot{x}_k^*(t) \right\}}{\sqrt{1 - \left( \frac{1}{T} \Re \left\{ \sum_{t=1}^T \dot{x}_j(t) \cdot \dot{x}_k^*(t) \right\} \right)^2}}$$
+$$ci\text{PLV}_{j, k} = \frac{\frac{1}{T} \Im \left\lbrace \sum_{t=1}^T \dot{x}_j(t) \cdot \dot{x}_k^*(t) \right\rbrace}{\sqrt{1 - \left( \frac{1}{T} \Re \left\lbrace \sum_{t=1}^T \dot{x}_j(t) \cdot \dot{x}_k^*(t) \right\rbrace \right)^2}}$$
 
 * **$\text{Lead}_{A \to B} > 0$ ($\sin(\Delta\varphi) > 0$):** Node $A$ leads Node $B$. Entity $A$ becomes the **Parent Container ($A \supset B$)**.
 * **$\text{Lead}_{A \to B} < 0$ ($\sin(\Delta\varphi) < 0$):** Node $B$ leads Node $A$. Inverts to **Child Component ($B \supset A$)**.
