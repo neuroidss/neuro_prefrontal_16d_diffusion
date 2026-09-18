@@ -28,7 +28,7 @@ COORDS_X = np.array([10.14, 7.43, 2.75, 2.72, -2.72, -2.75, -7.42, -10.14, -10.1
 COORDS_Y = np.array([-2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42, -2.73, 2.72, 7.43, 4.76, 10.14, 10.15, 4.77, 7.42, 2.71], dtype=np.float32)
 COORDS_Z = np.sqrt(np.maximum(100.0 - COORDS_X**2 - COORDS_Y**2, 0.0)).astype(np.float32)
 
-ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ЗАМОК", "ОКЕАН"]
+ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "ЗАМОК", "ОКЕАН", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ"]
 #ALL_NAMES = ["КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ГОРА", "ЗАМОК", "ОКЕАН", "ДЖУНГЛИ"]
 
 def torus_geodesic_distance(u1, v1, u2, v2):
@@ -246,7 +246,7 @@ class FullJepaVideoAgent(BaseActiveAgent):
             return self.role, None, 0.0
 
 class AutonomousSwarmProcess(mp.Process):
-    def __init__(self, shm, config_path: str, num_hardcoded: int, num_jepa: int, num_concepts: int = 8):
+    def __init__(self, shm, config_path: str, num_hardcoded: int, num_jepa: int, num_concepts: int = 8, sps: float = 250.0):
         super().__init__()
         self.daemon = True
         self.shm = shm
@@ -254,8 +254,11 @@ class AutonomousSwarmProcess(mp.Process):
         self.num_hardcoded = num_hardcoded
         self.num_jepa = num_jepa
         self.num_concepts = num_concepts
+        self.sps = float(sps)
 
     def run(self):
+        # Используем self.sps вместо жестко зашитого FS = 500.0:
+        FS = self.sps
         try:
             config_dict = {}
             if os.path.exists(self.config_path):
@@ -448,7 +451,7 @@ class AutonomousSwarmProcess(mp.Process):
             traceback.print_exc()
 
 class SyntheticAutonomousAgent:
-    def __init__(self, config_path: str = "swarm_config.json", num_hardcoded: int = 1, num_jepa: int = 0, num_concepts: int = 8):
+    def __init__(self, config_path: str = "swarm_config.json", num_hardcoded: int = 1, num_jepa: int = 0, num_concepts: int = 8, sps: float = 250.0):
         ctx = mp.get_context('spawn')
         self.num_concepts = num_concepts
         self.shm = {
@@ -462,7 +465,7 @@ class SyntheticAutonomousAgent:
             'concept_owners': ctx.Array('i', [-1] * 8)
         }
         self.process = AutonomousSwarmProcess(
-            self.shm, config_path, num_hardcoded=num_hardcoded, num_jepa=num_jepa, num_concepts=num_concepts
+            self.shm, config_path, num_hardcoded=num_hardcoded, num_jepa=num_jepa, num_concepts=num_concepts, sps=sps
         )
         self.process.start()
 

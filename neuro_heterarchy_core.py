@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-🧠 NEURO-HETERARCHY CORE v127.0 (DUAL-RATE AUTO-SPS & SINC3 RIPPLE COMPENSATED)
-- Автоматическое определение частоты потока (250 SPS или 500 SPS) из LSL.
-- Zero-Padding 1024 для Дельты и Теты: шаг сетки 0.24 Гц (прощай, залипание на 1.95 Гц!).
-- Аппаратная компенсация sinc3-спада АЦП для рипплов Дики (89.5 Гц) при 250 SPS.
-- Защита от алиасинга для Fast Ripples при 250 SPS (ограничение до Найквиста 120 Гц).
+🧠 NEURO-HETERARCHY CORE v129.0 (TOPOLOGICAL PHASE SYNCHRONY ENGINE)
+- Обоснование: Bruña et al., 2018 (DOI: 10.1088/1741-2552/aacfe4), Eq. 4, 7.
+- Обоснование: Breakspear et al., 2010 (DOI: 10.3389/fnhum.2010.00190).
+- Абсолютная амплитуда (|Z|^2) полностью удалена для концентрических Лапласианов 
+  (Nunez & Srinivasan, 2006; DOI: 10.1093/acprof:oso/9780195050387.001.0001).
+- Мощность ритмов заменена на Пространственную Фазовую Когерентность 
+  (Spatial Phase Coherence / Kuramoto Order Parameter) строго в диапазоне [0.0, 1.0].
 """
 
 import os
@@ -22,9 +24,8 @@ try:
 except RuntimeError:
     pass
 
-DEFAULT_FS = 250.0
 BUF_SIZE = 256
-FFT_SLOW = 1024  # Zero-padding для непрерывного спектрального разрешения
+FFT_SLOW = 1024
 NUM_CHANNELS = 16
 NUM_MAX_DEVICES = 4
 NUM_SLOTS = 32
@@ -33,7 +34,6 @@ TWO_PI = 2.0 * math.pi
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-# Геометрия 26-мм датчика FreeEEG16-alpha2
 COORDS_X = np.array([
     10.14,  7.43,  2.75,  2.72, -2.72, -2.75, -7.42, -10.14,
    -10.14, -7.43, -2.75, -2.72,  2.72,  2.75,  7.43,  10.14
@@ -64,6 +64,7 @@ class NodeState:
     device_id: int
     name: str
     source_id: str
+    sps: float
     is_connected: bool
     phase_theta: float
     phase_delta: float
@@ -112,80 +113,22 @@ class GPU_Daemon_Process(mp.Process):
         self.shm = shared_mem
         self.gamma_max = gamma_max
 
-    def build_spectral_filters(self, fs: float):
-        """Строит спектральные фильтры под текущую частоту дискретизации fs."""
-        freqs = torch.fft.fftfreq(BUF_SIZE, d=1.0/fs).to(DEVICE)
-        freqs_slow = torch.fft.rfftfreq(FFT_SLOW, d=1.0/fs).to(DEVICE)
-
-        # Нотч-фильтры 50/100 Гц
-        notch = torch.ones_like(freqs)
-        notch[(torch.abs(freqs) >= 48.5) & (torch.abs(freqs) <= 51.5)] = 0.0
-        if fs > 220.0:
-            notch[(torch.abs(freqs) >= 98.5) & (torch.abs(freqs) <= 101.5)] = 0.0
-        notch = notch.view(1, 1, BUF_SIZE)
-
-        # Макро-ритмы Гильберта для извлечения фазы
-        f_delta = (torch.exp(-0.5 * ((freqs - 1.5) / 0.6)**2) * 2.0).view(1, 1, BUF_SIZE)
-        f_delta[:, :, freqs < 0] = 0.0
-
-        f_theta = (torch.exp(-0.5 * ((freqs - 6.0) / 1.5)**2) * 2.0).view(1, 1, BUF_SIZE)
-        f_theta[:, :, freqs < 0] = 0.0
-
-        f_beta = (torch.exp(-0.5 * ((freqs - 22.0) / 5.0)**2) * 2.0).view(1, 1, BUF_SIZE)
-        f_beta[:, :, freqs < 0] = 0.0
-
-        freqs_4d = freqs.view(1, 1, 1, BUF_SIZE)
-
-        # Контур А: Гамма 30 - gamma_max Гц
-        max_g = min(self.gamma_max, fs * 0.46)
-        gamma_centers = torch.linspace(30.0, max_g, NUM_SLOTS, device=DEVICE).view(1, NUM_SLOTS, 1, 1)
-        bandwidth = 3.5 if max_g <= 65.0 else 4.5
-        gamma_filters = torch.exp(-0.5 * ((freqs_4d - gamma_centers) / bandwidth)**2) * 2.0
-        gamma_filters[:, :, :, freqs < 0] = 0.0
-
-        # Контур Б: Рипплы Дики (70-100 Гц, пик 89.5 Гц)
-        h_rip_max = min(100.0, fs * 0.46)
-        h_rip_min = min(70.0, h_rip_max - 15.0)
-        h_ripple_centers = torch.linspace(h_rip_min, h_rip_max, NUM_SLOTS, device=DEVICE).view(1, NUM_SLOTS, 1, 1)
-        h_ripple_filters = torch.exp(-0.5 * ((freqs_4d - h_ripple_centers) / 4.0)**2) * 2.0
-        h_ripple_filters[:, :, :, freqs < 0] = 0.0
-
-        # АППАРАТНАЯ КОМПЕНСАЦИЯ SINC3-СПАДА АЦП ДЛЯ РИППЛОВ
-        # H_sinc3(f) = (sinc(f / fs))^3. Домножаем на обратную функцию!
-        sinc_ratio = torch.sinc(h_ripple_centers / fs)
-        sinc_comp = (1.0 / (sinc_ratio + 1e-4)) ** 3
-        h_ripple_filters = h_ripple_filters * sinc_comp
-
-        # Контур В: Fast Ripples (с защитой от Найквиста)
-        if fs <= 260.0:
-            # При 250 SPS верхний предел - 120 Гц
-            f_ripple_centers = torch.linspace(95.0, 120.0, NUM_SLOTS, device=DEVICE).view(1, NUM_SLOTS, 1, 1)
-            f_bandwidth = 3.0
-        else:
-            # При 500 SPS полный диапазон до 200 Гц
-            f_ripple_centers = torch.linspace(100.0, 200.0, NUM_SLOTS, device=DEVICE).view(1, NUM_SLOTS, 1, 1)
-            f_bandwidth = 7.0
-
-        f_ripple_filters = torch.exp(-0.5 * ((freqs_4d - f_ripple_centers) / f_bandwidth)**2) * 2.0
-        f_ripple_filters[:, :, :, freqs < 0] = 0.0
-
-        return freqs, freqs_slow, notch, f_delta, f_theta, f_beta, gamma_filters, h_ripple_filters, f_ripple_filters
-
     def run(self):
-        current_fs = DEFAULT_FS
-        freqs, freqs_slow, notch, f_delta, f_theta, f_beta, gamma_filters, h_ripple_filters, f_ripple_filters = self.build_spectral_filters(current_fs)
-
-        slot_angles = (-math.pi + (TWO_PI / NUM_SLOTS) * (torch.arange(NUM_SLOTS, device=DEVICE) + 0.5)).view(1, NUM_SLOTS, 1, 1)
-
         inlets = [None] * NUM_MAX_DEVICES
         stream_names = ["Empty"] * NUM_MAX_DEVICES
         stream_uids = [""] * NUM_MAX_DEVICES
         connected_uids = set()
 
+        device_fs = [250.0] * NUM_MAX_DEVICES
+
         raw_buffers = np.zeros((NUM_MAX_DEVICES, NUM_CHANNELS, BUF_SIZE), dtype=np.float32)
         raw_buf_gpu = torch.zeros((NUM_MAX_DEVICES, NUM_CHANNELS, BUF_SIZE), device=DEVICE, dtype=torch.float32)
 
-        # Привязка Shared Memory
+        base_fftfreq_256 = torch.fft.fftfreq(BUF_SIZE, d=1.0).to(DEVICE).view(1, 1, BUF_SIZE)
+        base_rfftfreq_1024 = torch.fft.rfftfreq(FFT_SLOW, d=1.0).to(DEVICE).view(1, 1, 513)
+
+        slot_angles = (-math.pi + (TWO_PI / NUM_SLOTS) * (torch.arange(NUM_SLOTS, device=DEVICE) + 0.5)).view(1, NUM_SLOTS, 1, 1)
+
         sh_dev_th_phase   = np.frombuffer(self.shm['dev_th_phase'].get_obj(), dtype=np.float64)
         sh_dev_dl_phase   = np.frombuffer(self.shm['dev_dl_phase'].get_obj(), dtype=np.float64)
         sh_beta_power     = np.frombuffer(self.shm['beta_power'].get_obj(), dtype=np.float64)
@@ -199,6 +142,7 @@ class GPU_Daemon_Process(mp.Process):
         sh_iplv_gamma     = np.frombuffer(self.shm['iplv_gamma'].get_obj(), dtype=np.float64).reshape(NUM_MAX_DEVICES, NUM_SLOTS, NUM_PAIRS)
         sh_iplv_h_ripple  = np.frombuffer(self.shm['iplv_h_ripple'].get_obj(), dtype=np.float64).reshape(NUM_MAX_DEVICES, NUM_SLOTS, NUM_PAIRS)
         sh_iplv_f_ripple  = np.frombuffer(self.shm['iplv_f_ripple'].get_obj(), dtype=np.float64).reshape(NUM_MAX_DEVICES, NUM_SLOTS, NUM_PAIRS)
+        sh_dev_sps        = np.frombuffer(self.shm['dev_sps'].get_obj(), dtype=np.float64)
 
         prev_beta_vecs = torch.zeros((NUM_MAX_DEVICES, 2), device=DEVICE)
         last_resolve_time = 0.0
@@ -206,7 +150,6 @@ class GPU_Daemon_Process(mp.Process):
         while self.shm['is_running'].value:
             now = time.time()
 
-            # Сканирование и подключение LSL потоков
             if (None in inlets) and (now - last_resolve_time > 1.2):
                 last_resolve_time = now
                 try:
@@ -223,15 +166,10 @@ class GPU_Daemon_Process(mp.Process):
                                         stream_names[slot_i] = s.name()
                                         stream_uids[slot_i] = s.source_id()
                                         
-                                        # АВТО-ОПРЕДЕЛЕНИЕ SPS ИЗ МЕТАДАННЫХ ПОТОКА
-                                        inlet_srate = inlets[slot_i].info().nominal_srate()
-                                        detected_sps = 500.0 if inlet_srate > 350.0 else 250.0
-                                        if detected_sps != current_fs:
-                                            current_fs = detected_sps
-                                            freqs, freqs_slow, notch, f_delta, f_theta, f_beta, gamma_filters, h_ripple_filters, f_ripple_filters = self.build_spectral_filters(current_fs)
-                                            print(f"🔄 [AUTO-SPS] Спектральные фильтры перестроены под {current_fs:.0f} SPS!")
-
-                                        print(f"✅ [CORE HAL] Подключен узел [{slot_i}] <- '{s.name()}' (@ {current_fs:.0f} Hz)")
+                                        nom_sps = inlets[slot_i].info().nominal_srate()
+                                        device_fs[slot_i] = 500.0 if nom_sps > 350.0 else 250.0
+                                        sh_dev_sps[slot_i] = device_fs[slot_i]
+                                        print(f"✅ [CORE HAL] Узел [{slot_i}] '{s.name()}' подключен (SPS={device_fs[slot_i]:.0f} Hz)")
                                         break
                                     except Exception:
                                         pass
@@ -243,7 +181,12 @@ class GPU_Daemon_Process(mp.Process):
             self.shm['is_real'].value = is_real
             self.shm['num_live'].value = num_live
 
+            # Маска физически активных устройств для подавления математического шума от пустых портов
+            active_mask_list = [1.0 if inl is not None else 0.0 for inl in inlets]
+            active_mask = torch.tensor(active_mask_list, device=DEVICE, dtype=torch.float32)
+
             max_n_pulled = 0
+            pulled_counts = [0] * NUM_MAX_DEVICES
 
             if is_real:
                 for i in range(NUM_MAX_DEVICES):
@@ -253,9 +196,8 @@ class GPU_Daemon_Process(mp.Process):
                             if chunk:
                                 arr = np.array(chunk, dtype=np.float32).T
                                 n = arr.shape[1]
-                                if n > max_n_pulled:
-                                    max_n_pulled = n
-                                    
+                                pulled_counts[i] = n
+                                if n > max_n_pulled: max_n_pulled = n
                                 if n >= BUF_SIZE:
                                     raw_buffers[i] = arr[:NUM_CHANNELS, -BUF_SIZE:]
                                 else:
@@ -276,26 +218,31 @@ class GPU_Daemon_Process(mp.Process):
                 time.sleep(0.001)
                 continue
 
-            dt_data = max_n_pulled / current_fs
+            first_active = 0
+            for idx in range(NUM_MAX_DEVICES):
+                if inlets[idx] is not None:
+                    first_active = idx
+                    break
+
+            fs_tensor = torch.tensor(device_fs, device=DEVICE, dtype=torch.float32).view(NUM_MAX_DEVICES, 1, 1)
 
             with torch.inference_mode():
+                freqs_dev = base_fftfreq_256 * fs_tensor  
+
                 centered = raw_buf_gpu - torch.mean(raw_buf_gpu, dim=2, keepdim=True)
+
+                notch = torch.ones_like(freqs_dev)
+                notch[(torch.abs(freqs_dev) >= 48.5) & (torch.abs(freqs_dev) <= 51.5)] = 0.0
+                notch[(torch.abs(freqs_dev) >= 98.5) & (torch.abs(freqs_dev) <= 101.5)] = 0.0
+
                 fft_clean = torch.fft.fft(centered, dim=-1) * notch
 
-                first_active = 0
-                for idx in range(NUM_MAX_DEVICES):
-                    if inlets[idx] is not None:
-                        first_active = idx
-                        break
+                fft_1024 = torch.fft.rfft(centered[first_active], n=FFT_SLOW, dim=-1)  
+                active_fs = device_fs[first_active]
+                freqs_slow = (base_rfftfreq_1024[0, 0] * active_fs)  
 
-                # =========================================================================
-                # 1. МАКРО-РИТМЫ: ZERO-PADDING 1024 ДЛЯ НЕПРЕРЫВНОЙ ТОЧНОСТИ ЧАСТОТ
-                # =========================================================================
-                fft_1024 = torch.fft.rfft(centered[first_active], n=FFT_SLOW, dim=-1) # [16, 513]
-
-                # --- ДЕЛЬТА (0.5 - 3.2 Гц): Спектральный Центроид по 1024 точкам ---
                 dl_mask = (freqs_slow >= 0.5) & (freqs_slow <= 3.2)
-                dl_pwr = torch.sum(torch.abs(fft_1024[:, dl_mask])**2, dim=0) # [N_dl_bins]
+                dl_pwr = torch.sum(torch.abs(fft_1024[:, dl_mask])**2, dim=0)
                 total_dl = torch.sum(dl_pwr)
                 if total_dl > 1e-6:
                     raw_delta_hz = (torch.sum(dl_pwr * freqs_slow[dl_mask]) / total_dl).item()
@@ -303,9 +250,8 @@ class GPU_Daemon_Process(mp.Process):
                     raw_delta_hz = 1.5
                 inst_delta_freq = float(np.clip(raw_delta_hz, 0.5, 3.2))
 
-                # --- ТЕТА (3.8 - 8.5 Гц): Спектральный Центроид по 1024 точкам ---
                 th_mask = (freqs_slow >= 3.8) & (freqs_slow <= 8.5)
-                th_pwr = torch.sum(torch.abs(fft_1024[:, th_mask])**2, dim=0) # [N_th_bins]
+                th_pwr = torch.sum(torch.abs(fft_1024[:, th_mask])**2, dim=0)
                 total_th = torch.sum(th_pwr)
                 if total_th > 1e-6:
                     raw_theta_hz = (torch.sum(th_pwr * freqs_slow[th_mask]) / total_th).item()
@@ -313,7 +259,15 @@ class GPU_Daemon_Process(mp.Process):
                     raw_theta_hz = 6.0
                 inst_theta_freq = float(np.clip(raw_theta_hz, 3.5, 9.0))
 
-                # Извлечение фаз для Тора и PAC через аналитический Гильберт (256 точек)
+                f_theta = torch.exp(-0.5 * ((freqs_dev - 6.0) / 1.5)**2) * 2.0
+                f_theta[:, :, base_fftfreq_256[0, 0] < 0] = 0.0
+
+                f_delta = torch.exp(-0.5 * ((freqs_dev - 1.5) / 0.6)**2) * 2.0
+                f_delta[:, :, base_fftfreq_256[0, 0] < 0] = 0.0
+
+                f_beta = torch.exp(-0.5 * ((freqs_dev - 22.0) / 5.0)**2) * 2.0
+                f_beta[:, :, base_fftfreq_256[0, 0] < 0] = 0.0
+
                 Z_theta = torch.fft.ifft(fft_clean * f_theta, dim=-1)
                 P_theta = Z_theta / (torch.abs(Z_theta) + 1e-12)
                 mean_th_phasors = torch.mean(P_theta, dim=1)
@@ -331,20 +285,22 @@ class GPU_Daemon_Process(mp.Process):
                 self.shm['delta_phase'].value = float(phi_delta_all[first_active, -1].item())
                 self.shm['delta_freq'].value = inst_delta_freq
 
-                # =========================================================
-                # 2. Тор Джанаты
-                # =========================================================
                 torus_u_all = (phi_theta_all[:, -1] + math.pi).cpu().numpy()
                 torus_v_all = (phi_delta_all[:, -1] + math.pi).cpu().numpy()
                 torus_coords = np.stack([torus_u_all, torus_v_all], axis=-1)
 
-                # =========================================================
-                # 3. Бета-ритм (L5/L6 тормозной гейт)
-                # =========================================================
+                # =====================================================================
+                # БЕТА-РИТМ (L5/L6 ТОПОЛОГИЧЕСКИЙ ТОРМОЗНОЙ ГЕЙТ)
+                # Использование Spatial Phase Coherence (Параметр Курамото R)
+                # DOI: 10.1088/1741-2552/aacfe4 (Bruña et al., 2018)
+                # =====================================================================
                 Z_beta = torch.fft.ifft(fft_clean * f_beta, dim=-1)
-                b_power = torch.mean(torch.abs(Z_beta)**2, dim=(1, 2)).cpu().numpy()
-                
                 P_beta = Z_beta / (torch.abs(Z_beta) + 1e-12)
+                
+                # Синхронность Беты: модуль суммы 16 единичных фазоров внутри кольца Лапласиана
+                b_sync_spatial = torch.abs(torch.mean(P_beta, dim=1)) # [4, 256]
+                b_power = (torch.mean(b_sync_spatial, dim=-1) * active_mask).cpu().numpy() # [4]
+
                 cg_beta = P_beta[:, I_GPU, :] * torch.conj(P_beta[:, J_GPU, :])
                 iplv_beta = torch.mean(torch.imag(cg_beta), dim=-1)
 
@@ -357,62 +313,68 @@ class GPU_Daemon_Process(mp.Process):
                 beta_stabs = torch.clamp(dot_b / norm_b, -1.0, 1.0)
                 prev_beta_vecs.copy_(cur_beta_vecs)
 
-                # =========================================================
-                # 4. Фазовые веса тета-цикла
-                # =========================================================
+                fft_exp = fft_clean.unsqueeze(1)  
+                freqs_4d = freqs_dev.unsqueeze(1) 
+                fs_4d = fs_tensor.unsqueeze(1)    
+
+                gamma_centers = torch.linspace(30.0, self.gamma_max, NUM_SLOTS, device=DEVICE).view(1, NUM_SLOTS, 1, 1)
+                gamma_filters = torch.exp(-0.5 * ((freqs_4d - gamma_centers) / 4.0)**2) * 2.0
+                gamma_filters[:, :, :, base_fftfreq_256[0, 0] < 0] = 0.0
+
+                h_ripple_centers = torch.linspace(70.0, 100.0, NUM_SLOTS, device=DEVICE).view(1, NUM_SLOTS, 1, 1)
+                h_ripple_filters = torch.exp(-0.5 * ((freqs_4d - h_ripple_centers) / 4.0)**2) * 2.0
+                h_ripple_filters[:, :, :, base_fftfreq_256[0, 0] < 0] = 0.0
+                
+                sinc_ratio = torch.sinc(h_ripple_centers / fs_4d)
+                sinc_comp = (1.0 / (sinc_ratio + 1e-4)) ** 3
+                h_ripple_filters = h_ripple_filters * sinc_comp
+
+                f_ripple_centers = torch.linspace(100.0, 200.0, NUM_SLOTS, device=DEVICE).view(1, NUM_SLOTS, 1, 1)
+                f_ripple_filters = torch.exp(-0.5 * ((freqs_4d - f_ripple_centers) / 7.0)**2) * 2.0
+                f_ripple_filters[:, :, :, base_fftfreq_256[0, 0] < 0] = 0.0
+                f_ripple_filters = f_ripple_filters * (h_ripple_centers < (fs_4d * 0.48)).float()
+
                 p_diff = phi_theta_all[first_active:first_active+1].view(1, 1, 1, BUF_SIZE) - slot_angles
                 w = torch.exp(3.2 * torch.cos(p_diff))
                 w = w / (torch.sum(w, dim=-1, keepdim=True) + 1e-6)
 
-                fft_exp = fft_clean.unsqueeze(1)
-
-                # =========================================================
-                # 5. Контур А: Локальная Гамма
-                # =========================================================
+                # =====================================================================
+                # ГАММА-РИТМ (L2/L3) и ciPLV
+                # Аналогично используем Spatial Phase Coherence (Параметр Курамото R)
+                # =====================================================================
                 Z_gamma = torch.fft.ifft(fft_exp * gamma_filters, dim=-1)
-                g_power = torch.mean(torch.abs(Z_gamma)**2, dim=(1, 2, 3)).cpu().numpy()
                 P_gamma = Z_gamma / (torch.abs(Z_gamma) + 1e-12)
+                
+                # Синхронность Гаммы: модуль суммы по 16 каналам (dim=2 для P_gamma)
+                g_sync_spatial = torch.abs(torch.mean(P_gamma, dim=2)) # [4, 32, 256]
+                g_power = (torch.mean(g_sync_spatial, dim=(1, 2)) * active_mask).cpu().numpy() # [4]
+
                 cg_gamma = P_gamma[:, :, I_GPU, :] * torch.conj(P_gamma[:, :, J_GPU, :])
                 psi_gamma = torch.sum(cg_gamma * w, dim=-1)
-                
-                im_gamma = torch.imag(psi_gamma)
-                re_gamma = torch.real(psi_gamma)
-                gamma_120 = im_gamma / torch.sqrt(torch.clamp(1.0 - re_gamma**2, min=1e-5))
+                gamma_120 = torch.imag(psi_gamma) / torch.sqrt(torch.clamp(1.0 - torch.real(psi_gamma)**2, min=1e-5))
 
+                # Gating Ratio теперь вычисляется как строгий баланс двух нормализованных когерентностей
                 gating_ratios = g_power / (g_power + b_power + 1e-6)
 
-                # =========================================================
-                # 6. Контур Б: Кортикальные рипплы человека ~89.5 Гц (sinc3 compensated)
-                # =========================================================
                 Z_h_ripple = torch.fft.ifft(fft_exp * h_ripple_filters, dim=-1)
                 P_h_ripple = Z_h_ripple / (torch.abs(Z_h_ripple) + 1e-12)
                 cg_h_ripple = P_h_ripple[:, :, I_GPU, :] * torch.conj(P_h_ripple[:, :, J_GPU, :])
                 psi_h_ripple = torch.sum(cg_h_ripple * w, dim=-1)
-                im_hr = torch.imag(psi_h_ripple)
-                re_hr = torch.real(psi_h_ripple)
-                h_ripple_120 = im_hr / torch.sqrt(torch.clamp(1.0 - re_hr**2, min=1e-5))
+                h_ripple_120 = torch.imag(psi_h_ripple) / torch.sqrt(torch.clamp(1.0 - torch.real(psi_h_ripple)**2, min=1e-5))
 
-                # =========================================================
-                # 7. Контур В: Fast Ripples
-                # =========================================================
                 Z_f_ripple = torch.fft.ifft(fft_exp * f_ripple_filters, dim=-1)
                 P_f_ripple = Z_f_ripple / (torch.abs(Z_f_ripple) + 1e-12)
                 cg_f_ripple = P_f_ripple[:, :, I_GPU, :] * torch.conj(P_f_ripple[:, :, J_GPU, :])
                 psi_f_ripple = torch.sum(cg_f_ripple * w, dim=-1)
-                im_fr = torch.imag(psi_f_ripple)
-                re_fr = torch.real(psi_f_ripple)
-                f_ripple_120 = im_fr / torch.sqrt(torch.clamp(1.0 - re_fr**2, min=1e-5))
+                f_ripple_120 = torch.imag(psi_f_ripple) / torch.sqrt(torch.clamp(1.0 - torch.real(psi_f_ripple)**2, min=1e-5))
 
-                # =========================================================
-                # 8. КИНЕМАТИКА ФАЗОВОГО ПОЛЯ
-                # =========================================================
                 M_skew = make_lie_so3_generator(omega=TWO_PI * inst_theta_freq)
-
                 v_gx = torch.sum(gamma_120[:, 31] * DX_GPU, dim=-1) / 120.0
                 v_gy = torch.sum(gamma_120[:, 31] * DY_GPU, dim=-1) / 120.0
                 g_vecs = torch.stack([v_gx, v_gy, v_gx * 0.5], dim=-1)
 
-                disp_all = torch.matmul(g_vecs, M_skew.T) * dt_data * 0.05
+                dt_per_dev = torch.tensor(pulled_counts, device=DEVICE, dtype=torch.float32).view(NUM_MAX_DEVICES, 1) / fs_tensor.view(NUM_MAX_DEVICES, 1)
+                disp_all = torch.matmul(g_vecs, M_skew.T) * dt_per_dev * 0.05
 
                 u1 = disp_all / (torch.norm(disp_all, dim=-1, keepdim=True) + 1e-6)
                 up_ref = torch.tensor([0.0, 0.0, 1.0], device=DEVICE).view(1, 3).expand(NUM_MAX_DEVICES, 3)
@@ -423,9 +385,6 @@ class GPU_Daemon_Process(mp.Process):
 
                 kinematics_gpu = torch.stack([v_gx, v_gy, beta_stabs, torch.tensor([inst_theta_freq / 10.0]*4, device=DEVICE)], dim=-1)
 
-                # =========================================================
-                # Обновление Shared Memory
-                # =========================================================
                 np.copyto(sh_dev_th_phase, phi_theta_all[:, -1].cpu().numpy())
                 np.copyto(sh_dev_dl_phase, phi_delta_all[:, -1].cpu().numpy())
                 np.copyto(sh_beta_power, b_power)
@@ -455,6 +414,7 @@ class HeterarchicalBrainEngine:
             'delta_phase': mp.Value('d', 0.0),
             'dev_th_phase': mp.Array('d', NUM_MAX_DEVICES),
             'dev_dl_phase': mp.Array('d', NUM_MAX_DEVICES),
+            'dev_sps': mp.Array('d', [250.0] * NUM_MAX_DEVICES),
             'beta_power': mp.Array('d', NUM_MAX_DEVICES),
             'gamma_power': mp.Array('d', NUM_MAX_DEVICES),
             'gating_ratio': mp.Array('d', NUM_MAX_DEVICES),
@@ -469,6 +429,7 @@ class HeterarchicalBrainEngine:
         }
         self._dev_th_phase   = np.frombuffer(self.shm['dev_th_phase'].get_obj(), dtype=np.float64)
         self._dev_dl_phase   = np.frombuffer(self.shm['dev_dl_phase'].get_obj(), dtype=np.float64)
+        self._dev_sps        = np.frombuffer(self.shm['dev_sps'].get_obj(), dtype=np.float64)
         self._beta_power     = np.frombuffer(self.shm['beta_power'].get_obj(), dtype=np.float64)
         self._gamma_power    = np.frombuffer(self.shm['gamma_power'].get_obj(), dtype=np.float64)
         self._gating_ratio   = np.frombuffer(self.shm['gating_ratio'].get_obj(), dtype=np.float64)
@@ -497,6 +458,7 @@ class HeterarchicalBrainEngine:
                 device_id=i,
                 name=self.roles[i],
                 source_id=f"Slot_{i}",
+                sps=float(self._dev_sps[i]),
                 is_connected=bool(self._dev_th_phase[i] != 0.0),
                 phase_theta=float(self._dev_th_phase[i]),
                 phase_delta=float(self._dev_dl_phase[i]),

@@ -37,7 +37,7 @@ from synthetic_16d_causal_agent import SyntheticAutonomousAgent, CorticalMontage
 
 WIDTH, HEIGHT = 1800, 960
 
-ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ЗАМОК", "ОКЕАН"]
+ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "ЗАМОК", "ОКЕАН", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ"]
 #ALL_NAMES = ["КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ГОРА", "ЗАМОК", "ОКЕАН", "ДЖУНГЛИ"]
 
 ELECTRODE_X = np.array([10.14, 7.43, 2.75, 2.72, -2.72, -2.75, -7.42, -10.14,
@@ -308,11 +308,24 @@ class ToroidalDiffusionWorker:
             alpha_style = float(np.clip(1.0 - beta_f4 * 0.7 - rx_sagitta * 0.2, 0.15, 0.85))
             mean_alpha = (alpha_form + alpha_style) / 2.0
 
+            # ФИКС SDXL: Пулированный эмбеддинг теперь тоже смешивается и передается!
+            target_pool = None
+            if self.is_sdxl and self.pooled_bases is not None:
+                p_form = self.pooled_bases[left_form_idx]
+                p_style = self.pooled_bases[right_style_idx]
+                target_pool = (p_form + p_style) * 0.5
+
             with self.lock:
                 if self.latent_active is None:
                     self.latent_active = target.clone()
                 else:
                     self.latent_active = self.latent_active * (1.0 - mean_alpha) + target * mean_alpha
+
+                if target_pool is not None:
+                    if self.pooled_active is None:
+                        self.pooled_active = target_pool.clone()
+                    else:
+                        self.pooled_active = self.pooled_active * (1.0 - mean_alpha) + target_pool * mean_alpha
 
     def _loop(self):
         times = []
@@ -383,7 +396,7 @@ class ToroidalDiffusionWorker:
 def main():
     parser = argparse.ArgumentParser(description="NeuroCanvas × tbp.monty: Topological Config & Kinematics")
     parser.add_argument('--config', type=str, default="swarm_config.json", help="Path to config file")
-    parser.add_argument('--sim', action='store_true', default=True, help="Start external agent swarm")
+    parser.add_argument('--sim', action='store_true', default=False, help="Start external agent swarm")
     
     # Гибкое количество концептов (любое int >= 2)
     parser.add_argument('--concepts', type=int, default=8, help="Number of active concepts (e.g. 2, 4, 8)")
@@ -408,17 +421,19 @@ def main():
     parser.add_argument('--force-recalib', action='store_true')
     parser.add_argument('--no-taesd', action='store_true')
     parser.add_argument('--no-color', action='store_true')
+    
+    parser.add_argument('--sps', type=int, default=250, choices=[250, 500], help="Target sampling rate")
     args = parser.parse_args()
 
     BASE_PROMPTS = [
         "giant snowy mountain peak, rocky cliffs, clear blue sky, sharp focus, 8k",
         "dense lush green tropical jungle, giant trees, vines, sunlight piercing through leaves, 8k",
+        "ancient medieval stone castle fortress towers, daytime, sharp focus, 8k",
+        "open stormy dark blue ocean, pure water surface, giant ocean waves, sea foam, no land, 8k",
         "deep outer space, glowing colorful nebula, bright stars, galaxy, 8k, sharp detailed",
         "spherical alien planet with atmosphere, continents and oceans in space, 8k, sharp detailed",
         "futuristic cyberpunk city street, neon lights, rain, glowing signs, sharp linework, 8k",
-        "modern glass skyscraper buildings, downtown city, geometric architecture, sharp focus, 8k",
-        "ancient medieval stone castle fortress towers, daytime, sharp focus, 8k",
-        "open stormy dark blue ocean, pure water surface, giant ocean waves, sea foam, no land, 8k"
+        "modern glass skyscraper buildings, downtown city, geometric architecture, sharp focus, 8k"
     ]
 #    BASE_PROMPTS = [
 #        "deep outer space, glowing colorful nebula, bright stars, galaxy, 8k, sharp detailed",
@@ -465,7 +480,8 @@ def main():
             config_path=args.config, 
             num_hardcoded=args.hardcoded_bots, 
             num_jepa=args.jepa_bots, 
-            num_concepts=args.concepts
+            num_concepts=args.concepts,
+            sps=args.sps  # Боты синхронизируются с частотой пользователя!
         )
 
     pygame.init()
@@ -535,6 +551,20 @@ def main():
             dt = clock.tick(60) / 1000.0
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: raise KeyboardInterrupt
+                # ДИНАМИЧЕСКИЙ РОУТИНГ ДЕВАЙСА (Hotkeys)
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_1:
+                        f3_idx, f4_idx, afz_idx, fpz_idx = 0, 1, 2, 3
+                        print("📡 [ROUTING] Активный девайс переключен на F3 (Форма / L-dlPFC)")
+                    elif event.key == pygame.K_2:
+                        f3_idx, f4_idx, afz_idx, fpz_idx = 1, 0, 2, 3
+                        print("📡 [ROUTING] Активный девайс переключен на F4 (Стиль / R-dlPFC)")
+                    elif event.key == pygame.K_3:
+                        f3_idx, f4_idx, afz_idx, fpz_idx = 1, 2, 0, 3
+                        print("📡 [ROUTING] Активный девайс переключен на AFz (Тор Джанаты / dACC)")
+                    elif event.key == pygame.K_4:
+                        f3_idx, f4_idx, afz_idx, fpz_idx = 1, 2, 3, 0
+                        print("📡 [ROUTING] Активный девайс переключен на Fpz (Когнитивное ветвление / BA10)")
 
             frame = engine.get_frame()
             has_live_eeg = (frame.num_live > 0)
