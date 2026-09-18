@@ -59,17 +59,21 @@ def main():
                         del kwargs['cmd']
                         
                         if embeds_np is not None:
-                            # Восстанавливаем батч-размерность (1, 77, D)
                             t_emb = torch.tensor(embeds_np, dtype=render.dtype, device=render.device)
                             if t_emb.ndim == 2:
                                 t_emb = t_emb.unsqueeze(0)
                             kwargs['prompt_embeds'] = t_emb
 
-                        if pooled_np is not None and render.is_sdxl:
-                            t_pool = torch.tensor(pooled_np, dtype=render.dtype, device=render.device)
-                            if t_pool.ndim == 1:
-                                t_pool = t_pool.unsqueeze(0)
-                            kwargs['pooled_prompt_embeds'] = t_pool
+                        # ФИКС SDXL: Гарантируем наличие pooled_prompt_embeds
+                        if render.is_sdxl:
+                            if pooled_np is not None:
+                                t_pool = torch.tensor(pooled_np, dtype=render.dtype, device=render.device)
+                                if t_pool.ndim == 1:
+                                    t_pool = t_pool.unsqueeze(0)
+                                kwargs['pooled_prompt_embeds'] = t_pool
+                            else:
+                                # Fallback если пулированный эмбеддинг не был передан
+                                kwargs['pooled_prompt_embeds'] = torch.zeros((1, 1280), dtype=render.dtype, device=render.device)
 
                         if image_np is not None:
                             kwargs['image'] = Image.fromarray(image_np).convert("RGB")
