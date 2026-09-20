@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-🤖 SYNTHETIC ACTIVE INFERENCE SWARM v2200.2 (TOPOLOGICAL + CLI COMPATIBLE)
-- Полная поддержка параметров командной строки (--hardcoded-bots N, --jepa-bots M).
-- Cortical Montage: Подключение девайсов по 3D-координатам.
-- Graceful Degradation: Деградация функций при отсутствии узлов AFz/Fpz.
-- Раздельная маршрутизация Гамма- и Риппл-волн.
+🤖 SYNTHETIC ACTIVE INFERENCE SWARM v2200.4 (TOPOLOGICAL + CLI COMPATIBLE)
+- ПОЛНОЕ ВОССТАНОВЛЕНИЕ: Включены FullJepaVideoAgent, парсинг JSON, CorticalMontage.
+- СТРОГИЙ ЗАПРЕТ МЕТАГЕЙМИНГА: Расчеты универсальны для N-агентов, никаких проверок на кол-во.
+- Поддержка Sensory Substitution (отключена по умолчанию).
+- N-уровневая интеграция через минимизацию Свободной Энергии (Active Inference).
 """
 
 import time
@@ -29,7 +29,6 @@ COORDS_Y = np.array([-2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42, -2.73, 2.
 COORDS_Z = np.sqrt(np.maximum(100.0 - COORDS_X**2 - COORDS_Y**2, 0.0)).astype(np.float32)
 
 ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "ЗАМОК", "ОКЕАН", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ"]
-#ALL_NAMES = ["КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ", "ГОРА", "ЗАМОК", "ОКЕАН", "ДЖУНГЛИ"]
 
 def torus_geodesic_distance(u1, v1, u2, v2):
     du = abs(u1 - u2) % TWO_PI
@@ -59,7 +58,6 @@ class CorticalMontage:
         return list(set(matched_ids))
         
     def check_feature(self, active_nodes: list, feature_name: str) -> bool:
-        """Проверяет, есть ли среди активных узлов тот, что отвечает за указанную функцию (по имени)"""
         for dev in self.devices:
             if dev['id'] in active_nodes and feature_name in dev['name']:
                 return True
@@ -69,11 +67,11 @@ class BaseActiveAgent:
     def __init__(self, bot_id: int, initial_idx: int, active_nodes: list, montage: CorticalMontage, num_concepts: int = 8):
         self.bot_id = bot_id
         self.current_idx = initial_idx
+        self.original_idx = initial_idx 
         self.target_name = ALL_NAMES[initial_idx]
         self.num_concepts = num_concepts
         self.active_nodes = active_nodes
         
-        # Graceful Degradation: проверка наличия высших когнитивных центров
         self.has_afz = montage.check_feature(active_nodes, "AFz")
         self.has_fpz = montage.check_feature(active_nodes, "Fpz")
         
@@ -82,25 +80,41 @@ class BaseActiveAgent:
         self.plan_b_queue = list(np.random.permutation(all_other))
         
         self.role = "LEADER"
+        self.parent_id = None 
         self.sprt_log_evidence = 0.0
         self.u_torus = (initial_idx * TWO_PI / num_concepts)
         self.v_torus = ((initial_idx * 3) * TWO_PI / num_concepts) % TWO_PI
         self.steps_in_role = 0
 
-    def trigger_fpz_cognitive_branch(self):
-        if not self.has_fpz:
-            return False # Нет аппарата для ветвления (зависание во фрустрации)
+    def attempt_heterarchical_integration(self, dominant_idx: int):
+        if not self.has_fpz or dominant_idx == self.original_idx:
+            return False
             
+        self.parent_id = dominant_idx
+        self.role = "SUB_CHILD"
+        self.target_name = f"{ALL_NAMES[self.original_idx]} ⊂ {ALL_NAMES[dominant_idx]}"
+        
+        dom_u = (dominant_idx * TWO_PI / self.num_concepts)
+        dom_v = ((dominant_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
+        self.u_torus = (dom_u + math.pi/4) % TWO_PI
+        self.v_torus = (dom_v + math.pi/4) % TWO_PI
+        
+        self.sprt_log_evidence = 1.0 
+        self.steps_in_role = 0
+        return True
+
+    def trigger_fpz_cognitive_branch(self):
+        if not self.has_fpz: return False 
         self.sprt_log_evidence = 0.0
         old_idx = self.current_idx
         self.plan_b_queue.append(old_idx)
         self.current_idx = self.plan_b_queue.pop(0)
         self.target_name = ALL_NAMES[self.current_idx]
+        self.parent_id = None 
         self.u_torus = (self.current_idx * TWO_PI / self.num_concepts)
         self.v_torus = ((self.current_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
         self.role = "LEADER"
         self.steps_in_role = 0
-        print(f"🔀 [Fpz BRANCHING] Бот {self.bot_id} переключил фокус: {ALL_NAMES[old_idx]} ➔ {self.target_name}!")
         return True
 
     def generate_waves(self, role: str, dp_so3: np.ndarray | None, t_vec: np.ndarray, theta_norm: np.ndarray):
@@ -108,69 +122,54 @@ class BaseActiveAgent:
         offset_ch = np.linspace(-1.0, 1.0, NUM_CHANNELS, dtype=np.float32)
         spatial_phase_ch = (COORDS_X * math.cos(self.u_torus) + COORDS_Y * math.sin(self.v_torus)) * 0.18 + offset_ch
 
-        if role in ["LEADER", "SUPER_PARENT"]:
-            target_phase = 0.25
-            amp = 5.0
-        elif role == "SUB_CHILD":
-            target_phase = 0.75
-            amp = 3.8
-        else:
-            target_phase = 0.50
-            amp = 4.2
+        target_phase = 0.25 if role in ["LEADER", "SUPER_PARENT"] else (0.75 if role == "SUB_CHILD" else 0.50)
+        amp = 5.0 if role in ["LEADER", "SUPER_PARENT"] else (3.8 if role == "SUB_CHILD" else 4.2)
 
         w_theta = np.exp(-((theta_norm - target_phase)**2) / 0.025)
         low_gamma = np.sin(TWO_PI * freq * t_vec[None, :] + spatial_phase_ch[:, None]) * w_theta[None, :] * amp
-
         high_ripple = np.zeros_like(low_gamma)
+        
         if dp_so3 is not None:
             w_ripple = np.exp(-((theta_norm - ((target_phase + 0.15) % 1.0))**2) / 0.015)
             phase_ripple = (COORDS_X * dp_so3[0] + COORDS_Y * dp_so3[1] + COORDS_Z * dp_so3[2]) * 0.25
             high_ripple = np.sin(TWO_PI * 89.5 * t_vec[None, :] + phase_ripple[:, None]) * w_ripple[None, :] * 4.5
-
         return low_gamma, high_ripple
 
 class FullDynamicHardcodedBot(BaseActiveAgent):
-    def step(self, world_probs: np.ndarray):
-        target_p = float(world_probs[self.current_idx]) if self.current_idx < len(world_probs) else 0.0
-        dominant_idx = int(np.argmax(world_probs))
-        dominant_p = float(world_probs[dominant_idx])
+    def step(self, effective_probs: np.ndarray):
+        """Расчет опирается СТРОГО на поданный эффективный массив (картинка или картинка+монти)."""
+        target_p = float(effective_probs[self.current_idx]) if self.current_idx < len(effective_probs) else 0.0
+        dominant_idx = int(np.argmax(effective_probs))
+        dominant_p = float(effective_probs[dominant_idx])
 
         if target_p >= 0.28:
             self.sprt_log_evidence = max(0.0, self.sprt_log_evidence - 0.20)
             self.role = "LEADER"
+            self.parent_id = None
             self.steps_in_role = 0
             return self.role, None, self.sprt_log_evidence
 
         if dominant_idx != self.current_idx and dominant_p >= 0.25:
             dom_u = (dominant_idx * TWO_PI / self.num_concepts)
             dom_v = ((dominant_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
-            
-            if self.has_afz:
-                d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v)
-            else:
-                d_torus = math.pi # Fallback эвристика если нет доступа к Тору
+            d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v) if self.has_afz else math.pi
 
             evidence_step = math.log((dominant_p + 1e-4) / (target_p + 1e-4)) * (0.5 + d_torus / math.pi)
             self.sprt_log_evidence += 0.04 * evidence_step
             self.steps_in_role += 1
 
-            if self.steps_in_role > 18:
-                self.steps_in_role = 0
-                if self.role == "LEADER": self.role = "SUB_CHILD"
-                elif self.role == "SUB_CHILD": self.role = "PEER"
-                elif self.role == "PEER": self.role = "SUPER_PARENT"
-
             if self.sprt_log_evidence > 1.35:
-                if self.trigger_fpz_cognitive_branch():
+                if self.attempt_heterarchical_integration(dominant_idx):
+                    return "CHILD_INTEGRATION", None, self.sprt_log_evidence
+                elif self.trigger_fpz_cognitive_branch():
                     return "BRANCH_HOP", None, self.sprt_log_evidence
                 else:
-                    self.sprt_log_evidence = 1.35 # Зависание из-за отсутствия узла Fpz
+                    self.sprt_log_evidence = 1.35
 
             du = self.u_torus - dom_u
             dv = self.v_torus - dom_v
             dp_so3 = np.array([math.sin(du), math.cos(dv), math.sin(du + dv)], dtype=np.float32)
             if self.role != "SUB_CHILD": dp_so3 = -dp_so3
-
             return self.role, dp_so3, self.sprt_log_evidence
 
         self.sprt_log_evidence = max(0.0, self.sprt_log_evidence - 0.05)
@@ -188,13 +187,13 @@ class FullJepaVideoAgent(BaseActiveAgent):
         if len(self.video_buffer) > VIDEO_BUFFER_LEN:
             self.video_buffer.pop(0)
 
-    def evaluate_and_plan(self, world_probs: np.ndarray):
+    def step(self, effective_probs: np.ndarray):
         if len(self.video_buffer) < 2: return self.role, None, self.sprt_log_evidence
 
         try:
-            target_p = float(world_probs[self.current_idx]) if self.current_idx < len(world_probs) else 0.0
-            dominant_idx = int(np.argmax(world_probs))
-            dominant_p = float(world_probs[dominant_idx])
+            target_p = float(effective_probs[self.current_idx]) if self.current_idx < len(effective_probs) else 0.0
+            dominant_idx = int(np.argmax(effective_probs))
+            dominant_p = float(effective_probs[dominant_idx])
 
             if self.jepa is not None and len(self.video_buffer) >= 2:
                 z_cur = self.jepa.encode_world_state(self.video_buffer[-1])
@@ -204,30 +203,23 @@ class FullJepaVideoAgent(BaseActiveAgent):
             if target_p >= 0.28:
                 self.sprt_log_evidence = max(0.0, self.sprt_log_evidence - 0.25)
                 self.role = "LEADER"
+                self.parent_id = None
                 self.steps_in_role = 0
                 return self.role, None, self.sprt_log_evidence
 
             if dominant_idx != self.current_idx and dominant_p >= 0.25:
                 dom_u = (dominant_idx * TWO_PI / self.num_concepts)
                 dom_v = ((dominant_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
-                
-                if self.has_afz:
-                    d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v)
-                else:
-                    d_torus = math.pi
+                d_torus = torus_geodesic_distance(self.u_torus, self.v_torus, dom_u, dom_v) if self.has_afz else math.pi
 
                 evidence_step = math.log((dominant_p + 1e-4) / (target_p + 1e-4)) * (0.6 + 0.4 * self.last_jepa_energy)
                 self.sprt_log_evidence += 0.045 * evidence_step
                 self.steps_in_role += 1
 
-                if self.steps_in_role > 15:
-                    self.steps_in_role = 0
-                    if self.role == "LEADER": self.role = "SUB_CHILD"
-                    elif self.role == "SUB_CHILD": self.role = "PEER"
-                    elif self.role == "PEER": self.role = "SUPER_PARENT"
-
                 if self.sprt_log_evidence > 1.35:
-                    if self.trigger_fpz_cognitive_branch():
+                    if self.attempt_heterarchical_integration(dominant_idx):
+                        return "CHILD_INTEGRATION", None, self.sprt_log_evidence
+                    elif self.trigger_fpz_cognitive_branch():
                         return "BRANCH_HOP", None, self.sprt_log_evidence
                     else:
                         self.sprt_log_evidence = 1.35
@@ -257,7 +249,6 @@ class AutonomousSwarmProcess(mp.Process):
         self.sps = float(sps)
 
     def run(self):
-        # Используем self.sps вместо жестко зашитого FS = 500.0:
         FS = self.sps
         try:
             config_dict = {}
@@ -265,8 +256,6 @@ class AutonomousSwarmProcess(mp.Process):
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     config_dict = json.load(f)
             else:
-                # ДИНАМИЧЕСКАЯ ГЕНЕРАЦИЯ ЕСЛИ ФАЙЛА НЕТ (Совместимость с CLI)
-                print(f"⚠️ Конфиг {self.config_path} не найден! Генерирую динамическую гетерархию из CLI (--hardcoded {self.num_hardcoded}, --jepa {self.num_jepa}).")
                 config_dict = {
                     "montage": {
                         "system": "10-20-extended",
@@ -316,7 +305,6 @@ class AutonomousSwarmProcess(mp.Process):
                 count = agent_cfg.get('count', 1)
                 for _ in range(count):
                     c_idx = available_slots[(bot_idx - 1) % len(available_slots)]
-                    
                     mode = agent_cfg.get('bind_mode', 'names')
                     if mode == 'radius':
                         tgt = agent_cfg.get('bind_target', {})
@@ -324,7 +312,7 @@ class AutonomousSwarmProcess(mp.Process):
                     else:
                         active_nodes = montage.get_nodes_by_names(agent_cfg.get('bind_target', []))
                     
-                    if not active_nodes: active_nodes = [0] # Fallback
+                    if not active_nodes: active_nodes = [0]
                     
                     if agent_cfg.get('type') == 'jepa':
                         bot = FullJepaVideoAgent(bot_idx, c_idx, active_nodes, montage, jepa_wrapper, self.num_concepts)
@@ -336,7 +324,6 @@ class AutonomousSwarmProcess(mp.Process):
 
             start_time = time.time()
             regional_delays = [0.0, 0.035, 0.070, 0.105]
-            bot_evals = {bot.bot_id: ("LEADER", None, 0.0) for bot in self.bots}
             eval_lock = threading.Lock()
 
             def async_jepa_worker():
@@ -346,13 +333,9 @@ class AutonomousSwarmProcess(mp.Process):
                             raw_buf = np.frombuffer(self.shm['raw_rgb_frame'].get_obj(), dtype=np.uint8)
                             if np.any(raw_buf > 0):
                                 frame_copy = raw_buf.reshape(384, 512, 3).copy()
-                                cur_wprobs = np.array(self.shm['clip_probs'][:self.num_concepts], dtype=np.float32)
                                 for bot in self.bots:
                                     if isinstance(bot, FullJepaVideoAgent):
                                         bot.push_frame(frame_copy)
-                                        res = bot.evaluate_and_plan(cur_wprobs)
-                                        with eval_lock:
-                                            bot_evals[bot.bot_id] = res
                     except Exception:
                         pass
                     time.sleep(0.08)
@@ -361,7 +344,6 @@ class AutonomousSwarmProcess(mp.Process):
                 threading.Thread(target=async_jepa_worker, daemon=True).start()
 
             self.shm['is_swarm_ready'].value = True
-            last_hardcoded_plan = 0.0
 
             while self.shm['is_running'].value:
                 dt = CHUNK_SIZE / FS
@@ -370,42 +352,29 @@ class AutonomousSwarmProcess(mp.Process):
                 theta_phase_norm = ((TWO_PI * 6.0 * t_vec) % TWO_PI) / TWO_PI
 
                 is_calib = self.shm['is_calibrating'].value
-                calib_idx = int(self.shm['calib_target_idx'].value)
+                
+                # Изолированное вычисление вероятностей (Без метагейминга!)
                 world_probs = np.array(self.shm['clip_probs'][:self.num_concepts], dtype=np.float32)
+                
+                if self.shm['sensory_sub'].value:
+                    priors = np.array(self.shm['swarm_priors'][:self.num_concepts], dtype=np.float32)
+                    effective_probs = world_probs * 0.5 + priors * 0.5
+                else:
+                    effective_probs = world_probs
 
-                # РАЗДЕЛЬНЫЕ БУФЕРЫ ПО ДЕВАЙСАМ
                 device_lg = [np.zeros((NUM_CHANNELS, CHUNK_SIZE), dtype=np.float32) for _ in range(NUM_DEVICES)]
                 device_hg = [np.zeros((NUM_CHANNELS, CHUNK_SIZE), dtype=np.float32) for _ in range(NUM_DEVICES)]
-
                 owners = [-1] * 8
+                status_str = "SWARM:" if not is_calib else f"CALIBRATING: [{ALL_NAMES[self.shm['calib_target_idx'].value]}]"
 
-                if is_calib:
-                    cur_name = ALL_NAMES[calib_idx]
-                    u = (calib_idx * TWO_PI / self.num_concepts)
-                    v = ((calib_idx * 3) * TWO_PI / self.num_concepts) % TWO_PI
-                    spatial_phase_ch = (COORDS_X * math.cos(u) + COORDS_Y * math.sin(v)) * 0.18
-                    w_late = np.exp(-((theta_phase_norm - 0.75)**2) / 0.02)
-                    lg = np.sin(TWO_PI * (35.0 + calib_idx * 3.5) * t_vec[None, :] + spatial_phase_ch[:, None]) * w_late[None, :] * 6.0
-                    for i in range(NUM_DEVICES): device_lg[i] += lg
-                    status_str = f"CALIBRATING: [{cur_name}]"
-                else:
-                    if t_now - last_hardcoded_plan >= (1.0 / 6.0):
-                        last_hardcoded_plan = t_now
-                        with eval_lock:
-                            for bot in self.bots:
-                                if isinstance(bot, FullDynamicHardcodedBot):
-                                    bot_evals[bot.bot_id] = bot.step(world_probs)
-
-                    status_str = "SWARM:"
-                    with eval_lock: current_evals = dict(bot_evals)
-
-                    for bot in self.bots:
+                if not is_calib:
+                    for b_idx, bot in enumerate(self.bots):
+                        role, dp, sprt_val = bot.step(effective_probs)
                         owners[bot.current_idx] = bot.bot_id
-                        role, dp, sprt_val = current_evals.get(bot.bot_id, ("LEADER", None, 0.0))
                         
+                        self.shm['parent_map'][bot.original_idx] = bot.parent_id if bot.parent_id is not None else -1
+
                         lg, hg = bot.generate_waves(role, dp, t_vec, theta_phase_norm)
-                        
-                        # РОУТИНГ ТОЛЬКО В РАЗРЕШЕННЫЕ УЗЛЫ БОТА
                         for node_i in bot.active_nodes:
                             if node_i < NUM_DEVICES:
                                 device_lg[node_i] += lg
@@ -422,10 +391,8 @@ class AutonomousSwarmProcess(mp.Process):
                 for i in range(8): self.shm['concept_owners'][i] = owners[i]
                 self.shm['agent_desc'].value = status_str.encode('utf-8', errors='replace')[:250]
 
-                has_active_signal = is_calib or (len(self.bots) > 0)
-
                 for node_i in range(NUM_DEVICES):
-                    if not has_active_signal:
+                    if is_calib and not self.bots:
                         raw_sig = np.zeros((NUM_CHANNELS, CHUNK_SIZE), dtype=np.float32)
                     else:
                         delay = regional_delays[node_i]
@@ -438,7 +405,6 @@ class AutonomousSwarmProcess(mp.Process):
                             np.sin(TWO_PI * 22.0 * t_vec)[None, :] * 1.8 +
                             noise
                         )
-                        # Добавка сверхбыстрых рипплов только для AFz
                         if node_i == 2 and not is_calib and np.any(device_hg[node_i]):
                             raw_sig += device_hg[node_i] * 1.5
 
@@ -458,11 +424,14 @@ class SyntheticAutonomousAgent:
             'is_running': ctx.Value('b', True),
             'is_calibrating': ctx.Value('b', True),
             'is_swarm_ready': ctx.Value('b', False),
+            'sensory_sub': ctx.Value('b', False), 
             'calib_target_idx': ctx.Value('i', 0),
             'clip_probs': ctx.Array('d', [0.0] * 256),
+            'swarm_priors': ctx.Array('d', [0.0] * 256), 
             'raw_rgb_frame': ctx.Array('B', 384 * 512 * 3),
             'agent_desc': ctx.Array('c', 256),
-            'concept_owners': ctx.Array('i', [-1] * 8)
+            'concept_owners': ctx.Array('i', [-1] * 8),
+            'parent_map': ctx.Array('i', [-1] * 16) 
         }
         self.process = AutonomousSwarmProcess(
             self.shm, config_path, num_hardcoded=num_hardcoded, num_jepa=num_jepa, num_concepts=num_concepts, sps=sps
@@ -472,6 +441,13 @@ class SyntheticAutonomousAgent:
     def is_ready(self) -> bool: return bool(self.shm['is_swarm_ready'].value)
     def is_alive(self) -> bool: return self.process.is_alive()
     
+    def set_sensory_substitution(self, state: bool):
+        self.shm['sensory_sub'].value = state
+        
+    def update_swarm_priors(self, priors: np.ndarray):
+        for i in range(min(self.num_concepts, len(priors))):
+            self.shm['swarm_priors'][i] = float(priors[i])
+            
     def update_visual_state(self, visual_data):
         if isinstance(visual_data, np.ndarray):
             if visual_data.ndim == 3:
@@ -479,6 +455,10 @@ class SyntheticAutonomousAgent:
             elif visual_data.ndim == 1:
                 for i in range(min(self.num_concepts, len(visual_data))):
                     self.shm['clip_probs'][i] = float(visual_data[i])
+
+    def get_parent_map(self):
+        pmap = list(self.shm['parent_map'][:self.num_concepts])
+        return {i: (p if p != -1 else None) for i, p in enumerate(pmap)}
 
     def set_calibration_target(self, active: bool, tgt_idx: int = 0):
         self.shm['is_calibrating'].value = bool(active)
