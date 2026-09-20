@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 """
 🧠 NEUROCANVAS × TBP.MONTY: RIGOROUS 2-AXIS SENSORIMOTOR MANIFOLD (FCz)
-- Строгое нейробиологическое соответствие:
-  * Две непрерывные оси координат: Ось Y (Вперед <-> Назад) и Ось X (Влево <-> Вправо)
-    (Georgopoulos et al., Science 1986, DOI: 10.1126/science.3749885;
-     Churchland et al., Nature 2012, DOI: 10.1038/nature11129;
-     Chen et al., Neuron 2024, DOI: 10.1016/j.neuron.2024.07.024)
-  * Развязка темпоральности: темпоральный сдвиг (ry) не привязан к знаку движения,
-    а отражает внутренний когнитивный баланс retrieval/encoding
-    (Bieri et al., Neuron 2014, DOI: 10.1016/j.neuron.2014.03.013;
-     Miller, Lundqvist, Bastos, Neuron 2018, DOI: 10.1016/j.neuron.2018.09.023)
-  * Популяционная динамика FCz (SMA): векторный расчет из neuro_flexible_maze_app.py
-  * Калибровка 5-сигма (d' >= 4.75) раздельно по двум противоположным полюсам каждой оси
-  * Полная совместимость с Cortical Messaging Protocol (tbp.monty.cmp.Message)
-  * 100% сохранение всех визуальных и диагностических панелей
+- Научное обоснование 2D геометрии рабочей памяти:
+  * Fan, Wang, Ding, Luo (2024, Nature Human Behaviour, DOI: 10.1038/s41562-024-02047-8)
+  * Chen, Zhang, Hu, Min, Wang (2024, Neuron, DOI: 10.1016/j.neuron.2024.07.024)
+  * Xie et al. (2022, Science, DOI: 10.1126/science.abm0204)
+  * Miller, Lundqvist, Bastos (2018, Neuron, DOI: 10.1016/j.neuron.2018.09.023)
+  * Bieri, Bobbitt, Colgin (2014, Neuron, DOI: 10.1016/j.neuron.2014.03.013)
+  * Hawkins, Leadholm, Clay (2025/2026, arXiv:2507.05888)
+- 100% реализация динамики FCz из neuro_flexible_maze_app.py (persistence, temp_bias, sagitta).
+- 5-Сигма калибровка 2D векторов перемещения из прошлого в будущее (d' >= 4.75σ).
+- Строгая упаковка в Cortical Messaging Protocol (tbp.monty.cmp.Message).
+- Полная сохранность всех аналитических и графических панелей.
 """
 
 import os
@@ -49,15 +47,16 @@ MAX_CONCEPTS_CAPACITY = 16
 FEIGENBAUM_DELTA = 4.669201609
 
 ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "ЗАМОК", "ОКЕАН", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ"]
-
-# ДВЕ НЕПРЕРЫВНЫЕ ОСИ С ПРОТИВОПОЛОЖНЫМИ ПОЛЮСАМИ (Georgopoulos 1986, Chen 2024)
-# Ось Y: Вперед (+1) <-> Назад (-1)
-# Ось X: Вправо (+1) <-> Влево (-1)
-AXIS_NAMES = ["ОСЬ Y (ПРОДОЛЬНАЯ)", "ОСЬ X (БОКОВАЯ)"]
-POLE_NAMES = [
-    ("ВПЕРЕД (+Y)", "НАЗАД (-Y)"),
-    ("ВПРАВО (+X)", "ВЛЕВО (-X)")
+# 4 ортогональных полюса двух непрерывных осей 2D геометрии (Fan et al., 2024; Chen et al., 2024)
+MOTION_NAMES = ["ВПЕРЕД", "НАЗАД", "ВЛЕВО", "ВПРАВО"]
+MOTION_TARGET_VECS = [
+    np.array([ 0.0,  1.0], dtype=np.float32),  # ВПЕРЕД (+Y, Проспекция)
+    np.array([ 0.0, -1.0], dtype=np.float32),  # НАЗАД (-Y, Ретроспекция)
+    np.array([-1.0,  0.0], dtype=np.float32),  # ВЛЕВО (-X, Латеральный сдвиг)
+    np.array([ 1.0,  0.0], dtype=np.float32)   # ВПРАВО (+X, Латеральный сдвиг)
 ]
+
+AXIS_NAMES = ["ОСЬ Y (ПРОДОЛЬНАЯ)", "ОСЬ X (БОКОВАЯ)"]
 
 FRACTAL_COLORS = [
     (20, 20, 60), (30, 80, 120), (100, 100, 110), (150, 100, 50),
@@ -75,15 +74,6 @@ ELECTRODE_Y = np.array([-2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42, -2.73,
 # ТОЧНАЯ ФИЗИКА НАВИГАЦИИ ИЗ neuro_flexible_maze_app.py
 # =====================================================================
 class DynamicPilot:
-    """
-    Реализует популяционную физику движения:
-    - force_x = axes.lx, force_y = -axes.ly
-    - persistence = persistence * 0.95 + 0.05 * alignment * tanh(mag * 2.0)
-    - active_boost = 1.0 + persistence * 4.0
-    - base_speed = 3.2 * active_boost
-    - target_vx = force_x * base_speed, target_vy = force_y * base_speed
-    - vx = vx * 0.88 + target_vx * 0.12, vy = vy * 0.88 + target_vy * 0.12
-    """
     def __init__(self):
         self.x, self.y = 0.0, 0.0
         self.vx, self.vy = 0.0, 0.0
@@ -94,7 +84,7 @@ class DynamicPilot:
 
     def update(self, dt: float, force_x: float, force_y: float, wm_curvature: float, temp_bias: float):
         self.wm_curvature = wm_curvature
-        self.temporal_bias = temp_bias  # Независимый когнитивный баланс
+        self.temporal_bias = temp_bias
 
         mag = math.hypot(force_x, force_y)
         if mag > 0.05:
@@ -127,11 +117,8 @@ class DynamicPilot:
 
 def apply_manifold_camera_warp(img_np: np.ndarray, pilot: DynamicPilot, dt: float = 0.03):
     h, w = img_np.shape[:2]
-    # Зум по продольной оси Y: Вперед = увеличение, Назад = уменьшение
     zoom = 1.0 + (pilot.vy * dt * 0.22)
-    # Сдвиг по боковой оси X: Влево/Вправо
     dx = -pilot.vx * w * dt * 0.15
-    # Поворот от сагиттальной кривизны rx
     angle = -pilot.wm_curvature * 12.0 * dt
 
     if abs(zoom - 1.0) < 0.0008 and abs(dx) < 0.15 and abs(angle) < 0.04:
@@ -352,7 +339,7 @@ class FrontalExecutiveHeterarchy(nn.Module):
     def save_to_file(self, filepath: str, class_names: list):
         count = len(class_names)
         payload = {
-            'format_version': '9.0_bipolar_axes',
+            'format_version': '9.2_bipolar_axes',
             'num_nodes': self.num_nodes,
             'total_dim': self.total_dim,
             'num_concepts': count,
@@ -740,7 +727,6 @@ def main():
     parser.add_argument('--start-prompt', type=str, default="ancient medieval stone castle fortress towers, daytime, sharp focus, 8k")
     parser.add_argument('--chaos', action='store_true', help="Start with chaos bifurcation active immediately")
     
-    # КАЛИБРОВКА (ДВЕ НЕПРЕРЫВНЫЕ ОСИ X и Y против СЕМАНТИКИ AFz)
     parser.add_argument('--calib-mode', type=str, default="auto", choices=["auto", "motion", "semantic"],
                         help="'motion' = калибровка двух осей Y и X на FCz, 'semantic' = калибровка понятий AFz")
     parser.add_argument('--calib-sigma', type=float, default=4.75, help="Критерий статистической разделимости d-prime (4.75 для 5-сигма)")
@@ -782,8 +768,6 @@ def main():
     
     if is_motion_calib:
         initial_prompts = [args.start_prompt]
-        # В 2D пространстве калибруются две непрерывные оси: Y (Продольная) и X (Боковая)
-        # Каждая ось калибруется между двумя противоположными полюсами (2 шага на ось, 4 блока на цикл)
         calib_block_names = ["ВПЕРЕД (+Y)", "НАЗАД (-Y)", "ВПРАВО (+X)", "ВЛЕВО (-X)"]
         active_memory_classes = 4
     else:
@@ -862,8 +846,6 @@ def main():
     calib_cycle_count = 0
     epoch_start_time = time.time()
     
-    # Для движения: буферы проекций на ось Y (Вперед vs Назад) и ось X (Вправо vs Влево)
-    # Для семантики: буферы маржи по классам
     if is_motion_calib:
         calib_data = {
             'y_fwd': [], 'y_bwd': [],
@@ -943,8 +925,6 @@ def main():
             fcz_node = leader_brain.get_region_node("FCz", frame.nodes)
             axes = fcz_node.gamepad_axes
             
-            # В ядре -ly инвертировано для геймпада (Вперед = +).
-            # В формуле лабиринта: force_x = axes.lx, force_y = -axes.ly
             force_x = float(axes.lx)
             force_y = float(-axes.ly)
             wm_curvature = float(axes.rx)
@@ -999,11 +979,9 @@ def main():
 
                 if has_live_eeg:
                     for s in subjects:
-                        # Контрастная пластичность синапсов L4 HTM
                         s.learn_contrastive(calib_step_idx, active_memory_classes, lr=0.04, ltd_factor=0.6)
                         
                         if is_motion_calib:
-                            # Запись непрерывных проекций на оси X и Y
                             if calib_step_idx == 0:   # ВПЕРЕД (+Y)
                                 calib_data['y_fwd'].append(force_y)
                             elif calib_step_idx == 1: # НАЗАД (-Y)
@@ -1028,23 +1006,18 @@ def main():
                             calib_cycle_count += 1
                             
                             if is_motion_calib:
-                                # НАУЧНЫЙ РАСЧЕТ d-prime ПО ДВУМ НЕПРЕРЫВНЫМ ОСЯМ (Georgopoulos 1986, Chen 2024)
-                                # 1. Ось Y: Вперед vs Назад
                                 y_f = np.array(calib_data['y_fwd'][-120:]) if len(calib_data['y_fwd']) >= 20 else np.array([0.0])
                                 y_b = np.array(calib_data['y_bwd'][-120:]) if len(calib_data['y_bwd']) >= 20 else np.array([0.0])
                                 mu_yf = np.mean(y_f)
                                 mu_yb = np.mean(y_b)
                                 std_y = math.sqrt(0.5 * (np.var(y_f) + np.var(y_b)) + 1e-6)
-                                # Намерение "Вперед" дает force_y > 0, "Назад" дает force_y < 0
                                 dp_axis_y = max(0.0, (mu_yf - mu_yb) / std_y)
 
-                                # 2. Ось X: Вправо vs Влево
                                 x_r = np.array(calib_data['x_rgt'][-120:]) if len(calib_data['x_rgt']) >= 20 else np.array([0.0])
                                 x_l = np.array(calib_data['x_lft'][-120:]) if len(calib_data['x_lft']) >= 20 else np.array([0.0])
                                 mu_xr = np.mean(x_r)
                                 mu_xl = np.mean(x_l)
                                 std_x = math.sqrt(0.5 * (np.var(x_r) + np.var(x_l)) + 1e-6)
-                                # Намерение "Вправо" дает force_x > 0, "Влево" дает force_x < 0
                                 dp_axis_x = max(0.0, (mu_xr - mu_xl) / std_x)
 
                                 current_d_prime = min(dp_axis_y, dp_axis_x)
@@ -1136,6 +1109,9 @@ def main():
             panel_x, panel_y = 20, 40
             pygame.draw.rect(screen, (16, 22, 32), (panel_x, panel_y, 330, 270), border_radius=8)
 
+            # ГАРАНТИРУЕМ ИНИЦИАЛИЗАЦИЮ target_now ВНЕ ЗАВИСИМОСТИ ОТ СТАТУСА EEG:
+            target_now = calib_block_names[calib_step_idx]
+
             if is_calibrating:
                 border_col = (255, 120, 40) if has_live_eeg else (180, 50, 50)
                 pygame.draw.rect(screen, border_col, (panel_x, panel_y, 330, 270), 2, border_radius=8)
@@ -1148,7 +1124,6 @@ def main():
                     screen.blit(font_s.render("Подключите FreeEEG / запустите bridge", True, (200, 200, 200)), (panel_x + 15, panel_y + 70))
                 else:
                     rem_time = max(0.0, args.calib_seconds - (time.time() - epoch_start_time))
-                    target_now = calib_block_names[calib_step_idx]
                     screen.blit(font_b.render(f"ФОКУС: [{target_now}] ({rem_time:.1f}s)", True, (255, 255, 100)), (panel_x + 15, panel_y + 45))
                     screen.blit(font_s.render(f"Цикл: {calib_cycle_count}/{args.calib_cycles} | Цель: {args.calib_sigma}σ", True, (200, 200, 200)), (panel_x + 15, panel_y + 70))
                 
@@ -1209,7 +1184,6 @@ def main():
                 pygame.draw.line(screen, (0, 255, 200), (nav_radar_cx, nav_radar_cy), (nx_p, ny_p), 3)
                 pygame.draw.circle(screen, (255, 255, 255), (nx_p, ny_p), 4)
 
-            # Независимый темпоральный статус (Bieri et al., Neuron 2014)
             t_status = "Prospective (Будущее)" if temporal_bias > 0.15 else ("Retrospective (Прошлое)" if temporal_bias < -0.15 else "Equilibrium")
             
             screen.blit(font_b.render("FCz CONTINUOUS 2-AXIS (R^2):", True, (0, 255, 200)), (c_x + 16, c_y + 126))
