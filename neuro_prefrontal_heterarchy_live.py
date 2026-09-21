@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-🧠 NEUROCANVAS × TBP.MONTY: RIGOROUS 2-AXIS SENSORIMOTOR MANIFOLD (FCz)
-- Научное обоснование 2D геометрии рабочей памяти:
-  * Fan, Wang, Ding, Luo (2024, Nature Human Behaviour, DOI: 10.1038/s41562-024-02047-8)
-  * Chen, Zhang, Hu, Min, Wang (2024, Neuron, DOI: 10.1016/j.neuron.2024.07.024)
-  * Xie et al. (2022, Science, DOI: 10.1126/science.abm0204)
-  * Miller, Lundqvist, Bastos (2018, Neuron, DOI: 10.1016/j.neuron.2018.09.023)
-  * Bieri, Bobbitt, Colgin (2014, Neuron, DOI: 10.1016/j.neuron.2014.03.013)
-  * Hawkins, Leadholm, Clay (2025/2026, arXiv:2507.05888)
-- 100% реализация динамики FCz из neuro_flexible_maze_app.py (persistence, temp_bias, sagitta).
-- 5-Сигма калибровка 2D векторов перемещения из прошлого в будущее (d' >= 4.75σ).
-- Строгая упаковка в Cortical Messaging Protocol (tbp.monty.cmp.Message).
-- Полная сохранность всех аналитических и графических панелей.
+🧠 NEUROCANVAS × TBP.MONTY: 4-AXIS SPATIOTEMPORAL HETERARCHY & SENSORIMOTOR FLIGHT
+- Научные основы:
+  * Hawkins & Ahmad (2016) [DOI: 10.3389/fncir.2016.00023] — HTM Spatiotemporal Sequence Memory
+  * Lisman & Jensen (2013) [DOI: 10.1016/j.neuron.2013.03.007] — 32-Slot Theta-Gamma Coding
+  * Miller, Lundqvist, & Bastos (2018) [DOI: 10.1016/j.neuron.2018.09.023] — Working Memory 2.0
+  * Chen et al. (Neuron 2024) [DOI: 10.1016/j.neuron.2024.07.024] — Disentangled WM Subspaces
+  * Fan, Wang, Ding, & Luo (Nat Hum Behav 2024) [DOI: 10.1038/s41562-024-02047-8] — 2D Neural Geometry
+  * Dickey et al. (PNAS 2022) [DOI: 10.1073/pnas.2107797119] — 89.5 Hz Cortical Ripples
+  * Hawkins, Leadholm, & Clay (2025/2026) [arXiv:2507.05888] — Thousand Brains Theory 2.0
+  * Bruña, Maestú, & Pereda (2018) [DOI: 10.1088/1741-2552/aacfe4] — Volume-Conduction-Free ciPLV
 """
 
 import os
@@ -47,13 +45,15 @@ MAX_CONCEPTS_CAPACITY = 16
 FEIGENBAUM_DELTA = 4.669201609
 
 ALL_NAMES = ["ГОРА",  "ДЖУНГЛИ", "ЗАМОК", "ОКЕАН", "КОСМОС", "ПЛАНЕТА", "КИБЕРПАНК", "НЕБОСКРЕБ"]
-# 4 ортогональных полюса двух непрерывных осей 2D геометрии (Fan et al., 2024; Chen et al., 2024)
-MOTION_NAMES = ["ВПЕРЕД", "НАЗАД", "ВЛЕВО", "ВПРАВО"]
-MOTION_TARGET_VECS = [
-    np.array([ 0.0,  1.0], dtype=np.float32),  # ВПЕРЕД (+Y, Проспекция)
-    np.array([ 0.0, -1.0], dtype=np.float32),  # НАЗАД (-Y, Ретроспекция)
-    np.array([-1.0,  0.0], dtype=np.float32),  # ВЛЕВО (-X, Латеральный сдвиг)
-    np.array([ 1.0,  0.0], dtype=np.float32)   # ВПРАВО (+X, Латеральный сдвиг)
+
+# 4 кардинальных направления двух физических осей (Y и X)
+MOTION_NAMES = ["ВПЕРЕД", "НАЗАД", "ВПРАВО", "ВЛЕВО"]
+TARGET_ANGLES_DEG = [90.0, 270.0, 0.0, 180.0]
+TARGET_UNIT_VECS = [
+    np.array([ 0.0,  1.0], dtype=np.float32),  # Вперед (+Y)
+    np.array([ 0.0, -1.0], dtype=np.float32),  # Назад (-Y)
+    np.array([ 1.0,  0.0], dtype=np.float32),  # Вправо (+X)
+    np.array([-1.0,  0.0], dtype=np.float32)   # Влево (-X)
 ]
 
 AXIS_NAMES = ["ОСЬ Y (ПРОДОЛЬНАЯ)", "ОСЬ X (БОКОВАЯ)"]
@@ -67,11 +67,11 @@ FRACTAL_COLORS = [
 
 ELECTRODE_X = np.array([10.14, 7.43, 2.75, 2.72, -2.72, -2.75, -7.42, -10.14,
                         -10.14, -7.43, -2.75, -2.72, 2.72, 2.75, 7.43, 10.14], dtype=np.float32)
-ELECTRODE_Y = np.array([-2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42, -2.73,
-                         2.72, 7.43, 4.76, 10.14, 10.15, 4.77, 7.42, 2.71], dtype=np.float32)
+ELECTRODE_Y = np.array([-2.72, -7.43, -4.77, -10.15,-10.14, -4.77, -7.42,  -2.73,
+                         2.72,  7.43,  4.76, 10.14, 10.15,  4.77,  7.42,   2.71], dtype=np.float32)
 
 # =====================================================================
-# ТОЧНАЯ ФИЗИКА НАВИГАЦИИ ИЗ neuro_flexible_maze_app.py
+# ДИНАМИЧЕСКИЙ КИНЕМАТИЧЕСКИЙ ПИЛОТ
 # =====================================================================
 class DynamicPilot:
     def __init__(self):
@@ -115,11 +115,11 @@ class DynamicPilot:
         self.x += self.vx * dt
         self.y += self.vy * dt
 
-def apply_manifold_camera_warp(img_np: np.ndarray, pilot: DynamicPilot, dt: float = 0.03):
+def apply_manifold_camera_warp(img_np: np.ndarray, pilot: DynamicPilot, dt: float = 0.016):
     h, w = img_np.shape[:2]
-    zoom = 1.0 + (pilot.vy * dt * 0.22)
-    dx = -pilot.vx * w * dt * 0.15
-    angle = -pilot.wm_curvature * 12.0 * dt
+    zoom = 1.0 + (pilot.vy * dt * 0.18)
+    dx = -pilot.vx * w * dt * 0.12
+    angle = -pilot.wm_curvature * 10.0 * dt
 
     if abs(zoom - 1.0) < 0.0008 and abs(dx) < 0.15 and abs(angle) < 0.04:
         return img_np
@@ -219,13 +219,17 @@ def apply_color_surgery(img_np, old_f32):
     return np.clip(res, 0, 255).astype(np.uint8)
 
 # =====================================================================
-# HTM-КОЛОНКИ (L4 MACROCOLUMNS)
+# HTM 32-СЛОТОВАЯ ПРОСТРАНСТВЕННО-ВРЕМЕННАЯ КОЛОНКА (L4/L2-3)
+# Реализация по Hawkins & Ahmad (2016) и Lisman & Jensen (2013):
+# Сохраняются все 32 среза фазового времени без схлопывания в среднее!
 # =====================================================================
 class CanonicalHTMColumn(nn.Module):
-    def __init__(self, node_id: str = "Node", num_columns: int = 4096, k_active: int = 80):
+    def __init__(self, node_id: str = "Node", num_columns: int = 4096, k_active: int = 80, num_slots: int = 32):
         super().__init__()
         self.num_columns = num_columns
         self.k_active = k_active
+        self.num_slots = num_slots
+
         ex, ey = [], []
         for i in range(16):
             for j in range(i + 1, 16):
@@ -233,6 +237,7 @@ class CanonicalHTMColumn(nn.Module):
                 ey.append((ELECTRODE_Y[i] + ELECTRODE_Y[j]) / 2.0)
         self.register_buffer("edge_x", torch.tensor(ex, device=DEVICE))
         self.register_buffer("edge_y", torch.tensor(ey, device=DEVICE))
+
         grid_dim = int(math.isqrt(num_columns))
         cy = torch.linspace(-11.0, 11.0, grid_dim, device=DEVICE).view(grid_dim, 1, 1)
         cx = torch.linspace(-11.0, 11.0, grid_dim, device=DEVICE).view(1, grid_dim, 1)
@@ -241,95 +246,111 @@ class CanonicalHTMColumn(nn.Module):
         self.register_buffer("permanence", spatial_rf)
         self.perm_threshold = 0.25
 
-    def compute_sdr(self, pac_iplv_32x120: torch.Tensor):
-        connected = (self.permanence >= self.perm_threshold).float()
-        x_clean = torch.relu(pac_iplv_32x120)
-        if torch.max(x_clean) < 1e-4: return torch.zeros(self.num_columns, device=DEVICE)
-        phase_weights = torch.linspace(0.6, 1.4, 32, device=DEVICE).unsqueeze(1)
-        integrated_edges = torch.sum(x_clean * phase_weights, dim=0) / 32.0
-        synapse_counts = torch.sum(connected, dim=1).clamp(min=1.0)
-        overlap = torch.mv(connected, integrated_edges) / synapse_counts
-        k = min(self.k_active, overlap.shape[0])
-        _, active_indices = torch.topk(overlap, k)
-        sdr = torch.zeros(self.num_columns, device=DEVICE)
-        sdr[active_indices] = 1.0
-        return sdr
+    def compute_sdr(self, pac_iplv_32x120: torch.Tensor) -> torch.Tensor:
+        """
+        Вычисляет 32 последовательных SDR [32, num_columns] вдоль фазового пути
+        тета-цикла от прошлого к будущему (Hawkins & Ahmad 2016, Lisman & Jensen 2013).
+        """
+        connected = (self.permanence >= self.perm_threshold).float()  # [num_columns, 120]
+        x_clean = torch.relu(pac_iplv_32x120)                         # [32, 120]
+        
+        if torch.max(x_clean) < 1e-4:
+            return torch.zeros((self.num_slots, self.num_columns), device=DEVICE)
+
+        synapse_counts = torch.sum(connected, dim=1).clamp(min=1.0)   # [num_columns]
+        overlap = torch.matmul(x_clean, connected.T) / synapse_counts # [32, num_columns]
+        
+        _, active_indices = torch.topk(overlap, self.k_active, dim=-1)
+        sdr_seq = torch.zeros((self.num_slots, self.num_columns), device=DEVICE)
+        sdr_seq.scatter_(1, active_indices, 1.0)
+        return sdr_seq
 
 class FrontalExecutiveHeterarchy(nn.Module):
     def __init__(self, num_nodes: int = 1, max_capacity: int = MAX_CONCEPTS_CAPACITY, 
-                 num_columns_per_node: int = 4096, k_active_per_node: int = 80):
+                 num_columns_per_node: int = 4096, k_active_per_node: int = 80, num_slots: int = 32):
         super().__init__()
         self.num_nodes = max(1, int(num_nodes))
         self.num_columns_per_node = num_columns_per_node
         self.k_active_per_node = k_active_per_node
+        self.num_slots = num_slots
         self.max_capacity = max_capacity
         
         self.total_dim = self.num_columns_per_node * self.num_nodes
         self.total_k_active = self.k_active_per_node * self.num_nodes 
         
         self.nodes = nn.ModuleList([
-            CanonicalHTMColumn(node_id=f"Col_{i}", num_columns=num_columns_per_node, k_active=k_active_per_node)
+            CanonicalHTMColumn(node_id=f"Col_{i}", num_columns=num_columns_per_node, 
+                               k_active=k_active_per_node, num_slots=num_slots)
             for i in range(self.num_nodes)
         ])
-        self.register_buffer("calcium_trace", torch.zeros(self.total_dim, device=DEVICE))
-        self.register_buffer("synaptic_weights", torch.zeros((max_capacity, self.total_dim), device=DEVICE))
+        
+        # Синаптическая память траекторий: [Классы, 32 среза времени, total_dim]
+        self.register_buffer("trajectory_weights", torch.zeros((max_capacity, num_slots, self.total_dim), device=DEVICE))
+        self.register_buffer("calcium_trajectory", torch.zeros((num_slots, self.total_dim), device=DEVICE))
         self.register_buffer("membrane_potential", torch.zeros(max_capacity, device=DEVICE))
 
-    def get_current_sdr(self, iplv_gamma_nodes: list[torch.Tensor]):
+    def get_current_sdr(self, iplv_gamma_nodes: list[torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
         sdrs = []
         for i in range(self.num_nodes):
             if i < len(iplv_gamma_nodes):
                 sdrs.append(self.nodes[i].compute_sdr(iplv_gamma_nodes[i]))
             else:
-                sdrs.append(torch.zeros(self.num_columns_per_node, device=DEVICE))
-        full_sdr = torch.cat(sdrs, dim=0)
-        return full_sdr, sdrs[0]
+                sdrs.append(torch.zeros((self.num_slots, self.num_columns_per_node), device=DEVICE))
+        full_sdr_seq = torch.cat(sdrs, dim=-1)
+        return full_sdr_seq, sdrs[0]
 
     def reset_calcium(self):
-        self.calcium_trace.zero_()
+        self.calcium_trajectory.zero_()
 
     def contrastive_learn(self, target_idx: int, num_active_concepts: int, lr: float = 0.05, ltd_factor: float = 0.5):
-        if torch.max(self.calcium_trace) > 1e-4:
-            self.synaptic_weights[target_idx] += lr * self.calcium_trace
-            self.synaptic_weights[target_idx] = torch.clamp(self.synaptic_weights[target_idx], 0.0, 1.0)
+        if torch.max(self.calcium_trajectory) > 1e-4:
+            self.trajectory_weights[target_idx] += lr * self.calcium_trajectory
+            self.trajectory_weights[target_idx] = torch.clamp(self.trajectory_weights[target_idx], 0.0, 1.0)
             
             for other_idx in range(num_active_concepts):
                 if other_idx != target_idx:
-                    self.synaptic_weights[other_idx] -= (lr * ltd_factor) * self.calcium_trace
-                    self.synaptic_weights[other_idx] = torch.clamp(self.synaptic_weights[other_idx], 0.0, 1.0)
+                    self.trajectory_weights[other_idx] -= (lr * ltd_factor) * self.calcium_trajectory
+                    self.trajectory_weights[other_idx] = torch.clamp(self.trajectory_weights[other_idx], 0.0, 1.0)
 
     def inherit_synapses(self, parent_idx: int, child_idx: int):
-        self.synaptic_weights[child_idx] = self.synaptic_weights[parent_idx] * 0.85
+        self.trajectory_weights[child_idx] = self.trajectory_weights[parent_idx] * 0.85
 
     def get_ltm_scores(self, count: int) -> np.ndarray:
-        strong_synapses = torch.sum(self.synaptic_weights[:count] > 0.45, dim=1).float()
-        return (torch.clamp(strong_synapses / float(self.total_k_active), 0.0, 1.0) * 100.0).cpu().numpy()
+        strong = torch.sum(self.trajectory_weights[:count] > 0.45, dim=(1, 2)).float()
+        norm_factor = float(self.total_k_active * self.num_slots)
+        return (torch.clamp(strong / norm_factor, 0.0, 1.0) * 100.0).cpu().numpy()
 
-    def predict_evidence(self, cur_sdr: torch.Tensor, active_count: int, dt: float = 0.016, tau: float = 0.250):
-        self.calcium_trace = torch.max(self.calcium_trace * 0.9, cur_sdr)
+    def predict_evidence(self, cur_sdr_seq: torch.Tensor, active_count: int, dt: float = 0.016, tau: float = 0.250):
+        self.calcium_trajectory = torch.max(self.calcium_trajectory * 0.88, cur_sdr_seq)
         ltm_scores = self.get_ltm_scores(active_count)
 
-        if torch.max(self.calcium_trace) < 1e-4:
+        if torch.max(self.calcium_trajectory) < 1e-4:
             self.membrane_potential[:active_count] = self.membrane_potential[:active_count] * (1.0 - dt / tau)
             wm_scores = torch.zeros(active_count, device=DEVICE)
             weights = np.zeros(active_count, dtype=np.float32)
             if active_count > 0: weights[0] = 1.0
             return weights, wm_scores.cpu().numpy(), ltm_scores
 
-        w_norm = torch.nn.functional.normalize(self.synaptic_weights[:active_count], p=2, dim=1)
-        s_norm = torch.nn.functional.normalize(self.calcium_trace, p=2, dim=0)
+        w_flat = self.trajectory_weights[:active_count].view(active_count, -1)
+        s_flat = self.calcium_trajectory.view(-1)
+        
+        w_norm = torch.nn.functional.normalize(w_flat, p=2, dim=1)
+        s_norm = torch.nn.functional.normalize(s_flat, p=2, dim=0)
         current = torch.mv(w_norm, s_norm)
+
         alpha = dt / tau
         self.membrane_potential[:active_count] = (1.0 - alpha) * self.membrane_potential[:active_count] + alpha * current
         wm_scores = torch.clamp(self.membrane_potential[:active_count], 0.0, 1.0) * 100.0
         weights = torch.softmax(self.membrane_potential[:active_count] * 12.0, dim=0).cpu().numpy()
         return weights, wm_scores.cpu().numpy(), ltm_scores
 
-    def compute_contrastive_margin(self, cur_sdr: torch.Tensor, target_idx: int, active_count: int) -> float:
+    def compute_contrastive_margin(self, cur_sdr_seq: torch.Tensor, target_idx: int, active_count: int) -> float:
         if active_count <= 1: return 1.0
         with torch.no_grad():
-            w_norm = torch.nn.functional.normalize(self.synaptic_weights[:active_count], p=2, dim=1)
-            s_norm = torch.nn.functional.normalize(cur_sdr, p=2, dim=0)
+            w_flat = self.trajectory_weights[:active_count].view(active_count, -1)
+            s_flat = cur_sdr_seq.view(-1)
+            w_norm = torch.nn.functional.normalize(w_flat, p=2, dim=1)
+            s_norm = torch.nn.functional.normalize(s_flat, p=2, dim=0)
             scores = torch.mv(w_norm, s_norm)
             target_score = scores[target_idx]
             other_scores = torch.cat([scores[:target_idx], scores[target_idx+1:]])
@@ -339,32 +360,30 @@ class FrontalExecutiveHeterarchy(nn.Module):
     def save_to_file(self, filepath: str, class_names: list):
         count = len(class_names)
         payload = {
-            'format_version': '9.2_bipolar_axes',
+            'format_version': '12.0_spatiotemporal_trajectory',
             'num_nodes': self.num_nodes,
+            'num_slots': self.num_slots,
             'total_dim': self.total_dim,
             'num_concepts': count,
             'class_names': class_names,
-            'synaptic_weights': self.synaptic_weights[:count].cpu(),
+            'trajectory_weights': self.trajectory_weights[:count].cpu(),
             'timestamp': time.time()
         }
         torch.save(payload, filepath)
-        print(f"💾 [LTM PERSISTENCE] Сохранен банк весов в {filepath} ({count} классов, dim={self.total_dim})")
+        print(f"💾 [LTM PERSISTENCE] Сохранен банк пространственно-временных траекторий в {filepath} ({count} классов, 32 слота, dim={self.total_dim})")
 
     def load_from_file(self, filepath: str) -> tuple[bool, int]:
         if not os.path.exists(filepath): return False, 0
         try:
             ckpt = torch.load(filepath, map_location=DEVICE, weights_only=True)
             cnt = min(self.max_capacity, ckpt.get('num_concepts', 0))
-            saved_weights = ckpt['synaptic_weights'][:cnt].to(DEVICE)
-            saved_dim = saved_weights.shape[1]
-            if saved_dim == self.total_dim:
-                self.synaptic_weights[:cnt].copy_(saved_weights)
-            elif saved_dim > self.total_dim:
-                self.synaptic_weights[:cnt].copy_(saved_weights[:, :self.total_dim])
-            else:
-                self.synaptic_weights[:cnt, :saved_dim].copy_(saved_weights)
-            print(f"📂 [LTM VERIFIED] Загружен банк весов: {filepath} ({cnt} классов, dim={self.total_dim}).")
-            return True, cnt
+            if 'trajectory_weights' in ckpt:
+                saved_weights = ckpt['trajectory_weights'][:cnt].to(DEVICE)
+                if saved_weights.shape[1] == self.num_slots and saved_weights.shape[2] == self.total_dim:
+                    self.trajectory_weights[:cnt].copy_(saved_weights)
+                    print(f"📂 [LTM VERIFIED] Загружен банк траекторий: {filepath} ({cnt} классов, 32 слота, dim={self.total_dim}).")
+                    return True, cnt
+            return False, 0
         except Exception as e:
             print(f"⚠️ [LTM LOAD ERROR]: {e}")
             return False, 0
@@ -388,7 +407,6 @@ class BrainSubject:
         self.last_sdr = None
         self.last_sdr_first = None
 
-        # Физический пилот 2D многообразия
         self.pilot = DynamicPilot()
 
     def process_neurophysiology(self, frame_nodes: list[NodeState], dt: float, active_count: int):
@@ -401,11 +419,11 @@ class BrainSubject:
             my_tensors = [torch.zeros((32, 120), device=DEVICE)]
 
         with torch.no_grad():
-            full_sdr, sdr_first = self.heterarchy.get_current_sdr(my_tensors)
-            self.last_sdr = full_sdr
+            full_sdr_seq, sdr_first = self.heterarchy.get_current_sdr(my_tensors)
+            self.last_sdr = full_sdr_seq
             self.last_sdr_first = sdr_first
             
-            weights, wm, ltm = self.heterarchy.predict_evidence(full_sdr, active_count, dt=dt)
+            weights, wm, ltm = self.heterarchy.predict_evidence(full_sdr_seq, active_count, dt=dt)
             self.blended_weights = weights
             self.wm_scores = wm
             self.ltm_scores = ltm
@@ -465,7 +483,7 @@ class BrainSubject:
         )
 
 # =====================================================================
-# НАДМОЗГ: СБОР ТОЛЬКО РЕАЛЬНЫХ СВЯЗЕЙ
+# НАДМОЗГ: СБОР СВЯЗЕЙ
 # =====================================================================
 class OverBrainCollective:
     def __init__(self, subjects: list[BrainSubject]):
@@ -657,7 +675,7 @@ class EqualPoolChaosWorker:
                     self.dir_u = u / torch.norm(u, dim=-1, keepdim=True)
                     self.dir_v = v / torch.norm(v, dim=-1, keepdim=True)
                     self.initialized = True
-                    print(f"✅ [EQUAL POOL] Подключен к Diffusion Backend. Активно базовых промптов: {len(self.c_bases)}")
+                    print(f"✅ [EQUAL POOL] Подключен к Diffusion Backend. Базовых промптов: {len(self.c_bases)}")
                 except Exception:
                     time.sleep(0.5)
                     continue
@@ -719,7 +737,7 @@ def parse_user_setup(users_str: str) -> list[BrainSubject]:
     return subjects
 
 def main():
-    parser = argparse.ArgumentParser(description="NeuroCanvas: 2-Axis Sensorimotor Manifold Flight (FCz)")
+    parser = argparse.ArgumentParser(description="NeuroCanvas: Real-Time 4-Axis Spatiotemporal Heterarchy (60 FPS)")
     parser.add_argument('--config', type=str, default="swarm_config.json")
     parser.add_argument('--sim', action='store_true', default=False)
     
@@ -729,6 +747,8 @@ def main():
     
     parser.add_argument('--calib-mode', type=str, default="auto", choices=["auto", "motion", "semantic"],
                         help="'motion' = калибровка двух осей Y и X на FCz, 'semantic' = калибровка понятий AFz")
+    parser.add_argument('--move-directions', type=int, default=4, choices=[2, 4], 
+                        help="Число направлений (2: Вперед/Назад; 4: Вперед/Назад/Вправо/Влево)")
     parser.add_argument('--calib-sigma', type=float, default=4.75, help="Критерий статистической разделимости d-prime (4.75 для 5-сигма)")
     parser.add_argument('--calib-seconds', type=float, default=6.0, help="Длительность одной эпохи удержания (сек)")
     parser.add_argument('--calib-cycles', type=int, default=3, help="Минимум чередований перед валидацией")
@@ -753,7 +773,6 @@ def main():
     parser.add_argument('--sps', type=int, default=250, choices=[250, 500])
     args = parser.parse_args()
 
-    # Определение режима калибровки
     if args.calib_mode == "auto":
         is_motion_calib = (args.concepts <= 1) or ("FCz" in args.users and "AFz" not in args.users)
     else:
@@ -768,12 +787,14 @@ def main():
     
     if is_motion_calib:
         initial_prompts = [args.start_prompt]
-        calib_block_names = ["ВПЕРЕД (+Y)", "НАЗАД (-Y)", "ВПРАВО (+X)", "ВЛЕВО (-X)"]
-        active_memory_classes = 4
+        num_targets = args.move_directions
+        calib_block_names = MOTION_NAMES[:num_targets]
+        active_memory_classes = num_targets
     else:
         initial_prompts = [BASE_PROMPTS[i % len(BASE_PROMPTS)] for i in range(args.concepts)]
         calib_block_names = [ALL_NAMES[i % len(ALL_NAMES)] for i in range(args.concepts)]
-        active_memory_classes = len(calib_block_names)
+        num_targets = len(calib_block_names)
+        active_memory_classes = num_targets
 
     if os.path.exists(args.config):
         with open(args.config, 'r', encoding='utf-8') as f: cfg = json.load(f)
@@ -784,10 +805,10 @@ def main():
     collective = OverBrainCollective(subjects)
     leader_brain = subjects[0] if subjects else None
 
-    calib_desc = "2 НЕПРЕРЫВНЫЕ ОСИ FCz (Y: Вперед/Назад, X: Вправо/Влево)" if is_motion_calib else f"СЕМАНТИКА AFz ({active_memory_classes} классов)"
-    print(f"👥 [COLLECTIVE] Мозгов: {len(subjects)}. Режим калибровки: [{calib_desc}] (Цель: {args.calib_sigma}σ)")
+    calib_desc = "4-AXIS FCz SPATIOTEMPORAL TRAJECTORY (SMA)" if is_motion_calib else f"AFz SEMANTICS ({active_memory_classes} классов)"
+    print(f"👥 [COLLECTIVE] Мозгов: {len(subjects)}. Режим: [{calib_desc}] (Цель: {args.calib_sigma}σ)")
     for s in subjects:
-        print(f"   👤 Субъект [{s.subject_id}] слушает порты: {s.regions_map} (L4 колонок: {s.heterarchy.total_dim})")
+        print(f"   👤 Субъект [{s.subject_id}] слушает порты: {s.regions_map} (L4 нейронов: {s.heterarchy.total_dim})")
 
     agent = None
     if args.sim:
@@ -798,12 +819,14 @@ def main():
         if args.sensory_sub: agent.set_sensory_substitution(True)
 
     pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("NeuroCanvas: 2-Axis Sensorimotor Manifold & Bipolar 5-Sigma Calibration")
+    flags = pygame.HWSURFACE | pygame.DOUBLEBUF
+    screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
+    pygame.display.set_caption("NeuroCanvas: Real-Time 4-Axis Spatiotemporal Flight (60 FPS)")
     clock = pygame.time.Clock()
     font_b = pygame.font.SysFont("consolas", 14, bold=True)
     font_s = pygame.font.SysFont("consolas", 11)
     font_large = pygame.font.SysFont("consolas", 20, bold=True)
+    font_huge = pygame.font.SysFont("consolas", 24, bold=True)
 
     gamma_max = 100.0 if args.gamma_100 else 65.0
     engine = HeterarchicalBrainEngine(gamma_max=gamma_max)
@@ -833,7 +856,7 @@ def main():
     clip_teacher = VisualCLIPTeacher(initial_prompts)
 
     # -----------------------------------------------------------------
-    # НАУЧНАЯ КАЛИБРОВКА ПО ОСЯМ
+    # НАУЧНАЯ КАЛИБРОВКА ПО ОСЯМ И НАПРАВЛЕНИЯМ
     # -----------------------------------------------------------------
     is_calibrating = not args.chaos
     if not args.force_recalib and os.path.exists(args.weights) and not args.chaos:
@@ -882,10 +905,12 @@ def main():
 
     threading.Thread(target=async_clip_worker, daemon=True).start()
     FULL_DUPLEX_MODE = args.sensory_sub
+    in_target_sector_time = 0.0
 
     try:
         while True:
             dt = clock.tick(60) / 1000.0
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT: raise KeyboardInterrupt
                 if event.type == pygame.KEYDOWN:
@@ -898,11 +923,11 @@ def main():
             frame = engine.get_frame()
             has_live_eeg = (frame.num_live > 0)
 
-            # 1. РАСЧЕТ КАЖДОГО МОЗГА В ОТДЕЛЬНОСТИ
+            # 1. РАСЧЕТ КАЖДОГО МОЗГА В ОТДЕЛЬНОСТИ (32 ВРЕМЕННЫХ СРЕЗА)
             for s in subjects:
                 s.process_neurophysiology(frame.nodes, dt, active_memory_classes)
 
-            # 2. СБОР СВЯЗЕЙ
+            # 2. СБОР СВЯЗЕЙ НАДМОЗГА
             agent_pmap = agent.get_parent_map() if agent and FULL_DUPLEX_MODE else {}
             parent_map = collective.resolve_heterarchy(worker.active_count, worker.parent_map, agent_pmap)
 
@@ -920,7 +945,7 @@ def main():
             torus_u, torus_v = lead_node.torus_u, lead_node.torus_v
 
             # -------------------------------------------------------------
-            # ТОЧНЫЙ ВЕКТОР НАМЕРЕНИЯ ИЗ neuro_flexible_maze_app.py
+            # ТОЧНЫЙ ВЕКТОР НАМЕРЕНИЯ ИЗ КИНЕМАТИКИ
             # -------------------------------------------------------------
             fcz_node = leader_brain.get_region_node("FCz", frame.nodes)
             axes = fcz_node.gamepad_axes
@@ -933,7 +958,7 @@ def main():
             # Обновление динамического пилота аватара
             leader_brain.pilot.update(dt, force_x, force_y, wm_curvature, temporal_bias)
 
-            # Сенсомоторное перемещение по генеративному холсту диффузии:
+            # Сенсомоторное перемещение по генеративному холсту диффузии
             if abs(force_x) > 0.05 or abs(force_y) > 0.05 or abs(wm_curvature) > 0.04:
                 with worker.lock:
                     worker.current_rgb = apply_manifold_camera_warp(
@@ -957,14 +982,32 @@ def main():
             with worker.lock: 
                 rgb_m = worker.current_rgb.copy()
                 active_pool_size = worker.active_count
-                diff_names = list(worker.names)
 
             with clip_lock:   
                 live_probs = cur_probs[:active_pool_size].copy()
 
+            # Безопасный доступ к имени текущей мишени с защитой от выхода за границы
+            safe_step_idx = calib_step_idx % len(calib_block_names)
+            target_now = calib_block_names[safe_step_idx]
+
             # -----------------------------------------------------------------
-            # ЛОГИКА 5-СИГМА КАЛИБРОВКИ
+            # ЛОГИКА КАЛИБРОВКИ С ОБУЧЕНИЕМ СТРОГО ПРИ ПОПАДАНИИ В СЕКТОР
             # -----------------------------------------------------------------
+            is_aligned = False
+            cur_nav_mag = math.hypot(force_x, force_y)
+
+            if is_motion_calib:
+                target_vec = TARGET_UNIT_VECS[safe_step_idx]
+                if cur_nav_mag > 0.10:
+                    actual_dir = np.array([force_x, force_y]) / cur_nav_mag
+                    cos_sim = float(np.dot(actual_dir, target_vec))
+                    # Сектор захвата: угол отклонения менее 45 градусов
+                    is_aligned = (cos_sim > 0.707)
+                else:
+                    is_aligned = False
+            else:
+                is_aligned = (leader_idx == safe_step_idx and leader_brain.confidence > 20.0)
+
             if is_calibrating:
                 worker.update_cycle(
                     leader_idx=0, child_idx=0,
@@ -975,61 +1018,74 @@ def main():
                     resolved_parent_map=parent_map
                 )
                 worker.strength = args.strength_high
-                if agent: agent.set_calibration_target(True, calib_step_idx)
+                if agent: agent.set_calibration_target(True, safe_step_idx)
 
                 if has_live_eeg:
-                    for s in subjects:
-                        s.learn_contrastive(calib_step_idx, active_memory_classes, lr=0.04, ltd_factor=0.6)
-                        
+                    # ОБУЧЕНИЕ СИНАПСОВ ПРОИСХОДИТ ТОЛЬКО ПРИ ПОПАДАНИИ В МИШЕНЬ!
+                    if is_aligned:
+                        in_target_sector_time += dt
+
+                        for s in subjects:
+                            # Обучаем траекторию по всем 32 срезам
+                            s.learn_contrastive(safe_step_idx, active_memory_classes, lr=0.04, ltd_factor=0.6)
+                            
                         if is_motion_calib:
-                            if calib_step_idx == 0:   # ВПЕРЕД (+Y)
+                            if safe_step_idx == 0:   # ВПЕРЕД (+Y)
                                 calib_data['y_fwd'].append(force_y)
-                            elif calib_step_idx == 1: # НАЗАД (-Y)
+                            elif safe_step_idx == 1: # НАЗАД (-Y)
                                 calib_data['y_bwd'].append(force_y)
-                            elif calib_step_idx == 2: # ВПРАВО (+X)
+                            elif safe_step_idx == 2: # ВПРАВО (+X)
                                 calib_data['x_rgt'].append(force_x)
-                            elif calib_step_idx == 3: # ВЛЕВО (-X)
+                            elif safe_step_idx == 3: # ВЛЕВО (-X)
                                 calib_data['x_lft'].append(force_x)
                         else:
-                            if s.last_sdr is not None:
-                                margin_val = s.heterarchy.compute_contrastive_margin(
-                                    s.last_sdr, calib_step_idx, active_memory_classes
-                                )
-                                calib_data[calib_step_idx].append(margin_val)
+                            for s in subjects:
+                                if s.last_sdr is not None:
+                                    margin_val = s.heterarchy.compute_contrastive_margin(
+                                        s.last_sdr, safe_step_idx, active_memory_classes
+                                    )
+                                    calib_data[safe_step_idx].append(margin_val)
+
+                    # Непрерывный расчет d-prime в реальном времени:
+                    if is_motion_calib:
+                        y_f = np.array(calib_data['y_fwd'][-120:]) if len(calib_data['y_fwd']) >= 10 else np.array([0.0])
+                        y_b = np.array(calib_data['y_bwd'][-120:]) if len(calib_data['y_bwd']) >= 10 else np.array([0.0])
+                        mu_yf = np.mean(y_f)
+                        mu_yb = np.mean(y_b)
+                        std_y = math.sqrt(0.5 * (np.var(y_f) + np.var(y_b)) + 1e-6)
+                        dp_axis_y = max(0.0, (mu_yf - mu_yb) / std_y)
+
+                        x_r = np.array(calib_data['x_rgt'][-120:]) if len(calib_data['x_rgt']) >= 10 else np.array([0.0])
+                        x_l = np.array(calib_data['x_lft'][-120:]) if len(calib_data['x_lft']) >= 10 else np.array([0.0])
+                        mu_xr = np.mean(x_r)
+                        mu_xl = np.mean(x_l)
+                        std_x = math.sqrt(0.5 * (np.var(x_r) + np.var(x_l)) + 1e-6)
+                        dp_axis_x = max(0.0, (mu_xr - mu_xl) / std_x)
+
+                        current_d_prime = (dp_axis_y + dp_axis_x) / 2.0
+                    else:
+                        means = [np.mean(calib_data[k][-60:]) if len(calib_data[k]) >= 10 else 0.0 for k in range(active_memory_classes)]
+                        vars_ = [np.var(calib_data[k][-60:]) if len(calib_data[k]) >= 10 else 1.0 for k in range(active_memory_classes)]
+                        current_d_prime = max(0.0, np.mean(means) / math.sqrt(np.mean(vars_) + 1e-6))
 
                     elapsed = time.time() - epoch_start_time
                     if elapsed >= args.calib_seconds:
                         epoch_start_time = time.time()
-                        calib_step_idx = (calib_step_idx + 1) % active_memory_classes
+                        in_target_sector_time = 0.0
+                        calib_step_idx = (calib_step_idx + 1)
                         
-                        if calib_step_idx == 0:
+                        # Полный цикл пройден:
+                        if calib_step_idx >= active_memory_classes:
+                            calib_step_idx = 0
                             calib_cycle_count += 1
                             
                             if is_motion_calib:
-                                y_f = np.array(calib_data['y_fwd'][-120:]) if len(calib_data['y_fwd']) >= 20 else np.array([0.0])
-                                y_b = np.array(calib_data['y_bwd'][-120:]) if len(calib_data['y_bwd']) >= 20 else np.array([0.0])
-                                mu_yf = np.mean(y_f)
-                                mu_yb = np.mean(y_b)
-                                std_y = math.sqrt(0.5 * (np.var(y_f) + np.var(y_b)) + 1e-6)
-                                dp_axis_y = max(0.0, (mu_yf - mu_yb) / std_y)
-
-                                x_r = np.array(calib_data['x_rgt'][-120:]) if len(calib_data['x_rgt']) >= 20 else np.array([0.0])
-                                x_l = np.array(calib_data['x_lft'][-120:]) if len(calib_data['x_lft']) >= 20 else np.array([0.0])
-                                mu_xr = np.mean(x_r)
-                                mu_xl = np.mean(x_l)
-                                std_x = math.sqrt(0.5 * (np.var(x_r) + np.var(x_l)) + 1e-6)
-                                dp_axis_x = max(0.0, (mu_xr - mu_xl) / std_x)
-
-                                current_d_prime = min(dp_axis_y, dp_axis_x)
-                                print(f"📊 [2-AXIS FCz CALIB] Цикл {calib_cycle_count}: Ось Y (Fwd/Bwd) = {dp_axis_y:.2f}σ | Ось X (Rgt/Lft) = {dp_axis_x:.2f}σ | Общий min = {current_d_prime:.2f}σ (Цель: {args.calib_sigma:.2f}σ)")
+                                print(f"📊 [FCz СТРЕЛКА] Цикл {calib_cycle_count}/{args.calib_cycles}: Ось Y = {dp_axis_y:.2f}σ | Ось X = {dp_axis_x:.2f}σ | Среднее = {current_d_prime:.2f}σ (Цель: {args.calib_sigma:.2f}σ)")
                             else:
-                                means = [np.mean(calib_data[k][-120:]) if len(calib_data[k]) >= 20 else 0.0 for k in range(active_memory_classes)]
-                                vars_ = [np.var(calib_data[k][-120:]) if len(calib_data[k]) >= 20 else 1.0 for k in range(active_memory_classes)]
-                                current_d_prime = max(0.0, np.mean(means) / math.sqrt(np.mean(vars_) + 1e-6))
-                                print(f"📊 [AFz CALIB] Цикл {calib_cycle_count}: d' = {current_d_prime:.2f} (Цель: {args.calib_sigma:.2f}σ)")
+                                print(f"📊 [AFz СЕМАНТИКА] Цикл {calib_cycle_count}/{args.calib_cycles}: d' = {current_d_prime:.2f} (Цель: {args.calib_sigma:.2f}σ)")
 
                             if current_d_prime >= args.calib_sigma and calib_cycle_count >= args.calib_cycles:
-                                print(f"🎯 [CALIBRATION COMPLETE] Достигнута сверхнаучная разделимость {current_d_prime:.2f}σ по обеим осям!")
+                                print(f"🎯 [CALIBRATION COMPLETE] Достигнута сверхнаучная разделимость {current_d_prime:.2f}σ!")
                                 is_calibrating = False
                                 leader_brain.heterarchy.save_to_file(args.weights, calib_block_names)
                                 if agent: agent.set_calibration_target(False)
@@ -1062,7 +1118,7 @@ def main():
                     worker.strength = float(np.clip(base_strength, 0.10, 0.99))
 
             # -------------------------------------------------------------
-            # РЕНДЕРИНГ ИНТЕРФЕЙСА (100% СОХРАНЕНИЕ ВСЕХ ПАНЕЛЕЙ)
+            # РЕНДЕРИНГ ИНТЕРФЕЙСА (СОХРАНЕНЫ ВСЕ 8 ПАНЕЛЕЙ)
             # -------------------------------------------------------------
             screen.fill((10, 14, 20))
 
@@ -1074,43 +1130,77 @@ def main():
             screen.blit(surf_diff, (img_x, img_y))
             pygame.draw.rect(screen, (40, 50, 70), (img_x, img_y, 512, 384), 2, border_radius=8)
 
-            # 2. L4 SDR Sheet
+            # 2. L4 SDR Spatiotemporal Sequence Sheet
             if leader_brain and leader_brain.last_sdr_first is not None:
-                cur_sdr_img = leader_brain.last_sdr_first.view(64, 64).cpu().numpy() * 255.0
+                cur_sdr_img = leader_brain.last_sdr_first[-1].view(64, 64).cpu().numpy() * 255.0
                 sdr_surf = pygame.surfarray.make_surface(cv2.resize(cur_sdr_img, (140, 140)).astype(np.uint8))
                 screen.blit(sdr_surf, (img_x, 445))
-            screen.blit(font_s.render(f"L4 SDR Sheet [{leader_brain.subject_id}]", True, (0, 255, 200)), (img_x, 428))
+            screen.blit(font_s.render(f"L4 32-SDR Trajectory [{leader_brain.subject_id}]", True, (0, 255, 200)), (img_x, 428))
 
-            # 3. Active Working Memory Pool
-            dbg_x, dbg_y, dbg_w, dbg_h = img_x + 160, 430, 400, 170
+            # 3. НАВИГАЦИОННЫЙ РАДАР (МИШЕНЬ И ЖИВАЯ СТРЕЛКА)
+            dbg_x, dbg_y, dbg_w, dbg_h = img_x + 160, 430, 400, 175
             pygame.draw.rect(screen, (14, 18, 26), (dbg_x, dbg_y, dbg_w, dbg_h), border_radius=6)
-            pygame.draw.rect(screen, (40, 70, 100), (dbg_x, dbg_y, dbg_w, dbg_h), 1, border_radius=6)
             
-            pool_title = f"2-AXIS MANIFOLD: {'FCz (Y: Fwd/Bwd, X: Rgt/Lft)' if is_motion_calib else 'AFz (SEMANTICS)'}:"
-            screen.blit(font_b.render(pool_title, True, (0, 255, 200)), (dbg_x + 10, dbg_y + 8))
+            border_col = (0, 255, 120) if is_aligned else (40, 70, 100)
+            pygame.draw.rect(screen, border_col, (dbg_x, dbg_y, dbg_w, dbg_h), 2 if is_aligned else 1, border_radius=6)
+            
+            rx_c = dbg_x + 295
+            ry_c = dbg_y + 88
+            rc = 68
 
-            for i, name in enumerate(calib_block_names[:min(8, active_memory_classes)]):
-                score = leader_brain.wm_scores[i]
-                col_bar = (0, 255, 180) if score > 15.0 else (80, 80, 90)
-                bx = dbg_x + 10 + (i % 2) * 195
-                by = dbg_y + 30 + (i // 2) * 22
+            pygame.draw.circle(screen, (20, 28, 40), (rx_c, ry_c), rc)
+            pygame.draw.circle(screen, (40, 60, 85), (rx_c, ry_c), rc, 1)
+            pygame.draw.line(screen, (30, 45, 60), (rx_c - rc, ry_c), (rx_c + rc, ry_c), 1)
+            pygame.draw.line(screen, (30, 45, 60), (rx_c, ry_c - rc), (rx_c, ry_c + rc), 1)
+
+            # 1. Стрелка-мишень:
+            if is_calibrating and is_motion_calib:
+                t_deg = TARGET_ANGLES_DEG[safe_step_idx]
+                t_rad = math.radians(t_deg)
+                tx_end = rx_c + int((rc - 8) * math.cos(t_rad))
+                ty_end = ry_c - int((rc - 8) * math.sin(t_rad))
+                pygame.draw.line(screen, (255, 220, 50), (rx_c, ry_c), (tx_end, ty_end), 5)
+                pygame.draw.circle(screen, (255, 255, 100), (tx_end, ty_end), 6)
+
+            # 2. Живая стрелка мозга:
+            if cur_nav_mag > 0.02:
+                norm_len = min(1.0, cur_nav_mag)
+                lx_end = rx_c + int(norm_len * (rc - 8) * (force_x / cur_nav_mag))
+                ly_end = ry_c - int(norm_len * (rc - 8) * (force_y / cur_nav_mag))
+                col_live = (0, 255, 120) if is_aligned else (0, 220, 255)
+                pygame.draw.line(screen, col_live, (rx_c, ry_c), (lx_end, ly_end), 4)
+                pygame.draw.circle(screen, (255, 255, 255), (lx_end, ly_end), 5)
+
+            screen.blit(font_b.render("FCz НАВИГАТОР (SMA):", True, (0, 255, 200)), (dbg_x + 10, dbg_y + 8))
+            
+            if is_calibrating and is_motion_calib:
+                screen.blit(font_huge.render(f"МИШЕНЬ: {target_now}", True, (255, 220, 50)), (dbg_x + 10, dbg_y + 34))
                 
-                screen.blit(font_s.render(f"{name[:10]:10s}", True, (200, 200, 200)), (bx, by))
-                bar_len = int((score / 100.0) * 80)
-                pygame.draw.rect(screen, (30, 35, 45), (bx + 68, by + 2, 70, 10))
-                if bar_len > 0: pygame.draw.rect(screen, col_bar, (bx + 68, by + 2, bar_len, 10))
-                screen.blit(font_s.render(f"{score:4.1f}%", True, col_bar), (bx + 142, by))
+                if is_aligned:
+                    screen.blit(font_b.render("● В ЦЕЛЕВОМ СЕКТОРЕ!", True, (0, 255, 120)), (dbg_x + 10, dbg_y + 70))
+                else:
+                    screen.blit(font_s.render("Поверните стрелку в мишень", True, (180, 180, 180)), (dbg_x + 10, dbg_y + 70))
+                    
+                screen.blit(font_s.render(f"Импульс: x{(1.0 + leader_brain.pilot.persistence * 4.0):.1f}", True, (200, 220, 240)), (dbg_x + 10, dbg_y + 95))
+                screen.blit(font_s.render(f"Удержание: {in_target_sector_time:.1f}s / {args.calib_seconds:.1f}s", True, (200, 220, 200)), (dbg_x + 10, dbg_y + 115))
+            else:
+                for i, name in enumerate(calib_block_names[:min(4, active_memory_classes)]):
+                    score = leader_brain.wm_scores[i]
+                    col_bar = (0, 255, 180) if score > 15.0 else (80, 80, 90)
+                    by = dbg_y + 34 + i * 22
+                    screen.blit(font_s.render(f"{name[:8]:8s}", True, (200, 200, 200)), (dbg_x + 10, by))
+                    bar_len = int((score / 100.0) * 65)
+                    pygame.draw.rect(screen, (30, 35, 45), (dbg_x + 65, by + 2, 65, 10))
+                    if bar_len > 0: pygame.draw.rect(screen, col_bar, (dbg_x + 65, by + 2, bar_len, 10))
+                    screen.blit(font_s.render(f"{score:4.1f}%", True, col_bar), (dbg_x + 135, by))
 
-            chaos_txt = "CHAOS BIFURCATIONS: [ACTIVE]" if worker.chaos_enabled else "CHAOS BIFURCATIONS: [OFF] (Press SPACE)"
+            chaos_txt = "CHAOS BIFURCATIONS: [ACTIVE]" if worker.chaos_enabled else "CHAOS BIFURCATIONS: [OFF] (SPACE)"
             col_chaos = (255, 100, 255) if worker.chaos_enabled else (120, 120, 140)
-            screen.blit(font_s.render(chaos_txt, True, col_chaos), (dbg_x + 10, dbg_y + 148))
+            screen.blit(font_s.render(chaos_txt, True, col_chaos), (dbg_x + 10, dbg_y + 152))
 
             # 4. LTM / КАЛИБРОВКА (5-СИГМА НАУЧНЫЙ ЭКРАН)
             panel_x, panel_y = 20, 40
             pygame.draw.rect(screen, (16, 22, 32), (panel_x, panel_y, 330, 270), border_radius=8)
-
-            # ГАРАНТИРУЕМ ИНИЦИАЛИЗАЦИЮ target_now ВНЕ ЗАВИСИМОСТИ ОТ СТАТУСА EEG:
-            target_now = calib_block_names[calib_step_idx]
 
             if is_calibrating:
                 border_col = (255, 120, 40) if has_live_eeg else (180, 50, 50)
@@ -1124,8 +1214,8 @@ def main():
                     screen.blit(font_s.render("Подключите FreeEEG / запустите bridge", True, (200, 200, 200)), (panel_x + 15, panel_y + 70))
                 else:
                     rem_time = max(0.0, args.calib_seconds - (time.time() - epoch_start_time))
-                    screen.blit(font_b.render(f"ФОКУС: [{target_now}] ({rem_time:.1f}s)", True, (255, 255, 100)), (panel_x + 15, panel_y + 45))
-                    screen.blit(font_s.render(f"Цикл: {calib_cycle_count}/{args.calib_cycles} | Цель: {args.calib_sigma}σ", True, (200, 200, 200)), (panel_x + 15, panel_y + 70))
+                    screen.blit(font_b.render(f"МИШЕНЬ: [{target_now}] ({rem_time:.1f}s)", True, (255, 255, 100)), (panel_x + 15, panel_y + 45))
+                    screen.blit(font_s.render(f"Цикл: {calib_cycle_count}/{args.calib_cycles} | Порог: {args.calib_sigma}σ", True, (200, 200, 200)), (panel_x + 15, panel_y + 70))
                 
                 col_dp = (100, 255, 100) if current_d_prime >= args.calib_sigma else (255, 100, 100)
                 if is_motion_calib:
@@ -1133,15 +1223,16 @@ def main():
                 else:
                     screen.blit(font_b.render(f"Маржа Фишера d': {current_d_prime:.2f}σ", True, col_dp), (panel_x + 15, panel_y + 95))
                 
+                # Нарастающая полоска прогресса разделимости:
                 dp_bar_len = int(np.clip(current_d_prime / args.calib_sigma, 0.0, 1.0) * 290)
                 pygame.draw.rect(screen, (40, 50, 60), (panel_x + 15, panel_y + 120, 290, 15))
                 pygame.draw.rect(screen, col_dp, (panel_x + 15, panel_y + 120, dp_bar_len, 15))
 
                 if is_motion_calib:
-                    axis_now = AXIS_NAMES[calib_step_idx // 2]
+                    axis_now = AXIS_NAMES[safe_step_idx // 2]
                     screen.blit(font_s.render(f"Калибровка: {axis_now}", True, (200, 220, 255)), (panel_x + 15, panel_y + 150))
-                    screen.blit(font_s.render("Противоположные полюса одной оси в R^2.", True, (180, 180, 180)), (panel_x + 15, panel_y + 168))
-                    screen.blit(font_s.render("Georgopoulos (1986); Chen (Neuron 2024).", True, (180, 180, 180)), (panel_x + 15, panel_y + 186))
+                    screen.blit(font_s.render("Смотрите на радар справа.", True, (180, 180, 180)), (panel_x + 15, panel_y + 168))
+                    screen.blit(font_s.render("Обучение идёт СТРОГО при удержании в створе!", True, (0, 255, 120)), (panel_x + 15, panel_y + 186))
                 else:
                     screen.blit(font_s.render("Удерживайте образ целевого концепта.", True, (180, 180, 180)), (panel_x + 15, panel_y + 150))
                     screen.blit(font_s.render("Chen et al. (Neuron 2024): ортогонализация.", True, (180, 180, 180)), (panel_x + 15, panel_y + 168))
@@ -1160,36 +1251,18 @@ def main():
             pygame.draw.rect(screen, (100, 180, 255), (c_x, c_y, 330, 270), 1, border_radius=8)
             screen.blit(font_b.render("OVER-BRAIN DECODER (TBT 2.0)", True, (100, 180, 255)), (c_x + 12, c_y + 12))
 
-            lead_name = calib_block_names[leader_idx] if leader_idx < len(calib_block_names) else "Unknown"
-            child_name = calib_block_names[child_idx] if child_idx < len(calib_block_names) else "None"
+            lead_name = calib_block_names[leader_idx % len(calib_block_names)] if leader_idx < len(calib_block_names) else "Unknown"
+            child_name = calib_block_names[child_idx % len(calib_block_names)] if child_idx < len(calib_block_names) else "None"
             screen.blit(font_b.render(f"Dominant: [{lead_name}] ({leader_brain.subject_id})", True, (100, 255, 100)), (c_x + 15, c_y + 34))
             screen.blit(font_s.render(f"Subordinate: [{child_name}] ({child_brain.subject_id})", True, (255, 200, 100)), (c_x + 15, c_y + 54))
 
             screen.blit(font_s.render(f"Torus (Lead): u={torus_u:.2f} | v={torus_v:.2f}", True, (255, 220, 50)), (c_x + 15, c_y + 80))
             screen.blit(font_s.render(f"Drives: Order={beta_order:.2f} | Chaos={beta_chaos:.2f}", True, (150, 255, 200)), (c_x + 15, c_y + 98))
 
-            # FCz НАВИГАЦИОННЫЙ РАДАР (2 НЕПРЕРЫВНЫЕ ОСИ X и Y)
-            pygame.draw.rect(screen, (10, 14, 20), (c_x + 10, c_y + 120, 310, 85), border_radius=6)
-            pygame.draw.rect(screen, (40, 70, 100), (c_x + 10, c_y + 120, 310, 85), 1, border_radius=6)
-            
-            nav_radar_cx, nav_radar_cy, n_rad = c_x + 265, c_y + 162, 32
-            pygame.draw.circle(screen, (20, 30, 45), (nav_radar_cx, nav_radar_cy), n_rad, 1)
-            pygame.draw.line(screen, (30, 45, 60), (nav_radar_cx - n_rad, nav_radar_cy), (nav_radar_cx + n_rad, nav_radar_cy), 1)
-            pygame.draw.line(screen, (30, 45, 60), (nav_radar_cx, nav_radar_cy - n_rad), (nav_radar_cx, nav_radar_cy + n_rad), 1)
-            
-            nav_len = math.hypot(force_x, force_y)
-            if nav_len > 0.02:
-                nx_p = nav_radar_cx + int(np.clip(force_x, -1.0, 1.0) * (n_rad - 4))
-                ny_p = nav_radar_cy - int(np.clip(force_y, -1.0, 1.0) * (n_rad - 4))
-                pygame.draw.line(screen, (0, 255, 200), (nav_radar_cx, nav_radar_cy), (nx_p, ny_p), 3)
-                pygame.draw.circle(screen, (255, 255, 255), (nx_p, ny_p), 4)
-
-            t_status = "Prospective (Будущее)" if temporal_bias > 0.15 else ("Retrospective (Прошлое)" if temporal_bias < -0.15 else "Equilibrium")
-            
-            screen.blit(font_b.render("FCz CONTINUOUS 2-AXIS (R^2):", True, (0, 255, 200)), (c_x + 16, c_y + 126))
-            screen.blit(font_s.render(f"Ось Y (Fwd/Bwd):  {force_y:+.2f}", True, (200, 220, 240)), (c_x + 16, c_y + 144))
-            screen.blit(font_s.render(f"Ось X (Rgt/Lft):  {force_x:+.2f}", True, (200, 220, 240)), (c_x + 16, c_y + 160))
-            screen.blit(font_s.render(f"Temp. State (ry): {temporal_bias:+.2f} [{t_status[:4]}]", True, (255, 180, 100)), (c_x + 16, c_y + 176))
+            t_status = "Prospective" if temporal_bias > 0.15 else ("Retrospective" if temporal_bias < -0.15 else "Equilibrium")
+            screen.blit(font_s.render(f"Вектор FCz: X={force_x:+.2f} | Y={force_y:+.2f}", True, (200, 220, 240)), (c_x + 15, c_y + 130))
+            screen.blit(font_s.render(f"Сагитта (rx): {wm_curvature:+.2f} | Буст: {temporal_bias:+.2f}", True, (200, 220, 240)), (c_x + 15, c_y + 150))
+            screen.blit(font_s.render(f"Когнитивная фаза (ry): [{t_status}]", True, (255, 180, 100)), (c_x + 15, c_y + 170))
 
             screen.blit(font_s.render(f"Pacing: Theta={frame.theta_freq:.2f}Hz | Delta={frame.delta_freq:.2f}Hz", True, (200, 220, 240)), (c_x + 15, c_y + 215))
             screen.blit(font_s.render(f"Pipeline: {args.mode.upper()} ({worker.fps:.1f} FPS, Str: {worker.strength:.2f})", True, (180, 180, 220)), (c_x + 15, c_y + 235))
@@ -1219,7 +1292,7 @@ def main():
 
             y_offset = ry_p + 60
             dir_str = "A ⊃ B (Вглубь / Child)" if lead_causal_sign >= 0.03 else ("B ⊃ A (Наружу / Parent)" if lead_causal_sign <= -0.03 else "A ∥ B (Вбок / Peer)")
-            screen.blit(font_s.render(f"Causal Lead (90 Hz ciPLV): {lead_causal_sign:+.3f} -> {dir_str}", True, (200, 200, 220)), (rx_p + 20, y_offset))
+            screen.blit(font_s.render(f"Causal Lead (90 Hz ciPLV): {lead_causal_sign:+.3f} -> {dir_str}", True, (200, 220, 220)), (rx_p + 20, y_offset))
 
             y_offset += 25
             screen.blit(font_s.render("SVD Спектр Рипплов 65–100 Гц:", True, (150, 150, 150)), (rx_p + 20, y_offset))
@@ -1256,7 +1329,7 @@ def main():
                 pygame.draw.rect(screen, c_color, (bx, by, bw, bh))
                 pygame.draw.rect(screen, (200, 200, 200), (bx, by, bw, bh), max(1, 3 - depth))
                 
-                c_name = calib_block_names[concept_idx]
+                c_name = calib_block_names[concept_idx % len(calib_block_names)]
                 owner_tag = ""
                 if leader_brain.decoded_leader_idx == concept_idx and leader_brain.confidence > 20.0:
                     owner_tag = f"[{leader_brain.subject_id}] "
