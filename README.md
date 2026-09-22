@@ -13,281 +13,297 @@
 ---
 
 ## 📑 Table of Contents
-1. [Paradigm Shift: Autonomous Multi-Brain Stigmergy vs. Mechanical BCIs](#1-paradigm-shift-autonomous-multi-brain-stigmergy-vs-mechanical-bcis)
-2. [Biophysical & Mathematical Foundation](#2-biophysical--mathematical-foundation)
-   - 2.1 [The Thousand Brains Heterarchy (TBT 2.0): Eliminating Hardcoded Trees](#21-the-thousand-brains-heterarchy-tbt-20-eliminating-hardcoded-trees)
-   - 2.2 [Anti-Metagaming Principle: Zero Cross-Brain Signal Averaging](#22-anti-metagaming-principle-zero-cross-brain-signal-averaging)
-   - 2.3 [Contrastive Plasticity (LTP + Anti-Hebbian LTD) & 5-Sigma Statistical Separation](#23-contrastive-plasticity-ltp--anti-hebbian-ltd--5-sigma-statistical-separation)
-   - 2.4 [Emergent Heterarchy vs. Fabricated Trees: Default Peer Coexistence ($A \parallel B$)](#24-emergent-heterarchy-vs-fabricated-trees-default-peer-coexistence-a-parallel-b)
-   - 2.5 [Pure Spatial Phase Synchrony: Eliminating Amplitude Artifacts in Surface Laplacian](#25-pure-spatial-phase-synchrony-eliminating-amplitude-artifacts-in-surface-laplacian)
-   - 2.6 [Working Memory 2.0: Deep-Layer Beta Gating of Superficial Gamma](#26-working-memory-20-deep-layer-beta-gating-of-superficial-gamma)
-   - 2.7 [Causal Directionality: Volume-Conduction-Free Corrected $ci\text{PLV}$](#27-causal-directionality-volume-conduction-free-corrected-ciplv)
-   - 2.8 [Topological Cognitive Geometry: The Janata Torus ($T^2 = S^1 \times S^1$)](#28-topological-cognitive-geometry-the-janata-torus-t2--s1-times-s1)
-   - 2.9 [Open-World Chaos: Feigenbaum Cascades ($\delta \approx 4.669$) & Attractor Crises](#29-open-world-chaos-feigenbaum-cascades-delta-approx-4669--attractor-crises)
-3. [Thousand Brains Project Integration (`tbp.monty`)](#3-thousand-brains-project-integration-tbpmonty)
-   - 3.1 [Strict Cortical Messaging Protocol (CMP) Packet Structure](#31-strict-cortical-messaging-protocol-cmp-packet-structure)
-   - 3.2 [Sensorimotor Frame Transformations & Relational Compositionality](#32-sensorimotor-frame-transformations--relational-compositionality)
-   - 3.3 [Autonomous Brain Units (`BrainSubject`) & CUDA Layer 4 HTM Sheets](#33-autonomous-brain-units-brainsubject--cuda-layer-4-htm-sheets)
-4. [Hardware, Multi-User Routing & Controls](#4-hardware-multi-user-routing--controls)
-   - 4.1 [FreeEEG16-alpha2 Concentric Ring Sensor Array](#41-freeeeg16-alpha2-concentric-ring-sensor-array)
-   - 4.2 [Arbitrary Multi-User Topology via CLI (`--users`) & JSON Config](#42-arbitrary-multi-user-topology-via-cli---users--json-config)
-   - 4.3 [Sensory Substitution Modes: Isolated Self-Feedback vs. Full-Duplex Swarm (`--sensory-sub`, Key `M`)](#43-sensory-substitution-modes-isolated-self-feedback-vs-full-duplex-swarm---sensory-sub-key-m)
-   - 4.4 [Live Chaos Engine Toggle (SPACE Key)](#44-live-chaos-engine-toggle-space-key)
-5. [CLI Reference & Quickstart](#5-cli-reference--quickstart)
-6. [Comprehensive Scientific Bibliography & DOIs](#6-comprehensive-scientific-bibliography--dois)
+1. [Paradigm Architecture: Collective Stigmergy & Cortical Generative Active Inference](#1-paradigm-architecture-collective-stigmergy--cortical-generative-active-inference)
+2. [Functional Neuroanatomy of Prefrontal Cortical Modules](#2-functional-neuroanatomy-of-prefrontal-cortical-modules)
+   - 2.1 [FCz (Supplementary Motor Area / Pre-SMA): Dedicated 4-Axis Kinematic Flight](#21-fcz-supplementary-motor-area--pre-sma-dedicated-4-axis-kinematic-flight)
+   - 2.2 [AFz (Rostromedial Prefrontal Cortex / rmPFC / dACC): Topological Torus Geometry ($T^2$)](#22-afz-rostromedial-prefrontal-cortex--rmpfc--dacc-topological-torus-geometry-t2)
+   - 2.3 [F3 (Left dlPFC): Categorical Attractors, Symbolic Tokens & $\beta$-Order Gating](#23-f3-left-dlpfc-categorical-attractors-symbolic-tokens--beta-order-gating)
+   - 2.4 [F4 (Right dlPFC): Holistic Schemas, Visuospatial Coordinate Frames & Feigenbaum Chaos](#24-f4-right-dlpfc-holistic-schemas-visuospatial-coordinate-frames--feigenbaum-chaos)
+   - 2.5 [Fpz (Frontopolar Cortex / BA 10): Cognitive Branching & Counterfactual Tracking](#25-fpz-frontopolar-cortex--ba-10-cognitive-branching--counterfactual-tracking)
+3. [Electrophysiological & Biophysical Foundations](#3-electrophysiological--biophysical-foundations)
+   - 3.1 [Working Memory 2.0: Laminar Push-Pull Rhythms (Superficial $\gamma$ vs. Deep Infragranular $\beta$)](#31-working-memory-20-laminar-push-pull-rhythms-superficial-gamma-vs-deep-infragranular-beta)
+   - 3.2 [32-Slot $\theta$-$\gamma$ Phase-Amplitude Coupling with Downbeat Anchor Referencing](#32-32-slot-theta-gamma-phase-amplitude-coupling-with-downbeat-anchor-referencing)
+   - 3.3 [89.5 Hz Cortical Ripples (Dickey et al., 2022) & Causal Directionality ($ci\text{PLV}$)](#33-895-hz-cortical-ripples-dickey-et-al-2022--causal-directionality-ciplv)
+   - 3.4 [High-Dimensional Orthogonal Plasticity: Hebbian LTP + Anti-Hebbian LTD ($5\sigma$)](#34-high-dimensional-orthogonal-plasticity-hebbian-ltp--anti-hebbian-ltd-5sigma)
+   - 3.5 [Continuous Drift-Diffusion Dynamics (DDM) & Synaptic Persistence](#35-continuous-drift-diffusion-dynamics-ddm--synaptic-persistence)
+4. [Hardware Execution, Zero-CPU Guarantee & Maze Parity](#4-hardware-execution-zero-cpu-guarantee--maze-parity)
+   - 4.1 [End-to-End CUDA Tensor Pipeline & Microsecond IPC](#41-end-to-end-cuda-tensor-pipeline--microsecond-ipc)
+   - 4.2 [LSL Buffer Anti-Starvation & Lock-Free Asynchronous Decoupling](#42-lsl-buffer-anti-starvation--lock-free-asynchronous-decoupling)
+   - 4.3 [Dual-Mode Display: Kinematic Vector Compass vs. Torus Phase Space](#43-dual-mode-display-kinematic-vector-compass-vs-torus-phase-space)
+5. [Thousand Brains Project (`tbp.monty`) Integration](#5-thousand-brains-project-tbpmonty-integration)
+   - 5.1 [Cortical Messaging Protocol (CMP) Packet Structure](#51-cortical-messaging-protocol-cmp-packet-structure)
+   - 5.2 [Relational Compositionality & Reference Frame Transformations](#52-relational-compositionality--reference-frame-transformations)
+6. [CLI Configuration, Topology Syntax & Controls](#6-cli-configuration-topology-syntax--controls)
+7. [Comprehensive Scientific Bibliography & DOIs](#7-comprehensive-scientific-bibliography--dois)
 
 ---
 
-## 1. Paradigm Shift: Autonomous Multi-Brain Stigmergy vs. Mechanical BCIs
+## 1. Paradigm Architecture: Collective Stigmergy & Cortical Generative Active Inference
 
-Traditional Brain-Computer Interfaces (BCIs) reduce neural activity to low-dimensional mechanical effectors [24]. NeuroCanvas views the cortex as an **endogenous generative simulation engine** [2, 10, 23]. 
-
-When multiple biological humans or synthetic agents interact, **they must never be averaged together into a single composite signal**. In nature, collective cognition operates via **Stigmergy** [56] and **Multi-Agent Active Inference** [21, 42]: each brain is an independent Markov blanket that perceives the shared environment (the diffusion canvas), calculates its own prediction errors, and acts upon the environment.
+Traditional Brain-Computer Interfaces (BCIs) reduce high-dimensional cortical dynamics into low-dimensional mechanical effectors [24]. NeuroCanvas treats neocortex as an **endogenous generative simulation engine** [2, 10, 23].
 
 ```
-                  COLLECTIVE MULTI-BRAIN OVER-HETERARCHY (STIGMERGY)
-                  
+                     COLLECTIVE MULTI-BRAIN OVER-HETERARCHY (STIGMERGY)
+                     
     ┌──────────────────────┐                     ┌──────────────────────┐
     │  BRAIN SUBJECT 1     │                     │  BRAIN SUBJECT 2     │
-    │  (e.g., User1 @ F3)  │                     │  (e.g., User2 @ F4)   │
-    │  • Own Theta/Beta/γ  │                     │  • Own Theta/Beta/γ  │
-    │  • Own L4 HTM Sheet  │                     │  • Own L4 HTM Sheet  │
-    │  • Intent: [CASTLE]  │                     │  • Intent: [OCEAN]   │
+    │  (e.g., Pilot @ FCz) │                     │  (e.g., Guide @ AFz) │
+    │  • 32-Slot PAC Motor │                     │  • 32-Slot PAC Torus │
+    │  • 4,096 L4 HTM Sheet│                     │  • 4,096 L4 HTM Sheet│
+    │  • Action: [FORWARD] │                     │  • Concept: [CASTLE] │
     └──────────┬───────────┘                     └──────────┬───────────┘
                │                                            │
-               │ Independent Votes / Attractor Drives       │
+               │ Kinematic Vector (lx, ly, rx)             │ Semantic Trajectory (u, v, wm)
                ▼                                            ▼
     ┌───────────────────────────────────────────────────────────────────┐
-    │                   OVER-BRAIN COLLECTIVE (TBT 2.0)                 │
-    │   • Resolves Compositional Heterarchy (NO Signal Averaging!)     │
-    │   • Evaluates Causal Lead / Attractor Confidence                  │
-    │     - If Brain 1 leads:  [Castle] ⊃ [Ocean] (Castle on Island)    │
-    │     - If Brain 2 leads:  [Ocean] ⊃ [Castle] (Sunken Ruins)        │
-    │     - If Peers (Equal):  [Castle] ∥ [Ocean] (Divided Canvas)      │
+    │                OVER-BRAIN COLLECTIVE (TBT 2.0 / CMP)              │
+    │   • Multi-Agent Markov Blankets (Zero Cross-Brain Averaging)      │
+    │   • Resolves Compositional Heterarchy ($A \supset B$, $A \parallel B$)            │
+    │   • Evaluates Causal Lead ($89.5\text{ Hz } ci\text{PLV}$) & Attractor Gating     │
     └─────────────────────────────────┬─────────────────────────────────┘
-                                      │ Latent Composition Vector c ∈ R^768
+                                      │ Sensorimotor Warp (dx, dy) & Latent Code c ∈ R^768
                                       ▼
     ┌───────────────────────────────────────────────────────────────────┐
-    │               OPEN-WORLD GENERATIVE ENGINE (SD/LCM)               │
-    │        Continuous Torus Steering • Feigenbaum Cascades (δ≈4.669)  │
+    │              DIFFUSION MANIFOLD & RECURSIVE TREEMAP               │
+    │   • Real-Time SD/LCM Pipeline with Manifold Affine Warping        │
+    │   • Feigenbaum Period-Doubling Bifurcations ($\delta \approx 4.6692$)         │
+    │   • Emergent Proportional Partitioning & Boundary Crises          │
     └─────────────────────────────────┬─────────────────────────────────┘
-                                      │ High-Rate Visual Sensory Stream
+                                      │ Closed-Loop Sensory Feedback
                                       ▼
     ┌───────────────────────────────────────────────────────────────────┐
-    │                      ENVIRONMENTAL PERCEPTION                     │
-    │        Zero-Shot Semantic Density Vector W (CLIP Teacher)         │
+    │                 ENVIRONMENTAL PERCEPTION (CLIP)                   │
+    │   • Asynchronous Zero-Shot Semantic Density Estimation            │
     └──────────┬────────────────────────────────────────────┬───────────┘
                │                                            │
-               └────────► Observed by Brain 1               └────────► Observed by Brain 2
+               └────────► Perceived by Brain 1              └────────► Perceived by Brain 2
 ```
 
+In nature, multi-agent coordination operates via **Stigmergy** [56] and **Distributed Active Inference** [21, 42]: biological brains never average their raw potentials. Averaging potentials across separate nervous systems violates the **Markov Blanket** [21] and introduces destructive phase interference [42]. NeuroCanvas maintains completely isolated mathematical pipelines for each user, allowing cooperative and competitive dynamics to emerge purely through modifications of the shared generative canvas.
+
 ---
 
-## 2. Biophysical & Mathematical Foundation
+## 2. Functional Neuroanatomy of Prefrontal Cortical Modules
 
-### 2.1 The Thousand Brains Heterarchy (TBT 2.0): Eliminating Hardcoded Trees
-In the classical hierarchical framework, features are extracted sequentially up an anatomically fixed hierarchy ($V1 \to V2 \to IT$). Under Hawkins, Leadholm, & Clay (2025/2026) [1]:
-1. **Primary sensory areas represent complete objects:** Columns across $V1$, $S1$, and $A1$ establish complete sensorimotor object models through movement integration.
-2. **Heterarchical equivalence:** Connections learn **compositional assignments** between whole objects ($A \supset B$ or $B \supset A$).
-3. **Absence of a priori ordering:** An object can be either a parent container or a child component depending on context.
+The system rigorously maps electrode coordinates to distinct functional cytoarchitectonic regions of the human prefrontal cortex (PFC), preserving their native neurophysiological roles:
 
-### 2.2 Anti-Metagaming Principle: Zero Cross-Brain Signal Averaging
-In distributed neuroscience, averaging raw signals across separate brains ($\frac{\beta_1 + \beta_2}{2}$) violates the **Markov Blanket** [21] and produces destructive phase interference [42]:
-* Each human user and synthetic agent possesses an independent `BrainSubject` instance with private sampling rates, resonant theta peaks, and distinct working memory membrane potentials.
-* **The system's underlying mathematical formulas remain strictly invariant whether 1 user, 2 users, or 10 agents are active.** No branching logic alters physics based on participant count.
+```
+                            ANATOMICAL MONTAGE (10-20 EEG)
+                                      
+                                      [ Fpz ]  <-- Cognitive Branching (BA 10)
+                                      /     \
+                Left PFC (Order) [ F3 ]     [ F4 ]  Right PFC (Chaos)
+                                      \     /
+                       Cognitive Torus [ AFz ]
+                                          |
+                         Motor Flight  [ FCz ]  <-- Supplementary Motor Area (SMA)
+```
 
-### 2.3 Contrastive Plasticity (LTP + Anti-Hebbian LTD) & 5-Sigma Statistical Separation
-Previous heuristics relying on arbitrary $\ge 75\%$ synaptic thresholds cause collinear weight collapse ($W_0 \approx W_1$), producing catastrophic limit-cycle flip-flops (random switching between concepts every few seconds).
+### 2.1 FCz (Supplementary Motor Area / Pre-SMA): Dedicated 4-Axis Kinematic Flight
+* **Brodmann Area:** BA 6 / BA 8 boundary.
+* **Neurocomputational Function:** Planning, initiating, and executing voluntary sensorimotor action sequences [6, 7].
+* **System Implementation:** **`FCz` is the sole electrode channel authorized to drive physical translation and camera warping.**
+  When `FCz` is assigned in the routing topology (`--users "User1:FCz=0"`), the 32-slot $\theta$-$\gamma$ phase trajectory is projected onto the physical dipole axes to yield real-time steering vectors:
+  $$\mathbf{intent} = (lx, ly), \quad \text{yaw} = rx, \quad \text{temporal lookahead} = ry$$
+  **If `FCz` is absent from the configuration (e.g., `--users "User1:AFz=0"`), physical camera motion is strictly held at zero ($dx = 0, dy = 0$).** The canvas remains stationary; cognitive noise does not induce false camera drift.
 
-NeuroCanvas implements **Orthogonal Subspace Projection** [36, 37]:
-1. **Hebbian LTP on Target:** Active Layer 4 synapses for the target concept are potentiated:
-   $$\mathbf{W}_{\text{target}} \leftarrow \mathrm{clamp}(\mathbf{W}_{\text{target}} + \eta \cdot \mathbf{C}, 0.0, 1.0)$$
-2. **Anti-Hebbian LTD on Competitors:** Synapses active during target activation are actively depressed in non-target memory matrices:
-   $$\mathbf{W}_{\text{competitor}} \leftarrow \mathrm{clamp}(\mathbf{W}_{\text{competitor}} - \eta \cdot \lambda_{\text{LTD}} \cdot \mathbf{C}, 0.0, 1.0)$$
-3. **5-Sigma ($5\sigma$) Statistical Criterion ($d' \ge 4.75$, $p < 3 \cdot 10^{-7}$):**
-   Calibration runs in guided blocked epochs. Synaptic projections for each concept are buffered, and Fisher's discriminant ratio ($d'$) is continuously evaluated:
+### 2.2 AFz (Rostromedial Prefrontal Cortex / rmPFC / dACC): Topological Torus Geometry ($T^2$)
+* **Brodmann Area:** BA 9 / BA 32.
+* **Neurocomputational Function:** Tracking cognitive space, monitoring internal schemas, and navigating conceptual relational geometries [45, 60].
+* **System Implementation:** **`AFz` operates in non-translational conceptual coordinates.** It samples the endogenous $\theta$ carrier ($6.0\text{ Hz}$) and $\delta$ macro-frame ($1.5\text{ Hz}$) to anchor the state vector onto the **Janata Torus** ($T^2 = S^1 \times S^1$):
+  $$u = \angle(\Phi_\theta) \pmod{2\pi}, \quad v = \angle(\Phi_\delta) \pmod{2\pi}$$
+  In `AFz` mode, the polar radar displays **Torus Phase Space** rather than a flight compass. Concept selection, contrastive LTM learning ($5\sigma$), and Treemap area allocation are mediated through `AFz`.
+
+### 2.3 F3 (Left dlPFC): Categorical Attractors, Symbolic Tokens & $\beta$-Order Gating
+* **Brodmann Area:** Left BA 9 / BA 46.
+* **Neurocomputational Function:** Hierarchical sequence grammar, categorical boundary maintenance, symbolic linguistic chunking, and analytical execution [11, 32].
+* **System Implementation:** Evaluates left-hemispheric infragranular $\beta$-power ($15\text{--}30\text{ Hz}$). Elevated $\beta$ on `F3` enforces **$\beta$-Order Gating** ($R_{\beta,\text{order}}$), stabilizing the active conceptual attractor, suppressing chaotic drift, and triggering boundary crises to prune redundant sub-branches when order exceeds $0.80$.
+
+### 2.4 F4 (Right dlPFC): Holistic Schemas, Visuospatial Coordinate Frames & Feigenbaum Chaos
+* **Brodmann Area:** Right BA 9 / BA 46.
+* **Neurocomputational Function:** Holistic scene analysis, coordinate spatial relations, novel associative discovery, and divergent thinking [46, 47, 65].
+* **System Implementation:** Evaluates right-hemispheric $\beta$-desynchronization ($1.0 - R_{\beta,\text{chaos}}$). A decline in right-frontal $\beta$ injects **Lyapunov Chaos Drive**, driving the accumulation of nonlinear energy in the active concept:
+  $$\Delta E = (1.0 - R_{\beta,\text{chaos}}) \cdot \kappa_{\text{chaos}} - R_{\beta,\text{order}} \cdot \kappa_{\text{order}}$$
+  When energy breaches the scaled Feigenbaum threshold ($E > \frac{0.70}{\delta^{\text{depth}}}$), it forces a **period-doubling bifurcation**, spawning specialized daughter concepts in the generative model.
+
+### 2.5 Fpz (Frontopolar Cortex / BA 10): Cognitive Branching & Counterfactual Tracking
+* **Brodmann Area:** Lateral and rostral BA 10.
+* **Neurocomputational Function:** Evaluating alternative courses of action while maintaining the primary behavioral goal (cognitive branching) [28, 29, 33].
+* **System Implementation:** Evaluates the sub-granular gating ratio $g(t)$. When alternative evidence accumulates past the critical threshold ($S > 1.35$), `Fpz` executes `trigger_fpz_cognitive_branch` or voluntary sub-child integration (`attempt_heterarchical_integration`), shifting the active Markov hierarchy without resetting baseline memory banks.
+
+---
+
+## 3. Electrophysiological & Biophysical Foundations
+
+```
+                            CORTICAL COLUMN MICROCIRCUIT
+                                   
+   L2/3 Superficial:  [ Gamma Bursts (30-100 Hz) ] <===> Feedforward Sensory & Concept Tokens
+                             ▲                 ▲
+                             │ (Gating Factor) │ (Dendritic Calcium C(t))
+                             ▼                 ▼
+   L4 Granular:       [ 4,096-Column HTM Sheet ] <===> Sparse Distributed Representations (k=80)
+                             ▲                 ▲
+                             │                 │ (3-Factor Synaptic Plasticity)
+                             ▼                 ▼
+   L5/6 Infragranular:[ Beta Rhythms (15-30 Hz) ] <===> Top-Down Executive Inhibitory Brake
+```
+
+### 3.1 Working Memory 2.0: Laminar Push-Pull Rhythms (Superficial $\gamma$ vs. Deep Infragranular $\beta$)
+NeuroCanvas implements the laminar oscillatory control architecture validated by Miller, Lundqvist, and Bastos [2, 4]:
+* **Superficial Layers (L2/3):** Pyramidal-Interneuron Gamma (PING) oscillations ($30\text{--}100\text{ Hz}$) encode transient, sparse bursts of active memoranda [5]. Spiking is bursty, minimizing metabolic consumption and preventing catastrophic attractor collapse.
+* **Deep Layers (L5/6):** Synchronized infragranular $\beta$ oscillations ($15\text{--}30\text{ Hz}$) act as an **inhibitory executive brake**. When deep $\beta$ couples to superficial layers, it terminates gamma bursts and clears active memory contents.
+* **Biophysical Gating Equation:**
+  $$g(t) = \frac{R_\gamma(t)}{R_\gamma(t) + \kappa R_\beta(t) + \epsilon}$$
+  A drop in deep-layer beta disinhibits L2/3 recurrent microcircuits, opening the gate for novel concept entry.
+
+### 3.2 32-Slot $\theta$-$\gamma$ Phase-Amplitude Coupling with Downbeat Anchor Referencing
+Sensory representations, spatial navigation trajectories, and abstract conceptual sequences are time-division multiplexed into high-gamma subcycles ($70\text{--}100\text{ Hz}$) nested within an endogenous $\theta$ carrier ($4\text{--}8\text{ Hz}$) [6, 20]:
+* Each single theta cycle is discretized into **32 temporal phase bins** $\theta_k \in [-\pi, \pi)$.
+* **Downbeat Slot 0 Anchor Referencing:** To eliminate zero-frequency baseline drift, cross-spectral density matrices across all 120 electrode pairs are referenced to the initial phase anchor (Slot 0):
+  $$\mathbf{\Psi}_{k} = \Im \left( \mathbf{\Phi}_k \odot \mathbf{\Phi}_0^* \right) \in \mathbb{R}^{120}, \quad k \in \{0, \dots, 31\}$$
+  Because Slot 0 referenced to itself identically satisfies $\Im(\mathbf{\Phi}_0 \odot \mathbf{\Phi}_0^*) \equiv 0$, the initial downbeat functions as an invariant mathematical origin.
+
+### 3.3 89.5 Hz Cortical Ripples (Dickey et al., 2022) & Causal Directionality ($ci\text{PLV}$)
+During memory recall and cognitive integration, human neocortex exhibits widespread $\sim 70\text{ ms}$, $89.5\text{ Hz}$ ripples that phase-synchronize across long distances [15].
+NeuroCanvas isolates the **Volume-Conduction-Free Corrected Imaginary Phase-Locking Value ($ci\text{PLV}$)** across all 120 electrode pairs [12]:
+
+$$ci\text{PLV}_{i, j} = \frac{\frac{1}{T} \sum_{t=1}^T \Im \left( z_i(t) z_j^*(t) \right)}{\sqrt{1 - \left( \frac{1}{T} \sum_{t=1}^T \Re \left( z_i(t) z_j^*(t) \right) \right)^2}}$$
+
+* **Singular Value Decomposition (SVD) Rank Depth:** The centered ripple matrix is analyzed via SVD. The normalized singular value spectrum ($S_1, \dots, S_4$) extracts the effective intrinsic dimensionality of the prefrontal manifold.
+* **Causal Order Metrics:**
+  * $\text{Lead} > +0.03 \implies$ Node $A$ leads Node $B$ (Super-ordinate Parent Container: $A \supset B$).
+  * $\text{Lead} < -0.03 \implies$ Node $B$ leads Node $A$ (Sub-ordinate Child Component: $B \supset A$).
+  * $|\text{Lead}| \le 0.03 \implies$ Synchronous Co-occurrence (Peer Coexistence: $A \parallel B$).
+
+### 3.4 High-Dimensional Orthogonal Plasticity: Hebbian LTP + Anti-Hebbian LTD ($5\sigma$)
+To avoid catastrophic collinear weight collapse ($W_0 \approx W_1$), each `BrainSubject` maintains a **4,096-column CUDA Cortical Macrocolumn Sheet** with $1.95\%$ SDR sparsity ($k = 80$ active columns):
+1. **Hebbian Long-Term Potentiation (LTP):**
+   $$\mathbf{W}_{\text{target}} \leftarrow \text{clamp}\left( \mathbf{W}_{\text{target}} + \eta \cdot \mathbf{C}(t), 0.01, 1.0 \right)$$
+2. **Anti-Hebbian Long-Term Depression (LTD):**
+   $$\mathbf{W}_{\text{competitor}} \leftarrow \text{clamp}\left( \mathbf{W}_{\text{competitor}} - \eta \cdot \lambda_{\text{LTD}} \cdot \mathbf{C}(t), 0.01, 1.0 \right)$$
+3. **$5\sigma$ Statistical Criterion ($d' \ge 4.75$, $p < 3 \cdot 10^{-7}$):**
+   The system continuously calculates Fisher’s discriminant ratio across all active memory classes:
    $$d' = \frac{|\mu_0 - \mu_1|}{\sqrt{\frac{1}{2}(\sigma_0^2 + \sigma_1^2)}}$$
-   **The engine refuses to exit calibration until $d' \ge \text{threshold}$ (default: $3.5\sigma$; up to $4.75\sigma$ / $5\sigma$).** This guarantees complete geometric orthogonality in prefrontal subspaces.
+   **The engine refuses to unlock free inference until $d' \ge \text{threshold}$ (default: $3.0\sigma\text{--}3.5\sigma$, up to $5.0\sigma$).**
 
-### 2.4 Emergent Heterarchy vs. Fabricated Trees: Default Peer Coexistence ($A \parallel B$)
-**The system is strictly prohibited from inventing hierarchies where users/agents have not created them:**
-* By default, all active concepts and brains exist on **Depth 0 as equal peers ($A \parallel B$)**.
-* Canvas space in the Treemap is partitioned **proportionally to real-time confidence weights**, not arbitrary equal splits.
-* Parent-child nesting ($A \supset B$) emerges **only** through:
-  1. Spontaneous Feigenbaum period-doubling bifurcations in the chaos worker (`parent_map[child] = parent`).
-  2. Active Inference sub-ordination: when an agent's prediction error exceeds tolerance, it executes `attempt_heterarchical_integration`, voluntarily assigning its concept as a child component of the dominant environmental prior.
-
-### 2.5 Pure Spatial Phase Synchrony: Eliminating Amplitude Artifacts in Surface Laplacian
-The FreeEEG16-alpha2 sensor calculates the **tri-polar Surface Laplacian** ($\nabla^2 V$). Because the Laplacian is the second spatial derivative of the electrical potential, it functions as a high-pass spatial filter [19, 58]. Absolute voltage amplitude squared ($\mu V^2$) is discarded in favor of **Spatial Phase Coherence (Kuramoto Order Parameter $R \in [0.0, 1.0]$)** [12, 59]:
-
-$$P_k(t) = \frac{Z_k(t)}{|Z_k(t)| + \epsilon} = e^{i \varphi_k(t)}, \quad R_{\text{local}}(t) = \left| \frac{1}{N} \sum_{k=1}^{N} P_k(t) \right| \in [0.0, 1.0]$$
-
-### 2.6 Working Memory 2.0: Deep-Layer Beta Gating of Superficial Gamma
-Under **Working Memory 2.0** [2, 4]:
-* **Superficial Layers (L2/3):** Gamma bursts ($30\text{--}100\text{ Hz}$) encoding active representations.
-* **Deep Layers (L5/6):** Infragranular beta rhythms ($15\text{--}30\text{ Hz}$) exerting inhibitory gating.
-* **Gating Factor:** $g(t) = \frac{R_\gamma(t)}{R_\gamma(t) + \kappa R_\beta(t) + \epsilon}$. High Beta closes the gate (memory locked); Beta desynchronization opens the gate (state updates freely).
-
-### 2.7 Causal Directionality: Volume-Conduction-Free Corrected $ci\text{PLV}$
-To eliminate volume conduction artifacts while extracting true inter-areal phase delays, NeuroCanvas computes the **Corrected Imaginary Phase-Locking Value ($ci\text{PLV}$)** across all 120 pairs in the $89.5\text{ Hz}$ ripple band [12, 15]:
-
-$$ci\text{PLV}_{j, k} = \frac{\frac{1}{T} \Im \left\lbrace \sum_{t=1}^T \dot{x}_j(t) \cdot \dot{x}_k^*(t) \right\rbrace}{\sqrt{1 - \left( \frac{1}{T} \Re \left\lbrace \sum_{t=1}^T \dot{x}_j(t) \cdot \dot{x}_k^*(t) \right\rbrace \right)^2}}$$
-
-* $\text{Lead} > 0.03$: Node $A$ leads Node $B \implies$ Parent Container ($A \supset B$).
-* $\text{Lead} < -0.03$: Node $B$ leads Node $A \implies$ Child Component ($B \supset A$).
-* $|\text{Lead}| \le 0.03$: Synchronous co-occurrence $\implies$ Peers ($A \parallel B$).
-
-### 2.8 Topological Cognitive Geometry: The Janata Torus ($T^2 = S^1 \times S^1$)
-Rostromedial prefrontal cortex (rmPFC / dACC, under **AFz**) continuously tracks navigation through abstract cognitive spaces along the surface of a 2D torus [45, 60]:
-* $u \in [0, 2\pi)$: Theta carrier phase ($6.0\text{ Hz}$).
-* $v \in [0, 2\pi)$: Delta macro-frame phase ($1.5\text{ Hz}$).
-
-### 2.9 Open-World Chaos: Feigenbaum Cascades ($\delta \approx 4.669$) & Attractor Crises
-* **Lyapunov Chaos Drive:** $\Delta E = (1.0 - \beta_{\text{chaos}}) \cdot \kappa_{\text{chaos}} - \beta_{\text{order}} \cdot \kappa_{\text{order}}$
-* **Period-Doubling Cascade:** The critical energy threshold contracts geometrically [61]:
-  $$E_{\text{split}}(\text{depth}) = \frac{E_0}{\delta^{\text{depth}}}, \quad \delta \approx 4.6692016$$
-* **Boundary Crisis:** Surging order drive collapses redundant low-energy branches back into their parent attractor [63].
+### 3.5 Continuous Drift-Diffusion Dynamics (DDM) & Synaptic Persistence
+Following Gold & Shadlen [51] and Peixoto et al. [36], decision variables accumulate continuously without step-function artifacts:
+* **Analog Projection:** $\rho(t) = \frac{\vec{f} \cdot \vec{f}_{\text{target}}}{\|\vec{f}\|_2 \|\vec{f}_{\text{target}}\|_2}$.
+* **Synaptic Persistence Accumulation:**
+  $$\text{Persistence}_t = \text{Persistence}_{t-1} \cdot 0.94 + 0.06 \cdot \text{Alignment} \cdot \tanh(\|\vec{f}\|_2 \cdot 2.0)$$
+* **Active Boost Acceleration:** $\text{Boost} = 1.0 + 4.0 \cdot \text{Persistence}$, scaling velocity up to $5\times$ during sustained mental focus.
 
 ---
 
-## 3. Thousand Brains Project Integration (`tbp.monty`)
+## 4. Hardware Execution, Zero-CPU Guarantee & Maze Parity
 
-### 3.1 Strict Cortical Messaging Protocol (CMP) Packet Structure
-Every processing cycle packages the decoded prefrontal state into an authentic `tbp.monty.cmp.Message` instance:
+### 4.1 End-to-End CUDA Tensor Pipeline & Microsecond IPC
+The runtime guarantees strict synchronization with `neuro_monty_bci_maze.py`:
+* **Zero CPU Recomputation:** The 32-slot PAC field $\mathbf{\Psi}_{32 \times 120}$, Cartesian trajectory $\mathbf{P}_{32 \times 2}$, and kinematic state variables (`lx`, `ly`, `rx`, `ry`) are evaluated strictly within PyTorch CUDA tensors in `GPU_Daemon_Process`.
+* **Deprecation of Legacy CPU Loops:** The `@property def gamepad_axes` bypasses all legacy host-side Python loops, returning the pre-packaged GPU tensor directly.
+
+### 4.2 LSL Buffer Anti-Starvation & Lock-Free Asynchronous Decoupling
+To eliminate frame stutter and maintain exact theta-rate sampling ($60\text{ FPS}$):
+* **Buffer Purging (`max_samples=8192`):** `inlets[i].pull_chunk` pulls all accumulated samples, slicing the trailing `[-BUF_SIZE:]` to guarantee the processing window remains locked to real-time regardless of background load.
+* **CLIP Decoupling:** The Vision-Language CLIP teacher evaluates frames in an isolated background thread at $5\text{ Hz}$, freeing GPU capacity for real-time EEG processing.
+* **SVD & Treemap Throttling:** SVD decomposition and recursive Treemap box scaling evaluate every 6 frames ($10\text{ Hz}$), preventing CUDA stream synchronization stalls.
+
+### 4.3 Dual-Mode Display: Kinematic Vector Compass vs. Torus Phase Space
+
+| Screen Indicator | Motor Navigation Mode (`FCz`) | Semantic Torus Mode (`AFz`) |
+| :--- | :--- | :--- |
+| **Yellow Vector** | Target Direction ($\vec{f}_{\text{target}}$, Screen $N/S/E/W$) | Target Concept Position ($\vec{u}_{\text{target}}$ on Torus) |
+| **Cyan Vector** | Real Human Motor Intent ($\vec{f}_{\text{human}}$, Screen $N/S/E/W$) | Current Torus Coordinate ($\cos u, \sin v$) |
+| **Pink Vector** | Monty Decoded Prediction ($\vec{f}_{\text{monty}}$, Screen $N/S/E/W$) | Decoded Concept Attractor ($\vec{u}_{\text{decoded}}$) |
+| **Camera Response** | Active Optical Flow (Zoom In/Out, Lateral Pan) | Fixed Camera / Static Manifold Rendering |
+| **Treemap Display** | Kinematic Axes (`ВПЕРЕД`, `НАЗАД`, `ВПРАВО`, `ВЛЕВО`) | Conceptual Classes (`ГОРА`, `ДЖУНГЛИ`, `ЗАМОК`, `ОКЕАН`...) |
+
+---
+
+## 5. Thousand Brains Project (`tbp.monty`) Integration
+
+### 5.1 Cortical Messaging Protocol (CMP) Packet Structure
+At each cognitive cycle, the executive state is packaged into a standard `tbp.monty.cmp.Message` instance:
 
 ```python
 Message(
-    location=brain.disp_xyz.astype(np.float64),         # 3D vector [x, y, z] (shape (3,))
+    location=pilot.x, pilot.y, 0.0,                    # Allocentric 3D spatial location
     morphological_features={
-        "pose_vectors": brain.pose_matrix.astype(np.float64), # SO(3) rotation matrix (3, 3)
-        "pose_fully_defined": bool(smooth_depth >= 1.8),      # True when manifold rank >= 1.8
-        "on_object": 1.0                                      # Sensor engaged on manifold
+        "pose_vectors": rot_matrix,                   # SO(3) Frenet frame orientation
+        "pose_fully_defined": bool(smooth_depth >= 1.8),# True if SVD rank >= 1.8
+        "on_object": 1.0                              # Manifold engagement marker
     },
     non_morphological_features={
-        "object_id": int(brain.decoded_leader_idx),           # Active concept index
-        "torus_u": node_afz.torus_u,                          # Theta coordinate u on Torus
-        "torus_v": node_afz.torus_v,                          # Delta coordinate v on Torus
-        "beta_order": brain.beta_power                        # Inhibitory gate
+        "object_id": int(leader_idx),                 # Active categorical attractor ID
+        "torus_u": float(node_afz.torus_u),           # Theta coordinate u on Janata Torus
+        "torus_v": float(node_afz.torus_v),           # Delta coordinate v on Janata Torus
+        "beta_order": float(node_f3.beta_power)       # Infragranular inhibitory state
     },
-    confidence=float(np.clip(brain.confidence / 100.0, 0.0, 1.0)),
-    pass_message=True,                                        # Forward to downstream LMs
-    process_features_in_lm=True,                              # Enables evidence updates
-    sender_id=brain.subject_id,
-    sender_type="SM"
+    confidence=float(np.clip(confidence / 100.0, 0.0, 1.0)),
+    pass_message=True,
+    sender_id=subject_id,
+    sender_type="SM",
+    process_features_in_lm=True
 )
 ```
 
-### 3.2 Sensorimotor Frame Transformations & Relational Compositionality
-Under TBT 2.0 [1], thalamic alignment calculates the relative rotation $\Delta \mathbf{R} \in SO(3)$ between child and parent reference frames from Torus phase offsets:
+### 5.2 Relational Compositionality & Reference Frame Transformations
+Following TBT 2.0 [1], thalamocortical loops compute the relative rotation matrix $\Delta \mathbf{R} \in SO(3)$ between parent and child reference frames from Torus phase offsets:
 
 $$\Delta u = u_{\text{child}} - u_{\text{parent}}, \quad \Delta v = v_{\text{child}} - v_{\text{parent}}$$
 
 $$\Delta \mathbf{p}_{SO(3)} = \begin{bmatrix} \sin(\Delta u) \\ \cos(\Delta v) \\ \sin(\Delta u + \Delta v) \end{bmatrix}$$
 
-### 3.3 Autonomous Brain Units (`BrainSubject`) & CUDA Layer 4 HTM Sheets
-* Each `BrainSubject` maintains an isolated **4,096-column CUDA Cortical Macrocolumn Sheet** with $1.95\%$ SDR sparsity ($k = 80$).
-* **Synaptic Inheritance:** When a concept bifurcates, the daughter node inherits 85% of the parent’s synaptic permanence matrix in Layer 4 (`heterarchy.inherit_synapses`), eliminating cold-start delay [9, 64].
+---
+
+## 6. CLI Configuration, Topology Syntax & Controls
+
+### Command-Line Arguments
+```bash
+# Mode 1: Pure 4-Axis Kinematic Flight (Identical to Maze Engine)
+python neuro_prefrontal_heterarchy_live.py --users "User1:FCz=0" --calib-mode motion
+
+# Mode 2: Full Prefrontal Cognitive Heterarchy (AFz Torus + F3 Order + F4 Chaos)
+python neuro_prefrontal_heterarchy_live.py --users "User1:AFz=0,F3=1,F4=2" --concepts 4
+
+# Mode 3: Combined Pilot & Navigator Multi-Region Configuration
+python neuro_prefrontal_heterarchy_live.py --users "User1:FCz=0,AFz=1,F3=2,F4=3" --concepts 4
+
+# Mode 4: Multi-Subject Cooperative/Competitive Brain Space
+python neuro_prefrontal_heterarchy_live.py --users "Pilot:FCz=0; Guide:AFz=1; Critic:F3=2,F4=3"
+```
+
+| Argument | Default | Type | Description |
+| :--- | :--- | :--- | :--- |
+| `--users` | `Dmitry:FCz=0`| `str` | Prefrontal routing string (`Subject:Region=DevIdx,...`). |
+| `--calib-mode` | `auto` | `str` | Calibration mode: `auto` (auto-detect by region), `motion` (FCz), `semantic` (AFz). |
+| `--concepts` | `1` | `int` | Number of semantic categories ($2\text{--}16$). |
+| `--calib-sigma` | `3.5` | `float`| Statistical separation threshold $d'$ for unlocking inference ($3.0\sigma\text{--}5.0\sigma$). |
+| `--calib-seconds` | `6.0` | `float`| Duration in seconds per guided calibration block. |
+| `--calib-cycles` | `3` | `int` | Minimum alternation cycles before validation. |
+| `--sensitivity` | `0.05` | `float`| Pilot response sensitivity (`moveSensitivity` from web). |
+| `--max-speed` | `9.0` | `float`| Maximum allowable kinematic velocity. |
+| `--intent-gain` | `1.5` | `float`| Raw motor intention multiplier. |
+| `--chaos` | `False` | `flag` | Enables open-world Feigenbaum bifurcation cascades on launch. |
+| `--sensory-sub` | `False` | `flag` | Enables Full-Duplex inter-brain concept broadcasting (Key `M`). |
+| `--gamma-100` | `False` | `flag` | Extends spectral integration ceiling from $65\text{ Hz}$ to $100\text{ Hz}$. |
+
+### Keybindings Reference
+| Key | Action | Functional Description |
+| :--- | :--- | :--- |
+| `SPACE` | **Toggle Autopilot / Chaos** | Toggles between manual BCI intent and autonomous predictive steering. |
+| `C` | **Toggle Chaos Engine** | Enables/disables live Feigenbaum period-doubling bifurcations ($\delta \approx 4.6692$). |
+| `M` | **Sensory Substitution** | Alternates between isolated self-feedback and full-duplex swarm synchronization. |
+| `R` | **Recalibrate** | Erases cached session parameters and restarts guided calibration. |
+| `↑` / `↓` | **Longitudinal Drive** | Manual override for forward/backward translation. |
+| `←` / `→` | **Lateral Strafe** | Manual override for left/right translation. |
+| `.` / `,` | **Yaw Rotation** | Manual override for angular torque. |
+| `ESC` | **Safe Shutdown** | Safely parks GPU daemons and releases POSIX shared memory buffers. |
 
 ---
 
-## 4. Hardware, Multi-User Routing & Controls
-
-### 4.1 FreeEEG16-alpha2 Concentric Ring Sensor Array
-* **Array Geometry:** FreeEEG16-alpha2 $26\text{-mm}$ dual-concentric gold-plated surface array [19].
-* **Spatial Filtering:** Real-time tri-polar surface Laplacian filtering isolates localized cortical dipoles; twin notch filters ($50\text{ Hz}$ and $100\text{ Hz}$) eliminate AC line noise.
-
-### 4.2 Arbitrary Multi-User Topology via CLI (`--users`) & JSON Config
-No hardcoded single-user assumptions. Any number of physical or simulated devices can be bound to arbitrary participants:
-* **CLI Syntax:** `--users "Subject1:Region=DeviceIndex; Subject2:Region=DeviceIndex"`
-  - *Example (Single User, 1 Region):* `--users "User1:AFz=0"`
-  - *Example (Two Users, 1 Region each):* `--users "User1:F3=0; User2:F4=1"`
-  - *Example (Two Users, Full 2-Device Setups):* `--users "User1:F3=0,AFz=1; User2:F4=2,Fpz=3"`
-* **JSON Syntax (`swarm_config.json`):**
-  ```json
-  {
-    "users": [
-      {"id": "User1", "regions": {"F3": 0, "AFz": 1}},
-      {"id": "User2", "regions": {"F4": 2, "Fpz": 3}}
-    ],
-    "agents": [
-      {"type": "hardcoded", "count": 1, "bind_target": ["F3"]}
-    ]
-  }
-  ```
-
-### 4.3 Sensory Substitution Modes: Isolated Self-Feedback vs. Full-Duplex Swarm (`--sensory-sub`, Key `M`)
-* **Isolated Self-Feedback (Default, `--sensory-sub` OFF):**
-  Participants perceive **only the visual output of the generative canvas**. No telepathic data leaks. Every brain acts independently within its own Markov blanket.
-* **Full-Duplex Shared World (`--sensory-sub` ON / Key `M`):**
-  Activates the Cortical Messaging Protocol broadcast channel. Working memory conviction scores ($\mathbf{W}_{\text{scores}}$) are fed into the sensory substitution loop as prior biases, enabling mutual telepathic awareness and cooperative attractor stabilization.
-
-### 4.4 Live Chaos Engine Toggle (SPACE Key)
-* **Safe Stable Mode (Default):** Static prompt space with calibrated Hebbian weights.
-* **Live Chaos Trigger (`SPACE` Key):** Unlocks Feigenbaum bifurcation cascades, allowing open-world concept branching based on infragranular Beta desynchronization.
-
----
-
-## 5. CLI Reference & Quickstart
-
-### 1. Launch Diffusion Backend
-```bash
-python brain_server.py --mode lcm
-```
-
-### 2. Launch Multi-Brain Heterarchy
-
-#### Mode A: Rigorous 5-Sigma Dual-Concept Calibration (Solo AFz)
-```bash
-python neuro_prefrontal_heterarchy_live.py \
-  --concepts 2 \
-  --force-recalib \
-  --calib-sigma 4.75 \
-  --calib-seconds 6.0 \
-  --calib-cycles 4 \
-  --users "User1:AFz=0" \
-  --gamma-100 \
-  --use-kinematics
-```
-
-#### Mode B: Two-Player Competitive/Cooperative Brain Space (User1 @ F3 vs. User2 @ F4)
-```bash
-python neuro_prefrontal_heterarchy_live.py \
-  --concepts 4 \
-  --users "User1:F3=0; User2:F4=1" \
-  --chaos \
-  --gamma-100 \
-  --use-kinematics
-```
-
-#### Mode C: Full-Duplex Shared Active Inference with Synthetic Agents
-```bash
-python neuro_prefrontal_heterarchy_live.py \
-  --sim \
-  --hardcoded-bots 2 \
-  --users "User1:AFz=0" \
-  --sensory-sub \
-  --chaos \
-  --gamma-100 \
-  --use-kinematics
-```
-
-### Key Arguments:
-* `--users S`: User routing string (format: `Name:Region=DevIndex,...; ...`).
-* `--sensory-sub`: Enables Full-Duplex inter-brain concept broadcasting (toggleable via `M` key).
-* `--calib-sigma F`: Statistical separation criterion $d'$ for exiting calibration (default: `3.5`, set `4.75` for $5\sigma$).
-* `--calib-seconds F`: Duration in seconds per guided calibration block (default: `6.0`).
-* `--calib-cycles N`: Minimum number of alternating blocks before evaluating statistical separability (default: `3`).
-* `--concepts N`: Number of starting concepts ($2$ for binary contrastive learning, up to $16$).
-* `--chaos`: Enables Feigenbaum bifurcation cascades from boot (toggleable via `SPACE`).
-* `--strength-high F`: Denoising strength during active transitions (default: `0.85`).
-* `--strength-low F`: Denoising strength during steady state (default: `0.60`).
-* `--gamma-100`: Extends local L4 gamma contour to the continuous **30–100 Hz** spectrum.
-* `--use-kinematics`: Enables state-space curvature ($rx$) and temporal lookahead ($ry$).
-* `--force-recalib`: Erases saved weights and initiates fresh calibration.
-
----
-
-## 6. Comprehensive Scientific Bibliography & DOIs
+## 7. Comprehensive Scientific Bibliography & DOIs
 
 1. **Hawkins, J., Leadholm, N., & Clay, V. (2025/2026).** The Thousand Brains Theory 2.0: An Extension for the Long-Range Connections of the Neocortical Heterarchy. *arXiv preprint*, [arXiv:2507.05888](https://arxiv.org/abs/2507.05888).
 2. **Miller, E. K., Lundqvist, M., & Bastos, A. M. (2018).** Working Memory 2.0. *Neuron*, 100(2), 463–475. [DOI: 10.1016/j.neuron.2018.09.023](https://doi.org/10.1016/j.neuron.2018.09.023)
@@ -357,3 +373,4 @@ python neuro_prefrontal_heterarchy_live.py \
 66. **Corbetta, M., & Shulman, G. L. (2002).** Control of goal-directed and stimulus-driven attention in the brain. *Nature Reviews Neuroscience*, 3(3), 201–215. [DOI: 10.1038/nrn755](https://doi.org/10.1038/nrn755)
 67. **Xie, Y., Hu, P., Li, J., Chen, J., Song, W., Wang, X. J., Yang, T., Dehaene, S., Tang, S., Min, B., & Wang, L. (2022).** Geometry of sequence working memory in macaque prefrontal cortex. *Science*, 375(6581), 632–639. [DOI: 10.1126/science.abm0204](https://doi.org/10.1126/science.abm0204)
 68. **McCulloch, W. S. (1945).** A heterarchy of values determined by the topology of nervous nets. *The Bulletin of Mathematical Biophysics*, 7(2), 89–93. [DOI: 10.1007/BF02478357](https://doi.org/10.1007/BF02478357)
+
